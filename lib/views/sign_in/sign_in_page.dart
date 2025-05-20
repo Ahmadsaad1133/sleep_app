@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../sign_up/sign_up_page.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({Key? key}) : super(key: key);
@@ -32,17 +33,13 @@ class _SignInPageState extends State<SignInPage> {
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
-
-    const svgOrigW = 547.0;
-    const svgOrigH = 428.0;
+    const svgOrigW = 547.0, svgOrigH = 428.0;
     final svgHeight = w * (svgOrigH / svgOrigW);
-
     double titleFontSize = (w * 0.06).clamp(18.0, 28.0);
     double buttonHeight = (w * 0.15).clamp(48.0, 72.0);
     double buttonFontSize = (w * 0.025).clamp(10.0, 14.0);
     double orFontSize = (w * 0.03).clamp(10.0, 14.0);
     double inputTextFontSize = (w * 0.04).clamp(12.0, 16.0);
-    double forgotFontSize = (w * 0.035).clamp(12.0, 14.0);
     double inputHeight = w < 320
         ? 28
         : w < 400
@@ -70,161 +67,151 @@ class _SignInPageState extends State<SignInPage> {
             ),
           ),
 
-          // SafeArea + OverflowBox
           SafeArea(
-            child: OverflowBox(
-              maxHeight: double.infinity,    // ← allow unlimited height
-              alignment: Alignment.topCenter,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: hp),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: SvgPicture.asset(
-                            'assets/images/NavigateLeft.svg',
-                            width: 55,
-                            height: 55,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: hp),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: SvgPicture.asset(
+                          'assets/images/NavigateLeft.svg',
+                          width: 55,
+                          height: 55,
+                        ),
+                      ),
+                      const Spacer(),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Welcome Back!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: titleFontSize,
+                      fontFamily: 'HelveticaNeue',
+                      fontWeight: FontWeight.w700,
+                      height: 1.35,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  _buildSocialButton(
+                    asset: 'assets/images/Facebook.svg',
+                    label: 'CONTINUE WITH FACEBOOK',
+                    backgroundColor: const Color(0xFF7583CA),
+                    textColor: Colors.white,
+                    height: buttonHeight,
+                    fontSize: buttonFontSize,
+                    outlined: false,
+                  ),
+                  const SizedBox(height: 20),
+                  _buildSocialButton(
+                    asset: 'assets/images/Google.svg',
+                    label: 'CONTINUE WITH GOOGLE',
+                    backgroundColor: Colors.white,
+                    textColor: Colors.black,
+                    height: buttonHeight,
+                    fontSize: buttonFontSize,
+                    outlined: true,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'OR LOG IN WITH EMAIL',
+                    style: TextStyle(
+                      fontSize: orFontSize,
+                      fontFamily: 'HelveticaNeue',
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: orFontSize * 0.05,
+                      color: const Color(0xFFA1A4B2),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+                  _buildInputField(
+                    hint: 'Email address',
+                    fontSize: inputTextFontSize,
+                    height: inputHeight,
+                    focusNode: _emailFocusNode,
+                  ),
+                  const SizedBox(height: 20),
+                  _buildInputField(
+                    hint: 'Password',
+                    fontSize: inputTextFontSize,
+                    height: inputHeight,
+                    obscureText: _obscurePassword,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
+                    ),
+                    focusNode: _passwordFocusNode,
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    height: loginButtonHeight,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // handle login
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF7B6FEC),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(38),
+                        ),
+                      ),
+                      child: Text(
+                        'LOG IN',
+                        style: TextStyle(
+                          fontSize: buttonFontSize,
+                          color: Colors.white,
+                          fontFamily: 'HelveticaNeue',
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // ← Sign Up navigation
+                  Center(
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const SignUnPage(),
                           ),
-                        ),
-                        const Spacer(),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Welcome Back!',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: titleFontSize,
-                        fontFamily: 'HelveticaNeue',
-                        fontWeight: FontWeight.w700,
-                        height: 1.35,
-                        color: Colors.black,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    _buildSocialButton(
-                      asset: 'assets/images/Facebook.svg',
-                      label: 'CONTINUE WITH FACEBOOK',
-                      backgroundColor: const Color(0xFF7583CA),
-                      textColor: Colors.white,
-                      height: buttonHeight,
-                      fontSize: buttonFontSize,
-                      outlined: false,
-                    ),
-                    const SizedBox(height: 20),
-                    _buildSocialButton(
-                      asset: 'assets/images/Google.svg',
-                      label: 'CONTINUE WITH GOOGLE',
-                      backgroundColor: Colors.white,
-                      textColor: Colors.black,
-                      height: buttonHeight,
-                      fontSize: buttonFontSize,
-                      outlined: true,
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'OR LOG IN WITH EMAIL',
-                      style: TextStyle(
-                        fontSize: orFontSize,
-                        fontFamily: 'HelveticaNeue',
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: orFontSize * 0.05,
-                        color: const Color(0xFFA1A4B2),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 20),
-                    _buildInputField(
-                      hint: 'Email address',
-                      fontSize: inputTextFontSize,
-                      height: inputHeight,
-                      focusNode: _emailFocusNode,
-                    ),
-                    const SizedBox(height: 20),
-                    _buildInputField(
-                      hint: 'Password',
-                      fontSize: inputTextFontSize,
-                      height: inputHeight,
-                      obscureText: _obscurePassword,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                        ),
-                        onPressed: () =>
-                            setState(() => _obscurePassword = !_obscurePassword),
-                      ),
-                      focusNode: _passwordFocusNode,
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      height: loginButtonHeight,
-                      child: ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF7B6FEC),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(38),
-                          ),
-                        ),
-                        child: Text(
-                          'LOG IN',
-                          style: TextStyle(
-                            fontSize: buttonFontSize,
-                            color: Colors.white,
+                        );
+                      },
+                      child: RichText(
+                        text: TextSpan(
+                          text: "Don't have an account? ",
+                          style: const TextStyle(
                             fontFamily: 'HelveticaNeue',
-                            fontWeight: FontWeight.w600,
+                            color: Colors.grey,
                           ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Center(
-                      child: TextButton(
-                        onPressed: () {},
-                        child: Text(
-                          'Forgot Password?',
-                          style: TextStyle(
-                            fontSize: forgotFontSize,
-                            fontFamily: 'HelveticaNeue',
-                            color: const Color(0xFF3F414E),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    Center(
-                      child: TextButton(
-                        onPressed: () {},
-                        child: RichText(
-                          text: TextSpan(
-                            text: "Don't have an account? ",
-                            style: const TextStyle(
-                              fontFamily: 'HelveticaNeue',
-                              color: Colors.grey,
-                            ),
-                            children: [
-                              TextSpan(
-                                text: 'Sign Up',
-                                style: TextStyle(
-                                  color: const Color(0xFF7B6FEC),
-                                  fontWeight: FontWeight.w600,
-                                ),
+                          children: [
+                            TextSpan(
+                              text: 'Sign Up',
+                              style: TextStyle(
+                                color: const Color(0xFF7B6FEC),
+                                fontWeight: FontWeight.w600,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    const SizedBox(height: 15),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 15),
+                ],
               ),
             ),
           ),
@@ -248,25 +235,24 @@ class _SignInPageState extends State<SignInPage> {
         const SizedBox(width: 20),
         Padding(
           padding: asset.contains('Facebook')
-              ? const EdgeInsets.only(left: 5, right: 13)
+              ? const EdgeInsets.only(left: 5)
               : EdgeInsets.zero,
-          child: SvgPicture.asset(asset, width: 24, height: 24),
+          child: SvgPicture.asset(
+            asset,
+            width: 24,
+            height: 24,
+          ),
         ),
         const SizedBox(width: 20),
         Expanded(
-          child: Padding(
-            padding: asset.contains('Google')
-                ? const EdgeInsets.only(right: 8)
-                : EdgeInsets.zero,
-            child: Center(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: fontSize,
-                  fontFamily: 'HelveticaNeue',
-                  fontWeight: FontWeight.w600,
-                  color: textColor,
-                ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: fontSize,
+                fontFamily: 'HelveticaNeue',
+                fontWeight: FontWeight.w600,
+                color: textColor,
               ),
             ),
           ),
@@ -277,7 +263,6 @@ class _SignInPageState extends State<SignInPage> {
 
     return SizedBox(
       height: height,
-      width: double.infinity,
       child: outlined
           ? OutlinedButton(
         onPressed: () {},
