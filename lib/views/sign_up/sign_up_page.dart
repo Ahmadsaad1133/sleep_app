@@ -1,7 +1,8 @@
 import 'dart:math';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
+import '../sign_in/sign_in_page.dart';
 class SignUpPage extends StatelessWidget {
   const SignUpPage({super.key});
 
@@ -14,6 +15,13 @@ class SignUpPage extends StatelessWidget {
 
     double getFontSize(double baseSize) => baseSize * scale;
     double getSize(double baseSize) => baseSize * scale;
+
+    void _goToSignIn() {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const SignInPage()),
+      );
+    }
 
     return Scaffold(
       body: SafeArea(
@@ -108,7 +116,7 @@ class SignUpPage extends StatelessWidget {
                       width: double.infinity,
                       height: 63 * scale,
                       child: ElevatedButton(
-                        onPressed: () => debugPrint("Get Started pressed"),
+                        onPressed: _goToSignIn,
                         style: ButtonStyle(
                           backgroundColor: MaterialStateProperty.all(const Color(0xFF8E97FD)),
                           shape: MaterialStateProperty.all(
@@ -129,8 +137,9 @@ class SignUpPage extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: getSize(20)),
-                    Text.rich(
-                      TextSpan(
+                    RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
                         text: 'ALREADY HAVE AN ACCOUNT? ',
                         style: TextStyle(
                           fontSize: getFontSize(14),
@@ -151,10 +160,10 @@ class SignUpPage extends StatelessWidget {
                               letterSpacing: 0.7 * scale,
                               color: const Color(0xFF8E97FD),
                             ),
+                            recognizer: TapGestureRecognizer()..onTap = _goToSignIn,
                           ),
                         ],
                       ),
-                      textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 20),
                   ],
@@ -167,5 +176,6 @@ class SignUpPage extends StatelessWidget {
     );
   }
 }
+
 
 

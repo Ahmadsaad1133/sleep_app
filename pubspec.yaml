@@ -25,6 +25,10 @@ flutter:
     - assets/images/logo.svg
     - assets/images/Image1.svg
     - assets/images/Frame.svg
+    - assets/images/Frame4.svg
+    - assets/images/NavigateLeft.svg
+    - assets/images/Facebook.svg
+    - assets/images/Google.svg
 
   fonts:
     - family: AirbnbCereal
