@@ -20,10 +20,7 @@ class _SignInPageState extends State<SignInPage> {
     _passwordFocusNode.addListener(_onFocusChange);
   }
 
-  void _onFocusChange() {
-    // Optionally handle focus changes
-    setState(() {});
-  }
+  void _onFocusChange() => setState(() {});
 
   @override
   void dispose() {
@@ -35,7 +32,6 @@ class _SignInPageState extends State<SignInPage> {
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
-    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
 
     const svgOrigW = 547.0;
     const svgOrigH = 428.0;
@@ -47,14 +43,22 @@ class _SignInPageState extends State<SignInPage> {
     double orFontSize = (w * 0.03).clamp(10.0, 14.0);
     double inputTextFontSize = (w * 0.04).clamp(12.0, 16.0);
     double forgotFontSize = (w * 0.035).clamp(12.0, 14.0);
-    double inputHeight = w < 320 ? 28 : w < 400 ? 34 : w < 600 ? 44 : 60;
+    double inputHeight = w < 320
+        ? 28
+        : w < 400
+        ? 34
+        : w < 600
+        ? 44
+        : 60;
     double loginButtonHeight = (w * 0.16).clamp(48.0, 63.0);
     const hp = 20.0;
 
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       body: Stack(
+        clipBehavior: Clip.none,
         children: [
+          // SVG background
           Positioned(
             top: 0,
             left: 0,
@@ -65,10 +69,12 @@ class _SignInPageState extends State<SignInPage> {
               fit: BoxFit.cover,
             ),
           ),
+
+          // SafeArea + OverflowBox
           SafeArea(
-            child: SingleChildScrollView(
-              reverse: true,
-              padding: EdgeInsets.only(bottom: keyboardHeight),
+            child: OverflowBox(
+              maxHeight: double.infinity,    // ← allow unlimited height
+              alignment: Alignment.topCenter,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: hp),
                 child: Column(
@@ -89,18 +95,15 @@ class _SignInPageState extends State<SignInPage> {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: Text(
-                        'Welcome Back!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: titleFontSize,
-                          fontFamily: 'HelveticaNeue',
-                          fontWeight: FontWeight.w700,
-                          height: 1.35,
-                          color: Colors.black,
-                        ),
+                    Text(
+                      'Welcome Back!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: titleFontSize,
+                        fontFamily: 'HelveticaNeue',
+                        fontWeight: FontWeight.w700,
+                        height: 1.35,
+                        color: Colors.black,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -154,7 +157,8 @@ class _SignInPageState extends State<SignInPage> {
                               ? Icons.visibility_off
                               : Icons.visibility,
                         ),
-                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        onPressed: () =>
+                            setState(() => _obscurePassword = !_obscurePassword),
                       ),
                       focusNode: _passwordFocusNode,
                     ),
@@ -246,11 +250,7 @@ class _SignInPageState extends State<SignInPage> {
           padding: asset.contains('Facebook')
               ? const EdgeInsets.only(left: 5, right: 13)
               : EdgeInsets.zero,
-          child: SvgPicture.asset(
-            asset,
-            width: 24,
-            height: 24,
-          ),
+          child: SvgPicture.asset(asset, width: 24, height: 24),
         ),
         const SizedBox(width: 20),
         Expanded(
