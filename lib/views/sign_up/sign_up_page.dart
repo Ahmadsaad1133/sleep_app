@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '/views/welcome_page/welcome_page.dart'; // <-- Update this to your actual path
 
 class SignUnPage extends StatefulWidget {
   const SignUnPage({Key? key}) : super(key: key);
@@ -202,7 +203,7 @@ class _SignUnPageState extends State<SignUnPage> {
                             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             checkColor: Colors.white,
                             activeColor: const Color(0xFF8E97FD),
-                            side: BorderSide(color: const Color(0xFFA1A4B2)),
+                            side: const BorderSide(color: Color(0xFFA1A4B2)),
                             value: _acceptedPolicy,
                             onChanged: (val) => setState(() => _acceptedPolicy = val ?? false),
                           ),
@@ -213,7 +214,12 @@ class _SignUnPageState extends State<SignUnPage> {
                     SizedBox(
                       height: loginButtonHeight,
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const WelcomePage()),
+                          );
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF7B6FEC),
                           shape: RoundedRectangleBorder(

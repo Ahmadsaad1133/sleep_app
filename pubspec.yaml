@@ -29,13 +29,21 @@ flutter:
     - assets/images/NavigateLeft.svg
     - assets/images/Facebook.svg
     - assets/images/Google.svg
+    - assets/images/WelcomeImage.png
+    - assets/images/logo2.svg
 
   fonts:
     - family: AirbnbCereal
       fonts:
         - asset: assets/fonts/AirbnbCerealBook.ttf
           weight: 400
-    - family: HelveticaNeue
+
+    - family: HelveticaNeueRegular
+      fonts:
+        - asset: assets/fonts/HelveticaNeueLTStd-Rg.ttf
+          weight: 400
+
+    - family: HelveticaNeueBold
       fonts:
         - asset: assets/fonts/HelveticaNeueLTStd-Bd.otf
           weight: 700

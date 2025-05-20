@@ -94,7 +94,7 @@ class HomePage extends StatelessWidget {
                       style: TextStyle(
                         fontSize: getFontSize(30),
                         fontFamily: 'HelveticaNeue',
-                        fontWeight: FontWeight.w400,
+                        fontWeight: FontWeight.w700,
                         height: 1.35,
                       ),
                       textAlign: TextAlign.center,
@@ -144,7 +144,7 @@ class HomePage extends StatelessWidget {
                         style: TextStyle(
                           fontSize: getFontSize(14),
                           fontFamily: 'HelveticaNeue',
-                          fontWeight: FontWeight.w400,
+                          fontWeight: FontWeight.w700,
                           height: 1.08,
                           letterSpacing: 0.7 * scale,
                           color: const Color(0xFFA1A4B2),
@@ -155,7 +155,7 @@ class HomePage extends StatelessWidget {
                             style: TextStyle(
                               fontSize: getFontSize(14),
                               fontFamily: 'HelveticaNeue',
-                              fontWeight: FontWeight.w400,
+                              fontWeight: FontWeight.w700,
                               height: 1.08,
                               letterSpacing: 0.7 * scale,
                               color: const Color(0xFF8E97FD),
