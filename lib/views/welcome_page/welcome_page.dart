@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '/views/choose_topic/choose_topic_page.dart'; // Make sure this path is correct
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({Key? key}) : super(key: key);
@@ -30,14 +31,12 @@ class WelcomePage extends StatelessWidget {
             ),
             child: const SizedBox.expand(),
           ),
-
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
                 children: [
                   const SizedBox(height: 30),
-
                   Padding(
                     padding: const EdgeInsets.only(top: 10.0),
                     child: Row(
@@ -73,7 +72,6 @@ class WelcomePage extends StatelessWidget {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 30),
                   Text(
                     'Hi Afsar, Welcome',
@@ -99,15 +97,18 @@ class WelcomePage extends StatelessWidget {
                       letterSpacing: 0.01 * getResponsiveSize(30.0),
                     ),
                   ),
-
                   const Spacer(),
-
                   SizedBox(
                     width: screenWidth > 390 ? 374 : double.infinity,
                     height: getResponsiveSize(63.0),
                     child: ElevatedButton(
                       onPressed: () {
-                        // TODO: Handle button press
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ChooseTopicPage(),
+                          ),
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
@@ -127,7 +128,6 @@ class WelcomePage extends StatelessWidget {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 30),
                 ],
               ),
