@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
+// Update this path to point at your actual HomePage file location:
+import '/views/home_page_7/home_Page_7.dart';
+
 class ReminderPage extends StatefulWidget {
   const ReminderPage({Key? key}) : super(key: key);
 
@@ -32,20 +35,14 @@ class _ReminderPageState extends State<ReminderPage> {
     }
 
     const double spacing = 20.0;
-
-    final double titleFontSize = 28 * scale;
-    final double subtitleFontSize = 16 * scale;
-    final double noThanksFontSize = 14 * scale;
-
     final primary = const Color(0xFF8E97FD);
+    final selectedDayColor = const Color(0xFF3F414E);
+    final unselectedPickerColor = const Color(0xFFA1A4B2);
 
-    final titleStyle = TextStyle(
-      fontFamily: 'HelveticaNeueBold',
-      fontSize: titleFontSize,
-      fontWeight: FontWeight.w700,
-      height: 1.35,
-      color: const Color(0xFF3F414E),
-    );
+    // Text styles
+    final titleFontSize = 28 * scale;
+    final subtitleFontSize = 16 * scale;
+    final noThanksFontSize = 14 * scale;
 
     final smallTitleStyle = TextStyle(
       fontFamily: 'HelveticaNeueBold',
@@ -55,17 +52,11 @@ class _ReminderPageState extends State<ReminderPage> {
       color: const Color(0xFF3F414E),
     );
 
-    final subtitleStyle = TextStyle(
+    final largerSubtitleStyle = TextStyle(
       fontFamily: 'HelveticaNeueRegular',
-      fontSize: subtitleFontSize,
-      fontWeight: FontWeight.w400,
-      height: 1.5,
-      color: const Color(0xFFA1A4B2),
-    );
-
-    final largerSubtitleStyle = subtitleStyle.copyWith(
       fontSize: subtitleFontSize * 1.2,
       fontWeight: FontWeight.w500,
+      height: 1.5,
       color: const Color(0xFFA1A4B2),
     );
 
@@ -75,22 +66,22 @@ class _ReminderPageState extends State<ReminderPage> {
       fontSize: noThanksFontSize,
       height: 1.08,
       letterSpacing: 0.05,
-      color: const Color(0xFF3F414E),
+      color: selectedDayColor,
     );
 
-    // Day button size: base 40 px scaled by scale factor but constrained min and max
+    // Day button size constraints
     double dayButtonSize = 40 * scale;
-    if (dayButtonSize < 30) dayButtonSize = 30; // minimum size
-    if (dayButtonSize > 50) dayButtonSize = 50; // maximum size
+    dayButtonSize = dayButtonSize.clamp(30.0, 50.0);
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding:
-          EdgeInsets.symmetric(horizontal: 20 * scale).copyWith(top: 40 * scale),
+          padding: EdgeInsets.symmetric(horizontal: 20 * scale)
+              .copyWith(top: 40 * scale),
           child: Column(
             children: [
+              // Content
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
@@ -101,10 +92,17 @@ class _ReminderPageState extends State<ReminderPage> {
                       Text('like to meditate?', style: smallTitleStyle),
                       SizedBox(height: 24 * scale),
 
-                      Text('Any time you can choose but we recommend', style: largerSubtitleStyle),
-                      Text('first thing in the morning.', style: largerSubtitleStyle),
+                      Text(
+                        'Any time you can choose but we recommend',
+                        style: largerSubtitleStyle,
+                      ),
+                      Text(
+                        'first thing in the morning.',
+                        style: largerSubtitleStyle,
+                      ),
                       SizedBox(height: spacing),
 
+                      // Time picker with custom unselected color and larger size
                       Container(
                         width: double.infinity,
                         height: 212 * scale,
@@ -113,16 +111,27 @@ class _ReminderPageState extends State<ReminderPage> {
                           color: const Color(0xFFF5F5F5),
                           borderRadius: BorderRadius.circular(12 * scale),
                         ),
-                        child: CupertinoDatePicker(
-                          mode: CupertinoDatePickerMode.time,
-                          initialDateTime: _selectedTime,
-                          use24hFormat: false,
-                          onDateTimeChanged: (newTime) {
-                            setState(() {
-                              _selectedTime = newTime;
-                            });
-                          },
+                        child: CupertinoTheme(
+                          data: CupertinoTheme.of(context).copyWith(
+                            textTheme: CupertinoTextThemeData(
+                              dateTimePickerTextStyle: TextStyle(
+                                fontSize: 30 * scale,
+                                color: Colors.black, // Set to black for selected items
+                              ),
+                            ),
+                          ),
+                          child: CupertinoDatePicker(
+                            mode: CupertinoDatePickerMode.time,
+                            initialDateTime: _selectedTime,
+                            use24hFormat: false,
+                            onDateTimeChanged: (newTime) {
+                              setState(() {
+                                _selectedTime = newTime;
+                              });
+                            },
+                          ),
                         ),
+
                       ),
                       SizedBox(height: spacing),
 
@@ -131,7 +140,10 @@ class _ReminderPageState extends State<ReminderPage> {
                       Text('like to meditate?', style: smallTitleStyle),
                       SizedBox(height: spacing),
 
-                      Text('Everyday is best, but we recommend picking', style: largerSubtitleStyle),
+                      Text(
+                        'Everyday is best, but we recommend picking',
+                        style: largerSubtitleStyle,
+                      ),
                       Text('at least five.', style: largerSubtitleStyle),
                       SizedBox(height: spacing),
                     ],
@@ -139,11 +151,11 @@ class _ReminderPageState extends State<ReminderPage> {
                 ),
               ),
 
-              // Days chooser row moved here - above Save button
+              // Days selector
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: _days.map((day) {
-                  final bool selected = _selectedDays.contains(day);
+                  final selected = _selectedDays.contains(day);
                   return GestureDetector(
                     onTap: () {
                       setState(() {
@@ -158,10 +170,12 @@ class _ReminderPageState extends State<ReminderPage> {
                       width: dayButtonSize,
                       height: dayButtonSize,
                       decoration: BoxDecoration(
-                        color: selected ? primary : Colors.white,
-                        borderRadius: BorderRadius.circular(dayButtonSize / 2),
+                        color: selected ? selectedDayColor : Colors.white,
+                        shape: BoxShape.circle,
                         border: Border.all(
-                          color: selected ? primary : const Color(0xFFE6E7F2),
+                          color: selected
+                              ? selectedDayColor
+                              : const Color(0xFFE6E7F2),
                           width: 1.5,
                         ),
                       ),
@@ -170,7 +184,9 @@ class _ReminderPageState extends State<ReminderPage> {
                         day,
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          color: selected ? Colors.white : const Color(0xFF3F414E),
+                          color: selected
+                              ? Colors.white
+                              : const Color(0xFF3F414E),
                           fontSize: dayButtonSize * 0.35,
                         ),
                       ),
@@ -181,7 +197,7 @@ class _ReminderPageState extends State<ReminderPage> {
 
               SizedBox(height: spacing),
 
-              // Save button and No Thanks text
+              // Save button + No Thanks
               Column(
                 children: [
                   SizedBox(
@@ -196,7 +212,11 @@ class _ReminderPageState extends State<ReminderPage> {
                         padding: EdgeInsets.zero,
                       ),
                       onPressed: () {
-                        // TODO: Save logic
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const HomePage7()),
+                        );
                       },
                       child: Text(
                         'SAVE',
@@ -209,9 +229,16 @@ class _ReminderPageState extends State<ReminderPage> {
                     ),
                   ),
                   SizedBox(height: 12 * scale),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 5, bottom: 10),
-                    child: Center(
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const HomePage7()),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 5, bottom: 10),
                       child: Text(
                         'No Thanks',
                         style: noThanksButtonStyle,

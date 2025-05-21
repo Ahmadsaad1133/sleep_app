@@ -50,6 +50,12 @@ class _SignInPageState extends State<SignInPage> {
     double loginButtonHeight = (w * 0.16).clamp(48.0, 63.0);
     const hp = 20.0;
 
+    // Responsive size for Navigate Left icon
+    final double navigateLeftSize = (w * 0.13).clamp(30.0, 55.0);
+
+    // Responsive font size for "Forgot Password?"
+    double forgotPasswordFontSize = (w * 0.035).clamp(12.0, 16.0);
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Stack(
@@ -80,8 +86,8 @@ class _SignInPageState extends State<SignInPage> {
                         onTap: () => Navigator.pop(context),
                         child: SvgPicture.asset(
                           'assets/images/NavigateLeft.svg',
-                          width: 55,
-                          height: 55,
+                          width: navigateLeftSize,
+                          height: navigateLeftSize,
                         ),
                       ),
                       const Spacer(),
@@ -96,10 +102,10 @@ class _SignInPageState extends State<SignInPage> {
                       fontFamily: 'HelveticaNeue',
                       fontWeight: FontWeight.w700,
                       height: 1.35,
-                      color: Colors.black,
+                      color: const Color(0xFF3F414E),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 28),
                   _buildSocialButton(
                     asset: 'assets/images/Facebook.svg',
                     label: 'CONTINUE WITH FACEBOOK',
@@ -109,7 +115,7 @@ class _SignInPageState extends State<SignInPage> {
                     fontSize: buttonFontSize,
                     outlined: false,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 15),
                   _buildSocialButton(
                     asset: 'assets/images/Google.svg',
                     label: 'CONTINUE WITH GOOGLE',
@@ -119,7 +125,7 @@ class _SignInPageState extends State<SignInPage> {
                     fontSize: buttonFontSize,
                     outlined: true,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 28),
                   Text(
                     'OR LOG IN WITH EMAIL',
                     style: TextStyle(
@@ -131,14 +137,14 @@ class _SignInPageState extends State<SignInPage> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 28),
                   _buildInputField(
                     hint: 'Email address',
                     fontSize: inputTextFontSize,
                     height: inputHeight,
                     focusNode: _emailFocusNode,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 15),
                   _buildInputField(
                     hint: 'Password',
                     fontSize: inputTextFontSize,
@@ -179,8 +185,27 @@ class _SignInPageState extends State<SignInPage> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  Center(
+                    child: TextButton(
+                      onPressed: () {
+                        // TODO: handle forgot password action
+                      },
+                      child: Text(
+                        'Forgot Password?',
+                        style: TextStyle(
+                          fontFamily: 'HelveticaNeue',
+                          fontSize: forgotPasswordFontSize,
+                          fontWeight: FontWeight.w400,
+                          height: 1.08, // line height 108%
+                          letterSpacing:
+                          forgotPasswordFontSize * 0.05, // 5% of font size
+                          color: const Color(0xFF3F414E),
+                        ),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 20),
-                  // ← Sign Up navigation
                   Center(
                     child: TextButton(
                       onPressed: () {
