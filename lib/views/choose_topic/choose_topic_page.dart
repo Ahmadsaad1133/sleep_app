@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../reminders/reminder_page.dart';
 
 class ChooseTopicPage extends StatelessWidget {
   const ChooseTopicPage({Key? key}) : super(key: key);
@@ -16,74 +17,76 @@ class ChooseTopicPage extends StatelessWidget {
     List<Widget>? extraTopWidgets,
     double scale = 1.0,
     Widget? customLabelWidget,
+    VoidCallback? onTap,
   }) {
     final width = baseWidth * scale;
     final height = baseHeight * scale;
     final svgWidth = baseSvgWidth != null ? baseSvgWidth * scale : null;
     final svgHeight = baseSvgHeight != null ? baseSvgHeight * scale : null;
 
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(10 * scale),
-      ),
-      padding: EdgeInsets.symmetric(horizontal: 10 * scale),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          if (svgAsset != null)
-            noPaddingTopForSvg
-                ? Align(
-              alignment: Alignment.topCenter,
-              child: SvgPicture.asset(
-                svgAsset,
-                width: svgWidth,
-                height: svgHeight,
-                fit: BoxFit.contain,
-              ),
-            )
-                : Padding(
-              padding: EdgeInsets.only(top: 8.0 * scale),
-              child: SvgPicture.asset(
-                svgAsset,
-                width: svgWidth,
-                height: svgHeight,
-                fit: BoxFit.contain,
-              ),
-            ),
-
-          if (extraTopWidgets != null)
-            ...extraTopWidgets.map(
-                  (widget) => Padding(
-                padding: EdgeInsets.only(top: 8.0 * scale),
-                child: widget,
-              ),
-            ),
-
-          if (customLabelWidget != null)
-            Padding(
-              padding: EdgeInsets.only(bottom: 12.0 * scale),
-              child: customLabelWidget,
-            )
-          else if (label != null)
-            Padding(
-              padding: EdgeInsets.only(bottom: 12.0 * scale),
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'HelveticaNeue',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 18 * scale,
-                  height: 1.35,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(10 * scale),
+        ),
+        padding: EdgeInsets.symmetric(horizontal: 10 * scale),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            if (svgAsset != null)
+              noPaddingTopForSvg
+                  ? Align(
+                alignment: Alignment.topCenter,
+                child: SvgPicture.asset(
+                  svgAsset,
+                  width: svgWidth,
+                  height: svgHeight,
+                  fit: BoxFit.contain,
                 ),
-                textAlign: TextAlign.center,
+              )
+                  : Padding(
+                padding: EdgeInsets.only(top: 8.0 * scale),
+                child: SvgPicture.asset(
+                  svgAsset,
+                  width: svgWidth,
+                  height: svgHeight,
+                  fit: BoxFit.contain,
+                ),
               ),
-            ),
-        ],
+            if (extraTopWidgets != null)
+              ...extraTopWidgets.map(
+                    (widget) => Padding(
+                  padding: EdgeInsets.only(top: 8.0 * scale),
+                  child: widget,
+                ),
+              ),
+            if (customLabelWidget != null)
+              Padding(
+                padding: EdgeInsets.only(bottom: 12.0 * scale),
+                child: customLabelWidget,
+              )
+            else if (label != null)
+              Padding(
+                padding: EdgeInsets.only(bottom: 12.0 * scale),
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontFamily: 'HelveticaNeue',
+                    fontWeight: FontWeight.w600,
+                    fontSize: 18 * scale,
+                    height: 1.35,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -166,7 +169,6 @@ class ChooseTopicPage extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 30 * scale),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,9 +189,11 @@ class ChooseTopicPage extends StatelessWidget {
                                 style: labelTextStyle,
                                 textAlign: TextAlign.center,
                               ),
+                              onTap: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const ReminderPage()));
+                              },
                             ),
                             SizedBox(height: 15 * scale),
-
                             buildTopicWidget(
                               baseWidth: 176,
                               baseHeight: 167,
@@ -212,9 +216,11 @@ class ChooseTopicPage extends StatelessWidget {
                                   textAlign: TextAlign.left,
                                 ),
                               ),
+                              onTap: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const ReminderPage()));
+                              },
                             ),
                             SizedBox(height: 15 * scale),
-
                             buildTopicWidget(
                               baseWidth: 176,
                               baseHeight: 210,
@@ -237,9 +243,11 @@ class ChooseTopicPage extends StatelessWidget {
                                   textAlign: TextAlign.left,
                                 ),
                               ),
+                              onTap: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const ReminderPage()));
+                              },
                             ),
                             SizedBox(height: 15 * scale),
-
                             buildTopicWidget(
                               baseWidth: 176,
                               baseHeight: 210,
@@ -254,6 +262,9 @@ class ChooseTopicPage extends StatelessWidget {
                                 style: labelTextStyle,
                                 textAlign: TextAlign.center,
                               ),
+                              onTap: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const ReminderPage()));
+                              },
                             ),
                           ],
                         ),
@@ -281,9 +292,11 @@ class ChooseTopicPage extends StatelessWidget {
                                   textAlign: TextAlign.left,
                                 ),
                               ),
+                              onTap: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const ReminderPage()));
+                              },
                             ),
                             SizedBox(height: 15 * scale),
-
                             buildTopicWidget(
                               baseWidth: 176,
                               baseHeight: 210,
@@ -298,9 +311,11 @@ class ChooseTopicPage extends StatelessWidget {
                                 ),
                               ],
                               scale: scale,
+                              onTap: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const ReminderPage()));
+                              },
                             ),
                             SizedBox(height: 15 * scale),
-
                             buildTopicWidget(
                               baseWidth: 176,
                               baseHeight: 167,
@@ -325,9 +340,11 @@ class ChooseTopicPage extends StatelessWidget {
                                   textAlign: TextAlign.left,
                                 ),
                               ),
+                              onTap: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const ReminderPage()));
+                              },
                             ),
                             SizedBox(height: 15 * scale),
-
                             buildTopicWidget(
                               baseWidth: 176,
                               baseHeight: 210,
@@ -342,6 +359,9 @@ class ChooseTopicPage extends StatelessWidget {
                                 style: labelTextStyle,
                                 textAlign: TextAlign.center,
                               ),
+                              onTap: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const ReminderPage()));
+                              },
                             ),
                           ],
                         ),
