@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '/views/course_details/course_details_page.dart'; // <-- Make sure this file exists in your lib/
 
 class HomePage7 extends StatefulWidget {
   const HomePage7({Key? key}) : super(key: key);
@@ -37,6 +38,7 @@ class _HomePage7State extends State<HomePage7> {
       required String imageAsset,
       required String title,
       required String subtitle,
+      required bool isCourse,
       Color titleColor = const Color(0xFFFFECCC),
       Color subtitleColor = const Color(0xFFF7E8D0),
       Color timeTextColor = const Color(0xFFEBEAEC),
@@ -121,7 +123,16 @@ class _HomePage7State extends State<HomePage7> {
                       width: buttonWidth,
                       height: buttonHeight,
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          if (isCourse) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const CourseDetailsPage(),
+                              ),
+                            );
+                          }
+                        },
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(
@@ -141,7 +152,8 @@ class _HomePage7State extends State<HomePage7> {
                           MaterialStateProperty.all(buttonBgColor),
                           shape: MaterialStateProperty.all(
                             RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(getSize(25)),
+                              borderRadius:
+                              BorderRadius.circular(getSize(25)),
                             ),
                           ),
                           elevation: MaterialStateProperty.all(0),
@@ -251,8 +263,9 @@ class _HomePage7State extends State<HomePage7> {
                 fontSize: getFontSize(12),
                 fontWeight: FontWeight.w500,
                 fontFamily: 'HelveticaNeue',
-                color:
-                isSelected ? const Color(0xFF8E97FD) : const Color(0xFFA0A3B1),
+                color: isSelected
+                    ? const Color(0xFF8E97FD)
+                    : const Color(0xFFA0A3B1),
               ),
             ),
           ],
@@ -265,7 +278,6 @@ class _HomePage7State extends State<HomePage7> {
         Navigator.pop(context);
         return false;
       },
-
       child: Scaffold(
         body: SafeArea(
           child: SingleChildScrollView(
@@ -335,6 +347,7 @@ class _HomePage7State extends State<HomePage7> {
                         imageAsset: 'assets/images/apple.svg',
                         title: 'Basics',
                         subtitle: 'COURSE',
+                        isCourse: true,
                       ),
                       SizedBox(width: getSize(12)),
                       buildCard(
@@ -342,6 +355,7 @@ class _HomePage7State extends State<HomePage7> {
                         imageAsset: 'assets/images/woman.svg',
                         title: 'Relaxation',
                         subtitle: 'MUSIC',
+                        isCourse: false,
                         titleColor: Colors.black,
                         subtitleColor: Colors.black,
                         timeTextColor: Colors.black,
@@ -470,9 +484,7 @@ class _HomePage7State extends State<HomePage7> {
                       scrollDirection: Axis.horizontal,
                       itemCount: 10,
                       padding: EdgeInsets.only(right: getSize(20)),
-                      itemBuilder: (context, index) {
-                        return buildHorizontalItem(index);
-                      },
+                      itemBuilder: (context, index) => buildHorizontalItem(index),
                     ),
                   ),
                   SizedBox(height: getSize(40)),

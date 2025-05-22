@@ -57,7 +57,7 @@ class _SignInPageState extends State<SignInPage> {
     double forgotPasswordFontSize = (w * 0.035).clamp(12.0, 16.0);
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true, // allow resize when keyboard shows
       body: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -76,167 +76,170 @@ class _SignInPageState extends State<SignInPage> {
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: hp),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: SvgPicture.asset(
-                          'assets/images/NavigateLeft.svg',
-                          width: navigateLeftSize,
-                          height: navigateLeftSize,
-                        ),
-                      ),
-                      const Spacer(),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Welcome Back!',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: titleFontSize,
-                      fontFamily: 'HelveticaNeue',
-                      fontWeight: FontWeight.w700,
-                      height: 1.35,
-                      color: const Color(0xFF3F414E),
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  _buildSocialButton(
-                    asset: 'assets/images/Facebook.svg',
-                    label: 'CONTINUE WITH FACEBOOK',
-                    backgroundColor: const Color(0xFF7583CA),
-                    textColor: Colors.white,
-                    height: buttonHeight,
-                    fontSize: buttonFontSize,
-                    outlined: false,
-                  ),
-                  const SizedBox(height: 15),
-                  _buildSocialButton(
-                    asset: 'assets/images/Google.svg',
-                    label: 'CONTINUE WITH GOOGLE',
-                    backgroundColor: Colors.white,
-                    textColor: Colors.black,
-                    height: buttonHeight,
-                    fontSize: buttonFontSize,
-                    outlined: true,
-                  ),
-                  const SizedBox(height: 28),
-                  Text(
-                    'OR LOG IN WITH EMAIL',
-                    style: TextStyle(
-                      fontSize: orFontSize,
-                      fontFamily: 'HelveticaNeue',
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: orFontSize * 0.05,
-                      color: const Color(0xFFA1A4B2),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 28),
-                  _buildInputField(
-                    hint: 'Email address',
-                    fontSize: inputTextFontSize,
-                    height: inputHeight,
-                    focusNode: _emailFocusNode,
-                  ),
-                  const SizedBox(height: 15),
-                  _buildInputField(
-                    hint: 'Password',
-                    fontSize: inputTextFontSize,
-                    height: inputHeight,
-                    obscureText: _obscurePassword,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                      ),
-                      onPressed: () =>
-                          setState(() => _obscurePassword = !_obscurePassword),
-                    ),
-                    focusNode: _passwordFocusNode,
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    height: loginButtonHeight,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // handle login
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF7B6FEC),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(38),
-                        ),
-                      ),
-                      child: Text(
-                        'LOG IN',
-                        style: TextStyle(
-                          fontSize: buttonFontSize,
-                          color: Colors.white,
-                          fontFamily: 'HelveticaNeue',
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Center(
-                    child: TextButton(
-                      onPressed: () {
-                        // TODO: handle forgot password action
-                      },
-                      child: Text(
-                        'Forgot Password?',
-                        style: TextStyle(
-                          fontFamily: 'HelveticaNeue',
-                          fontSize: forgotPasswordFontSize,
-                          fontWeight: FontWeight.w400,
-                          height: 1.08, // line height 108%
-                          letterSpacing:
-                          forgotPasswordFontSize * 0.05, // 5% of font size
-                          color: const Color(0xFF3F414E),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Center(
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const SignUnPage(),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(bottom: 20),
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: SvgPicture.asset(
+                            'assets/images/NavigateLeft.svg',
+                            width: navigateLeftSize,
+                            height: navigateLeftSize,
                           ),
-                        );
-                      },
-                      child: RichText(
-                        text: TextSpan(
-                          text: "Don't have an account? ",
-                          style: const TextStyle(
+                        ),
+                        const Spacer(),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Welcome Back!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: titleFontSize,
+                        fontFamily: 'HelveticaNeue',
+                        fontWeight: FontWeight.w700,
+                        height: 1.35,
+                        color: const Color(0xFF3F414E),
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    _buildSocialButton(
+                      asset: 'assets/images/Facebook.svg',
+                      label: 'CONTINUE WITH FACEBOOK',
+                      backgroundColor: const Color(0xFF7583CA),
+                      textColor: Colors.white,
+                      height: buttonHeight,
+                      fontSize: buttonFontSize,
+                      outlined: false,
+                    ),
+                    const SizedBox(height: 15),
+                    _buildSocialButton(
+                      asset: 'assets/images/Google.svg',
+                      label: 'CONTINUE WITH GOOGLE',
+                      backgroundColor: Colors.white,
+                      textColor: Colors.black,
+                      height: buttonHeight,
+                      fontSize: buttonFontSize,
+                      outlined: true,
+                    ),
+                    const SizedBox(height: 28),
+                    Text(
+                      'OR LOG IN WITH EMAIL',
+                      style: TextStyle(
+                        fontSize: orFontSize,
+                        fontFamily: 'HelveticaNeue',
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: orFontSize * 0.05,
+                        color: const Color(0xFFA1A4B2),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 28),
+                    _buildInputField(
+                      hint: 'Email address',
+                      fontSize: inputTextFontSize,
+                      height: inputHeight,
+                      focusNode: _emailFocusNode,
+                    ),
+                    const SizedBox(height: 15),
+                    _buildInputField(
+                      hint: 'Password',
+                      fontSize: inputTextFontSize,
+                      height: inputHeight,
+                      obscureText: _obscurePassword,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                        onPressed: () =>
+                            setState(() => _obscurePassword = !_obscurePassword),
+                      ),
+                      focusNode: _passwordFocusNode,
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      height: loginButtonHeight,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // handle login
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF7B6FEC),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(38),
+                          ),
+                        ),
+                        child: Text(
+                          'LOG IN',
+                          style: TextStyle(
+                            fontSize: buttonFontSize,
+                            color: Colors.white,
                             fontFamily: 'HelveticaNeue',
-                            color: Colors.grey,
+                            fontWeight: FontWeight.w600,
                           ),
-                          children: [
-                            TextSpan(
-                              text: 'Sign Up',
-                              style: TextStyle(
-                                color: const Color(0xFF7B6FEC),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 15),
-                ],
+                    const SizedBox(height: 12),
+                    Center(
+                      child: TextButton(
+                        onPressed: () {
+                          // TODO: handle forgot password action
+                        },
+                        child: Text(
+                          'Forgot Password?',
+                          style: TextStyle(
+                            fontFamily: 'HelveticaNeue',
+                            fontSize: forgotPasswordFontSize,
+                            fontWeight: FontWeight.w400,
+                            height: 1.08,
+                            letterSpacing: forgotPasswordFontSize * 0.05,
+                            color: const Color(0xFF3F414E),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Center(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const SignUnPage(),
+                            ),
+                          );
+                        },
+                        child: RichText(
+                          text: TextSpan(
+                            text: "Don't have an account? ",
+                            style: const TextStyle(
+                              fontFamily: 'HelveticaNeue',
+                              color: Colors.grey,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: 'Sign Up',
+                                style: TextStyle(
+                                  color: const Color(0xFF7B6FEC),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                  ],
+                ),
               ),
             ),
           ),

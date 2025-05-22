@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '/views/welcome_page/welcome_page.dart'; // <-- Update this to your actual path
+import '/views/welcome_page/welcome_page.dart'; // <-- adjust path as needed
 
 class SignUnPage extends StatefulWidget {
   const SignUnPage({Key? key}) : super(key: key);
@@ -37,8 +37,7 @@ class _SignUnPageState extends State<SignUnPage> {
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
-    const svgOrigW = 547.0;
-    const svgOrigH = 428.0;
+    const svgOrigW = 547.0, svgOrigH = 428.0;
     final svgHeight = w * (svgOrigH / svgOrigW);
 
     double titleFontSize = (w * 0.06).clamp(18.0, 28.0);
@@ -47,24 +46,23 @@ class _SignUnPageState extends State<SignUnPage> {
     double orFontSize = (w * 0.03).clamp(10.0, 14.0);
     double inputTextFontSize = (w * 0.04).clamp(12.0, 16.0);
     double policyFontSize = (w * 0.035).clamp(10.0, 14.0);
-
-    double inputHeight;
-    if (w < 320) inputHeight = 28;
-    else if (w < 400) inputHeight = 34;
-    else if (w < 600) inputHeight = 44;
-    else inputHeight = 60;
-
+    double inputHeight = w < 320
+        ? 28
+        : w < 400
+        ? 34
+        : w < 600
+        ? 44
+        : 60;
     double loginButtonHeight = (w * 0.16).clamp(48.0, 63.0);
     const hp = 20.0;
-
-    // Dynamic size for Navigate Left icon
     double navIconSize = (w * 0.13).clamp(30.0, 55.0);
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       body: Stack(
         clipBehavior: Clip.none,
         children: [
+          // SVG background
           Positioned(
             top: 0,
             left: 0,
@@ -75,173 +73,170 @@ class _SignUnPageState extends State<SignUnPage> {
               fit: BoxFit.cover,
             ),
           ),
+
           SafeArea(
-            child: OverflowBox(
-              maxHeight: double.infinity,
-              alignment: Alignment.topCenter,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: hp),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.only(bottom: 20), // <-- Added bottom padding here
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          GestureDetector(
-                            onTap: () => Navigator.pop(context),
-                            child: SvgPicture.asset(
-                              'assets/images/NavigateLeft.svg',
-                              width: navIconSize,
-                              height: navIconSize,
-                            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: hp),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(bottom: 20),
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: SvgPicture.asset(
+                            'assets/images/NavigateLeft.svg',
+                            width: navIconSize,
+                            height: navIconSize,
                           ),
-                          const Spacer(),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        'Create your account',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: titleFontSize,
-                          fontFamily: 'HelveticaNeue',
-                          fontWeight: FontWeight.w700,
-                          height: 1.35,
-                          color: const Color(0xFF3F414E),
                         ),
+                        const Spacer(),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Create your account',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: titleFontSize,
+                        fontFamily: 'HelveticaNeue',
+                        fontWeight: FontWeight.w700,
+                        height: 1.35,
+                        color: const Color(0xFF3F414E),
                       ),
-                      const SizedBox(height: 28),
-                      _buildSocialButton(
-                        asset: 'assets/images/Facebook.svg',
-                        label: 'CONTINUE WITH FACEBOOK',
-                        backgroundColor: const Color(0xFF7583CA),
-                        textColor: Colors.white,
-                        height: buttonHeight,
-                        fontSize: buttonFontSize,
-                        outlined: false,
+                    ),
+                    const SizedBox(height: 28),
+                    _buildSocialButton(
+                      asset: 'assets/images/Facebook.svg',
+                      label: 'CONTINUE WITH FACEBOOK',
+                      backgroundColor: const Color(0xFF7583CA),
+                      textColor: Colors.white,
+                      height: buttonHeight,
+                      fontSize: buttonFontSize,
+                      outlined: false,
+                    ),
+                    const SizedBox(height: 15),
+                    _buildSocialButton(
+                      asset: 'assets/images/Google.svg',
+                      label: 'CONTINUE WITH GOOGLE',
+                      backgroundColor: Colors.white,
+                      textColor: Colors.black,
+                      height: buttonHeight,
+                      fontSize: buttonFontSize,
+                      outlined: true,
+                    ),
+                    const SizedBox(height: 28),
+                    Text(
+                      'OR SIGN UP WITH EMAIL',
+                      style: TextStyle(
+                        fontSize: orFontSize,
+                        fontFamily: 'HelveticaNeue',
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: orFontSize * 0.05,
+                        color: const Color(0xFFA1A4B2),
                       ),
-                      const SizedBox(height: 15),
-                      _buildSocialButton(
-                        asset: 'assets/images/Google.svg',
-                        label: 'CONTINUE WITH GOOGLE',
-                        backgroundColor: Colors.white,
-                        textColor: Colors.black,
-                        height: buttonHeight,
-                        fontSize: buttonFontSize,
-                        outlined: true,
-                      ),
-                      const SizedBox(height: 28),
-                      Text(
-                        'OR LOG IN WITH EMAIL',
-                        style: TextStyle(
-                          fontSize: orFontSize,
-                          fontFamily: 'HelveticaNeue',
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: orFontSize * 0.05,
-                          color: const Color(0xFFA1A4B2),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 28),
+                    _buildInputField(
+                      hint: 'Email address',
+                      fontSize: inputTextFontSize,
+                      height: inputHeight,
+                      focusNode: _emailFocusNode,
+                    ),
+                    const SizedBox(height: 20),
+                    _buildInputField(
+                      hint: 'Confirm Email address',
+                      fontSize: inputTextFontSize,
+                      height: inputHeight,
+                      focusNode: _confirmEmailFocusNode,
+                    ),
+                    const SizedBox(height: 20),
+                    _buildInputField(
+                      hint: 'Password',
+                      fontSize: inputTextFontSize,
+                      height: inputHeight,
+                      obscureText: _obscurePassword,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
                         ),
-                        textAlign: TextAlign.center,
+                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                       ),
-                      const SizedBox(height: 28),
-                      _buildInputField(
-                        hint: 'Email address',
-                        fontSize: inputTextFontSize,
-                        height: inputHeight,
-                        focusNode: _emailFocusNode,
-                      ),
-                      const SizedBox(height: 20),
-                      _buildInputField(
-                        hint: 'Confirm Email address',
-                        fontSize: inputTextFontSize,
-                        height: inputHeight,
-                        focusNode: _confirmEmailFocusNode,
-                      ),
-                      const SizedBox(height: 20),
-                      _buildInputField(
-                        hint: 'Password',
-                        fontSize: inputTextFontSize,
-                        height: inputHeight,
-                        obscureText: _obscurePassword,
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                          ),
-                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                        ),
-                        focusNode: _passwordFocusNode,
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: RichText(
-                              text: TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: 'I have read the ',
-                                    style: TextStyle(
-                                      fontSize: policyFontSize,
-                                      fontFamily: 'HelveticaNeue',
-                                      color: const Color(0xFFA1A4B2),
-                                    ),
+                      focusNode: _passwordFocusNode,
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: RichText(
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: 'I have read the ',
+                                  style: TextStyle(
+                                    fontSize: policyFontSize,
+                                    fontFamily: 'HelveticaNeue',
+                                    color: const Color(0xFFA1A4B2),
                                   ),
-                                  TextSpan(
-                                    text: 'Privacy Policy',
-                                    style: TextStyle(
-                                      fontSize: policyFontSize,
-                                      fontFamily: 'HelveticaNeue',
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF8E97FD),
-                                    ),
+                                ),
+                                TextSpan(
+                                  text: 'Privacy Policy',
+                                  style: TextStyle(
+                                    fontSize: policyFontSize,
+                                    fontFamily: 'HelveticaNeue',
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF8E97FD),
                                   ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Checkbox(
-                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              checkColor: Colors.white,
-                              activeColor: const Color(0xFF8E97FD),
-                              side: const BorderSide(color: Color(0xFFA1A4B2)),
-                              value: _acceptedPolicy,
-                              onChanged: (val) => setState(() => _acceptedPolicy = val ?? false),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        height: loginButtonHeight,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const WelcomePage()),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF7B6FEC),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(38),
-                            ),
-                          ),
-                          child: Text(
-                            'Get STARTED',
-                            style: TextStyle(
-                              fontSize: buttonFontSize,
-                              color: Colors.white,
-                              fontFamily: 'HelveticaNeue',
-                              fontWeight: FontWeight.w600,
+                                ),
+                              ],
                             ),
                           ),
                         ),
+                        Checkbox(
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          checkColor: Colors.white,
+                          activeColor: const Color(0xFF8E97FD),
+                          side: const BorderSide(color: Color(0xFFA1A4B2)),
+                          value: _acceptedPolicy,
+                          onChanged: (val) => setState(() => _acceptedPolicy = val ?? false),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      height: loginButtonHeight,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const WelcomePage(),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF7B6FEC),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(38),
+                          ),
+                        ),
+                        child: Text(
+                          'Get STARTED',
+                          style: TextStyle(
+                            fontSize: buttonFontSize,
+                            color: Colors.white,
+                            fontFamily: 'HelveticaNeue',
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -295,7 +290,6 @@ class _SignUnPageState extends State<SignUnPage> {
 
     return SizedBox(
       height: height,
-      width: double.infinity,
       child: outlined
           ? OutlinedButton(
         onPressed: () {},

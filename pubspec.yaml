@@ -52,6 +52,11 @@ flutter:
     - assets/images/profileIcon.svg
     - assets/images/container1.svg
     - assets/images/container2.svg
+    - assets/images/sun.svg
+    - assets/images/heart.svg
+    - assets/images/download.svg
+    - assets/images/heartIcon.svg
+    - assets/images/headphoneIcon.svg
 
 
   fonts:
