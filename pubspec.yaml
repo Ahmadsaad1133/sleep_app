@@ -57,6 +57,17 @@ flutter:
     - assets/images/download.svg
     - assets/images/heartIcon.svg
     - assets/images/headphoneIcon.svg
+    - assets/images/all.svg
+    - assets/images/anxious.svg
+    - assets/images/kids.svg
+    - assets/images/my.svg
+    - assets/images/sleep.svg
+    - assets/images/frame105.svg
+    - assets/images/frame106.svg
+    - assets/images/frame107.svg
+    - assets/images/calm.svg
+    - assets/images/anxiet.svg
+
 
 
   fonts:

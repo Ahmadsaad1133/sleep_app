@@ -92,8 +92,8 @@ class HomePage extends StatelessWidget {
                     Text(
                       'We are what we do',
                       style: TextStyle(
-                        fontSize: getFontSize(30),
-                        fontFamily: 'HelveticaNeue',
+                        fontSize: getFontSize(36),
+                        fontFamily: 'HelveticaNeueBold',
                         fontWeight: FontWeight.w700,
                         height: 1.35,
                       ),
@@ -101,11 +101,11 @@ class HomePage extends StatelessWidget {
                     ),
                     SizedBox(height: getSize(20)),
                     Text(
-                      'Thousands of people are using Silent Moon for smalls meditation',
+                      'Thousands of people are using Silent Moon \nfor smalls meditation',
                       style: TextStyle(
-                        fontSize: getFontSize(16),
-                        fontFamily: 'HelveticaNeue',
-                        fontWeight: FontWeight.w700,
+                        fontSize: getFontSize(22),
+                        fontFamily: 'HelveticaNeueRegular',
+                        fontWeight: FontWeight.w300,
                         height: 1.65,
                         color: const Color(0xFFA1A4B2),
                       ),
@@ -126,11 +126,11 @@ class HomePage extends StatelessWidget {
                           ),
                         ),
                         child: Text(
-                          'Get Started',
+                          'SIGN UP',
                           style: TextStyle(
                             fontSize: getFontSize(16),
-                            fontFamily: 'AirbnbCereal',
-                            fontWeight: FontWeight.w600,
+                            fontFamily: 'HelveticaNeueRegular',
+                            fontWeight: FontWeight.w400,
                             color: Colors.white,
                           ),
                         ),
@@ -142,9 +142,9 @@ class HomePage extends StatelessWidget {
                       text: TextSpan(
                         text: 'ALREADY HAVE AN ACCOUNT? ',
                         style: TextStyle(
-                          fontSize: getFontSize(14),
-                          fontFamily: 'HelveticaNeue',
-                          fontWeight: FontWeight.w700,
+                          fontSize: getFontSize(20),
+                          fontFamily: 'HelveticaNeueRegular',
+                          fontWeight: FontWeight.w400,
                           height: 1.08,
                           letterSpacing: 0.7 * scale,
                           color: const Color(0xFFA1A4B2),
@@ -153,9 +153,9 @@ class HomePage extends StatelessWidget {
                           TextSpan(
                             text: 'LOG IN',
                             style: TextStyle(
-                              fontSize: getFontSize(14),
-                              fontFamily: 'HelveticaNeue',
-                              fontWeight: FontWeight.w700,
+                              fontSize: getFontSize(20),
+                              fontFamily: 'HelveticaNeueRegular',
+                              fontWeight: FontWeight.w400,
                               height: 1.08,
                               letterSpacing: 0.7 * scale,
                               color: const Color(0xFF8E97FD),

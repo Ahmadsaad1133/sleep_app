@@ -61,11 +61,11 @@ class _ReminderPageState extends State<ReminderPage> {
     );
 
     final noThanksButtonStyle = TextStyle(
-      fontFamily: 'HelveticaNeue',
+      fontFamily: 'HelveticaNeueRegular',
       fontWeight: FontWeight.w400,
       fontSize: noThanksFontSize,
       height: 1.08,
-      letterSpacing: 0.05,
+      letterSpacing: 1,
       color: selectedDayColor,
     );
 

@@ -77,7 +77,7 @@ class ChooseTopicPage extends StatelessWidget {
                   label,
                   style: TextStyle(
                     color: Colors.white,
-                    fontFamily: 'HelveticaNeue',
+                    fontFamily: 'HelveticaNeueBold',
                     fontWeight: FontWeight.w600,
                     fontSize: 18 * scale,
                     height: 1.35,
@@ -95,7 +95,6 @@ class ChooseTopicPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
 
-    // scale for sizing the entire widgets
     double scale;
     if (screenWidth <= 320) {
       scale = 0.7;
@@ -109,7 +108,6 @@ class ChooseTopicPage extends StatelessWidget {
       scale = 1.2;
     }
 
-    // separate scale factor for text sizes inside widgets (smaller overall)
     double textScaleFactor;
     if (screenWidth <= 320) {
       textScaleFactor = 0.6;
@@ -125,7 +123,7 @@ class ChooseTopicPage extends StatelessWidget {
 
     final labelTextStyle = TextStyle(
       color: const Color(0xFFFFECCC),
-      fontFamily: 'HelveticaNeue',
+      fontFamily: 'HelveticaNeueBold',
       fontWeight: FontWeight.w700,
       fontSize: 18 * textScaleFactor,
       height: 1.35,
@@ -170,7 +168,7 @@ class ChooseTopicPage extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: 'HelveticaNeueRegular',
                         fontSize: 28 * scale,
-                        fontWeight: FontWeight.w400,
+                        fontWeight: FontWeight.w300,
                         height: 1.35,
                         color: const Color(0xFF3F414E),
                       ),
@@ -179,7 +177,7 @@ class ChooseTopicPage extends StatelessWidget {
                     Text(
                       'choose a topic to focuse on:',
                       style: TextStyle(
-                        fontFamily: 'HelveticaNeue',
+                        fontFamily: 'HelveticaNeueRegular',
                         fontSize: 20 * scale,
                         fontWeight: FontWeight.w300,
                         height: 1.0,
@@ -208,10 +206,7 @@ class ChooseTopicPage extends StatelessWidget {
                                 textAlign: TextAlign.center,
                               ),
                               onTap: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (_) => const ReminderPage()));
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const ReminderPage()));
                               },
                             ),
                             SizedBox(height: 15 * scale),
@@ -238,10 +233,7 @@ class ChooseTopicPage extends StatelessWidget {
                                 ),
                               ),
                               onTap: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (_) => const ReminderPage()));
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const ReminderPage()));
                               },
                             ),
                             SizedBox(height: 15 * scale),
@@ -268,10 +260,7 @@ class ChooseTopicPage extends StatelessWidget {
                                 ),
                               ),
                               onTap: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (_) => const ReminderPage()));
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const ReminderPage()));
                               },
                             ),
                             SizedBox(height: 15 * scale),
@@ -290,10 +279,7 @@ class ChooseTopicPage extends StatelessWidget {
                                 textAlign: TextAlign.center,
                               ),
                               onTap: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (_) => const ReminderPage()));
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const ReminderPage()));
                               },
                             ),
                           ],
@@ -323,10 +309,7 @@ class ChooseTopicPage extends StatelessWidget {
                                 ),
                               ),
                               onTap: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (_) => const ReminderPage()));
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const ReminderPage()));
                               },
                             ),
                             SizedBox(height: 15 * scale),
@@ -345,10 +328,7 @@ class ChooseTopicPage extends StatelessWidget {
                               ],
                               scale: scale,
                               onTap: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (_) => const ReminderPage()));
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const ReminderPage()));
                               },
                             ),
                             SizedBox(height: 15 * scale),
@@ -377,10 +357,7 @@ class ChooseTopicPage extends StatelessWidget {
                                 ),
                               ),
                               onTap: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (_) => const ReminderPage()));
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const ReminderPage()));
                               },
                             ),
                             SizedBox(height: 15 * scale),
@@ -399,10 +376,7 @@ class ChooseTopicPage extends StatelessWidget {
                                 textAlign: TextAlign.center,
                               ),
                               onTap: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (_) => const ReminderPage()));
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const ReminderPage()));
                               },
                             ),
                           ],

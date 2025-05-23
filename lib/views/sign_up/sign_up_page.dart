@@ -103,7 +103,7 @@ class _SignUnPageState extends State<SignUnPage> {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: titleFontSize,
-                        fontFamily: 'HelveticaNeue',
+                        fontFamily: 'HelveticaNeueBold',
                         fontWeight: FontWeight.w700,
                         height: 1.35,
                         color: const Color(0xFF3F414E),
@@ -134,7 +134,7 @@ class _SignUnPageState extends State<SignUnPage> {
                       'OR SIGN UP WITH EMAIL',
                       style: TextStyle(
                         fontSize: orFontSize,
-                        fontFamily: 'HelveticaNeue',
+                        fontFamily: 'HelveticaNeueBold',
                         fontWeight: FontWeight.w700,
                         letterSpacing: orFontSize * 0.05,
                         color: const Color(0xFFA1A4B2),
@@ -163,9 +163,12 @@ class _SignUnPageState extends State<SignUnPage> {
                       obscureText: _obscurePassword,
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                         ),
-                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        onPressed: () =>
+                            setState(() => _obscurePassword = !_obscurePassword),
                       ),
                       focusNode: _passwordFocusNode,
                     ),
@@ -180,7 +183,8 @@ class _SignUnPageState extends State<SignUnPage> {
                                   text: 'I have read the ',
                                   style: TextStyle(
                                     fontSize: policyFontSize,
-                                    fontFamily: 'HelveticaNeue',
+                                    fontFamily: 'HelveticaNeueRegular',
+                                    letterSpacing: 1,
                                     color: const Color(0xFFA1A4B2),
                                   ),
                                 ),
@@ -188,8 +192,9 @@ class _SignUnPageState extends State<SignUnPage> {
                                   text: 'Privacy Policy',
                                   style: TextStyle(
                                     fontSize: policyFontSize,
-                                    fontFamily: 'HelveticaNeue',
+                                    fontFamily: 'HelveticaNeueRegular',
                                     fontWeight: FontWeight.w600,
+                                    letterSpacing: 1,
                                     color: const Color(0xFF8E97FD),
                                   ),
                                 ),
@@ -198,12 +203,15 @@ class _SignUnPageState extends State<SignUnPage> {
                           ),
                         ),
                         Checkbox(
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          materialTapTargetSize:
+                          MaterialTapTargetSize.shrinkWrap,
                           checkColor: Colors.white,
                           activeColor: const Color(0xFF8E97FD),
-                          side: const BorderSide(color: Color(0xFFA1A4B2)),
+                          side:
+                          const BorderSide(color: Color(0xFFA1A4B2)),
                           value: _acceptedPolicy,
-                          onChanged: (val) => setState(() => _acceptedPolicy = val ?? false),
+                          onChanged: (val) =>
+                              setState(() => _acceptedPolicy = val ?? false),
                         ),
                       ],
                     ),
@@ -230,7 +238,8 @@ class _SignUnPageState extends State<SignUnPage> {
                           style: TextStyle(
                             fontSize: buttonFontSize,
                             color: Colors.white,
-                            fontFamily: 'HelveticaNeue',
+                            fontFamily: 'HelveticaNeueRegular',
+                            letterSpacing: 1.5,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -276,8 +285,9 @@ class _SignUnPageState extends State<SignUnPage> {
                 label,
                 style: TextStyle(
                   fontSize: fontSize,
-                  fontFamily: 'HelveticaNeue',
-                  fontWeight: FontWeight.w600,
+                  fontFamily: 'HelveticaNeueRegular',
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: 2,
                   color: textColor,
                 ),
               ),
@@ -332,7 +342,7 @@ class _SignUnPageState extends State<SignUnPage> {
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(
-          fontFamily: 'HelveticaNeue',
+          fontFamily: 'HelveticaNeueRegular',
           fontSize: fontSize,
           color: const Color(0xFFA1A4B2),
         ),
@@ -349,7 +359,7 @@ class _SignUnPageState extends State<SignUnPage> {
         ),
       ),
       style: TextStyle(
-        fontFamily: 'HelveticaNeue',
+        fontFamily: 'HelveticaNeueRegular',
         fontSize: fontSize,
         color: Colors.black,
       ),

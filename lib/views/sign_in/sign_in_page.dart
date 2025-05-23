@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../sign_up/sign_up_page.dart';
+import '/views/sign_up/sign_up_page.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({Key? key}) : super(key: key);
@@ -40,28 +40,18 @@ class _SignInPageState extends State<SignInPage> {
     double buttonFontSize = (w * 0.025).clamp(10.0, 14.0);
     double orFontSize = (w * 0.03).clamp(10.0, 14.0);
     double inputTextFontSize = (w * 0.04).clamp(12.0, 16.0);
-    double inputHeight = w < 320
-        ? 28
-        : w < 400
-        ? 34
-        : w < 600
-        ? 44
-        : 60;
+    double inputHeight = w < 320 ? 28 : w < 400 ? 34 : w < 600 ? 44 : 60;
     double loginButtonHeight = (w * 0.16).clamp(48.0, 63.0);
     const hp = 20.0;
 
-    // Responsive size for Navigate Left icon
     final double navigateLeftSize = (w * 0.13).clamp(30.0, 55.0);
-
-    // Responsive font size for "Forgot Password?"
     double forgotPasswordFontSize = (w * 0.035).clamp(12.0, 16.0);
 
     return Scaffold(
-      resizeToAvoidBottomInset: true, // allow resize when keyboard shows
+      resizeToAvoidBottomInset: true,
       body: Stack(
         clipBehavior: Clip.none,
         children: [
-          // SVG background
           Positioned(
             top: 0,
             left: 0,
@@ -72,7 +62,6 @@ class _SignInPageState extends State<SignInPage> {
               fit: BoxFit.cover,
             ),
           ),
-
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: hp),
@@ -102,7 +91,7 @@ class _SignInPageState extends State<SignInPage> {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: titleFontSize,
-                        fontFamily: 'HelveticaNeue',
+                        fontFamily: 'HelveticaNeueBold',
                         fontWeight: FontWeight.w700,
                         height: 1.35,
                         color: const Color(0xFF3F414E),
@@ -133,7 +122,7 @@ class _SignInPageState extends State<SignInPage> {
                       'OR LOG IN WITH EMAIL',
                       style: TextStyle(
                         fontSize: orFontSize,
-                        fontFamily: 'HelveticaNeue',
+                        fontFamily: 'HelveticaNeueBold',
                         fontWeight: FontWeight.w700,
                         letterSpacing: orFontSize * 0.05,
                         color: const Color(0xFFA1A4B2),
@@ -142,14 +131,16 @@ class _SignInPageState extends State<SignInPage> {
                     ),
                     const SizedBox(height: 28),
                     _buildInputField(
-                      hint: 'Email address',
+                      label: 'Email address',
+                      hint: 'Enter your email',
                       fontSize: inputTextFontSize,
                       height: inputHeight,
                       focusNode: _emailFocusNode,
                     ),
                     const SizedBox(height: 15),
                     _buildInputField(
-                      hint: 'Password',
+                      label: 'Password',
+                      hint: 'Enter your password',
                       fontSize: inputTextFontSize,
                       height: inputHeight,
                       obscureText: _obscurePassword,
@@ -159,8 +150,7 @@ class _SignInPageState extends State<SignInPage> {
                               ? Icons.visibility_off
                               : Icons.visibility,
                         ),
-                        onPressed: () =>
-                            setState(() => _obscurePassword = !_obscurePassword),
+                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                       ),
                       focusNode: _passwordFocusNode,
                     ),
@@ -168,36 +158,30 @@ class _SignInPageState extends State<SignInPage> {
                     SizedBox(
                       height: loginButtonHeight,
                       child: ElevatedButton(
-                        onPressed: () {
-                          // handle login
-                        },
+                        onPressed: () {},
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF7B6FEC),
+                          foregroundColor: Colors.white, // <- set text color white
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(38),
                           ),
-                        ),
-                        child: Text(
-                          'LOG IN',
-                          style: TextStyle(
+                          textStyle: TextStyle(
+                            fontFamily: 'HelveticaNeueRegular',
+                            fontWeight: FontWeight.w400,
                             fontSize: buttonFontSize,
-                            color: Colors.white,
-                            fontFamily: 'HelveticaNeue',
-                            fontWeight: FontWeight.w600,
                           ),
                         ),
+                        child: const Text('LOG IN'),
                       ),
                     ),
                     const SizedBox(height: 12),
                     Center(
                       child: TextButton(
-                        onPressed: () {
-                          // TODO: handle forgot password action
-                        },
+                        onPressed: () {},
                         child: Text(
                           'Forgot Password?',
                           style: TextStyle(
-                            fontFamily: 'HelveticaNeue',
+                            fontFamily: 'HelveticaNeueRegular',
                             fontSize: forgotPasswordFontSize,
                             fontWeight: FontWeight.w400,
                             height: 1.08,
@@ -221,7 +205,8 @@ class _SignInPageState extends State<SignInPage> {
                           text: TextSpan(
                             text: "Don't have an account? ",
                             style: const TextStyle(
-                              fontFamily: 'HelveticaNeue',
+                              fontFamily: 'HelveticaNeueRegular',
+                              fontSize: 16,
                               color: Colors.grey,
                             ),
                             children: [
@@ -229,7 +214,9 @@ class _SignInPageState extends State<SignInPage> {
                                 text: 'Sign Up',
                                 style: TextStyle(
                                   color: const Color(0xFF7B6FEC),
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 16,
+                                  fontFamily: 'HelveticaNeueRegular',
                                 ),
                               ),
                             ],
@@ -262,9 +249,7 @@ class _SignInPageState extends State<SignInPage> {
       children: [
         const SizedBox(width: 20),
         Padding(
-          padding: asset.contains('Facebook')
-              ? const EdgeInsets.only(left: 5)
-              : EdgeInsets.zero,
+          padding: asset.contains('Facebook') ? const EdgeInsets.only(left: 5) : EdgeInsets.zero,
           child: SvgPicture.asset(
             asset,
             width: 24,
@@ -278,8 +263,9 @@ class _SignInPageState extends State<SignInPage> {
               label,
               style: TextStyle(
                 fontSize: fontSize,
-                fontFamily: 'HelveticaNeue',
-                fontWeight: FontWeight.w600,
+                fontFamily: 'HelveticaNeueRegular',      // ← ensures HelveticaNeue
+                fontWeight: FontWeight.w400,
+                letterSpacing: 2,
                 color: textColor,
               ),
             ),
@@ -289,51 +275,65 @@ class _SignInPageState extends State<SignInPage> {
       ],
     );
 
+    final ButtonStyle buttonStyle = outlined
+        ? OutlinedButton.styleFrom(
+      backgroundColor: backgroundColor,
+      side: const BorderSide(color: Color(0xFFEBEAEC)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(38),
+      ),
+      padding: EdgeInsets.zero,
+      textStyle: TextStyle(
+        fontFamily: 'HelveticaNeueRegular',     // ← ensures HelveticaNeue
+        fontWeight: FontWeight.w400,
+        fontSize: fontSize,
+      ),
+    )
+        : ElevatedButton.styleFrom(
+      backgroundColor: backgroundColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(38),
+      ),
+      padding: EdgeInsets.zero,
+      elevation: 0,
+      textStyle: TextStyle(
+        fontFamily: 'HelveticaNeueRegular',     // ← ensures HelveticaNeue
+        fontWeight: FontWeight.w400,
+        fontSize: fontSize,
+      ),
+    );
+
     return SizedBox(
       height: height,
       child: outlined
-          ? OutlinedButton(
-        onPressed: () {},
-        style: OutlinedButton.styleFrom(
-          backgroundColor: backgroundColor,
-          side: const BorderSide(color: Color(0xFFEBEAEC)),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(38),
-          ),
-          padding: EdgeInsets.zero,
-        ),
-        child: buttonChild,
-      )
-          : ElevatedButton(
-        onPressed: () {},
-        style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(38),
-          ),
-          padding: EdgeInsets.zero,
-          elevation: 0,
-        ),
-        child: buttonChild,
-      ),
+          ? OutlinedButton(onPressed: () {}, style: buttonStyle, child: buttonChild)
+          : ElevatedButton(onPressed: () {}, style: buttonStyle, child: buttonChild),
     );
   }
 
   Widget _buildInputField({
-    required String hint,
+    required String label,
     required double fontSize,
     required double height,
     bool obscureText = false,
     Widget? suffixIcon,
     FocusNode? focusNode,
+    String? hint,
   }) {
     return TextFormField(
       focusNode: focusNode,
       obscureText: obscureText,
       decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(
+          fontFamily: 'HelveticaNeueRegular',
+          fontSize: fontSize,
+          color: const Color(0xFFA1A4B2),
+          fontWeight: FontWeight.w600,
+        ),
         hintText: hint,
         hintStyle: TextStyle(
-          fontFamily: 'HelveticaNeue',
+          fontFamily: 'HelveticaNeueRegular',
           fontSize: fontSize,
           color: const Color(0xFFA1A4B2),
         ),
@@ -350,7 +350,7 @@ class _SignInPageState extends State<SignInPage> {
         ),
       ),
       style: TextStyle(
-        fontFamily: 'HelveticaNeue',
+        fontFamily: 'HelveticaNeueBold',
         fontSize: fontSize,
         color: Colors.black,
       ),

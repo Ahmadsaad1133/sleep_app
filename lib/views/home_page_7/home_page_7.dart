@@ -1,7 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '/views/course_details/course_details_page.dart'; // <-- Make sure this file exists in your lib/
+import '/views/course_details/course_details_page.dart';
+import '/views/meditate_Page/meditate_page.dart'; // <-- Ensure this file exists
 
 class HomePage7 extends StatefulWidget {
   const HomePage7({Key? key}) : super(key: key);
@@ -12,6 +13,21 @@ class HomePage7 extends StatefulWidget {
 
 class _HomePage7State extends State<HomePage7> {
   int _selectedIndex = 0;
+
+  void _onNavItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    if (index == 1) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const MeditatePage(),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +48,8 @@ class _HomePage7State extends State<HomePage7> {
       buttonWidth = getSize(90);
     }
     final double buttonHeight = getSize(35);
+
+    // ... (buildCard, buildHorizontalItem stay the same)
 
     Widget buildCard({
       required Color backgroundColor,
@@ -80,7 +98,6 @@ class _HomePage7State extends State<HomePage7> {
                       title,
                       style: TextStyle(
                         fontSize: getFontSize(18),
-                        fontFamily: 'HelveticaNeueRegular',
                         fontWeight: FontWeight.w700,
                         height: 1.08,
                         color: titleColor,
@@ -91,7 +108,6 @@ class _HomePage7State extends State<HomePage7> {
                       subtitle,
                       style: TextStyle(
                         fontSize: getFontSize(11),
-                        fontFamily: 'HelveticaNeue',
                         fontWeight: FontWeight.w400,
                         height: 1.08,
                         letterSpacing: 0.05 * getFontSize(11),
@@ -112,7 +128,6 @@ class _HomePage7State extends State<HomePage7> {
                       '3-10 MIN',
                       style: TextStyle(
                         fontSize: getFontSize(11),
-                        fontFamily: 'HelveticaNeue',
                         fontWeight: FontWeight.w400,
                         height: 1.08,
                         letterSpacing: 0.05 * getFontSize(11),
@@ -139,7 +154,6 @@ class _HomePage7State extends State<HomePage7> {
                             'start',
                             style: TextStyle(
                               fontSize: getFontSize(10),
-                              fontFamily: 'HelveticaNeue',
                               fontWeight: FontWeight.w400,
                               height: 1.08,
                               letterSpacing: 0.05 * getFontSize(10),
@@ -201,9 +215,8 @@ class _HomePage7State extends State<HomePage7> {
                       title,
                       style: TextStyle(
                         fontSize: getFontSize(18),
-                        fontFamily: 'HelveticaNeue',
                         fontWeight: FontWeight.w700,
-                        height: 1.08,
+                        fontFamily: 'HelveticaNeueBold',
                         color: const Color(0xFF3F414E),
                       ),
                     ),
@@ -212,9 +225,8 @@ class _HomePage7State extends State<HomePage7> {
                       subtitle,
                       style: TextStyle(
                         fontSize: getFontSize(11),
-                        fontFamily: 'HelveticaNeue',
                         fontWeight: FontWeight.w400,
-                        height: 1.08,
+                        fontFamily: 'HelveticaNeueRegular',
                         letterSpacing: 0.05 * getFontSize(11),
                         color: const Color(0xFFA1A4B2),
                       ),
@@ -231,11 +243,7 @@ class _HomePage7State extends State<HomePage7> {
     Widget buildNavItem(String iconAsset, String label, int index) {
       final isSelected = _selectedIndex == index;
       return GestureDetector(
-        onTap: () {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
+        onTap: () => _onNavItemTapped(index),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -243,8 +251,7 @@ class _HomePage7State extends State<HomePage7> {
               width: getSize(46),
               height: getSize(46),
               decoration: BoxDecoration(
-                color:
-                isSelected ? const Color(0xFF8E97FD) : Colors.transparent,
+                color: isSelected ? const Color(0xFF8E97FD) : Colors.transparent,
                 borderRadius: BorderRadius.circular(getSize(18)),
               ),
               child: Center(
@@ -261,8 +268,8 @@ class _HomePage7State extends State<HomePage7> {
               label,
               style: TextStyle(
                 fontSize: getFontSize(12),
-                fontWeight: FontWeight.w500,
-                fontFamily: 'HelveticaNeue',
+                fontFamily: 'HelveticaNeueRegular',
+                fontWeight: FontWeight.w400,
                 color: isSelected
                     ? const Color(0xFF8E97FD)
                     : const Color(0xFFA0A3B1),
@@ -290,15 +297,11 @@ class _HomePage7State extends State<HomePage7> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        'Silent',
-                        style: TextStyle(
-                          fontSize: getFontSize(16),
-                          fontFamily: 'AirbnbCereal',
-                          fontWeight: FontWeight.w400,
-                          letterSpacing: 3.84 * scale,
-                        ),
-                      ),
+                      Text('Silent',
+                          style: TextStyle(
+                              fontSize: getFontSize(16),
+                              fontWeight: FontWeight.w400,
+                              letterSpacing: 3.84 * scale)),
                       SizedBox(width: getSize(8)),
                       SvgPicture.asset(
                         'assets/images/logo.svg',
@@ -306,39 +309,27 @@ class _HomePage7State extends State<HomePage7> {
                         height: getSize(30),
                       ),
                       SizedBox(width: getSize(8)),
-                      Text(
-                        'Moon',
-                        style: TextStyle(
-                          fontSize: getFontSize(16),
-                          fontFamily: 'AirbnbCereal',
-                          fontWeight: FontWeight.w400,
-                          letterSpacing: 3.84 * scale,
-                        ),
-                      ),
+                      Text('Moon',
+                          style: TextStyle(
+                              fontSize: getFontSize(16),
+                              fontWeight: FontWeight.w400,
+                              letterSpacing: 3.84 * scale)),
                     ],
                   ),
                   SizedBox(height: getSize(30)),
-                  Text(
-                    'Good Morning, Afsar',
-                    style: TextStyle(
-                      fontSize: getFontSize(28),
-                      fontFamily: 'HelveticaNeue',
-                      fontWeight: FontWeight.w700,
-                      height: 1.08,
-                      color: const Color(0xFF3F414E),
-                    ),
-                  ),
+                  Text('Good Morning, Afsar',
+                      style: TextStyle(
+                          fontSize: getFontSize(28),
+                          fontFamily: 'HelveticaNeueBold',
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF3F414E))),
                   SizedBox(height: getSize(10)),
-                  Text(
-                    'We Wish you have a good day',
-                    style: TextStyle(
-                      fontSize: getFontSize(24),
-                      fontFamily: 'HelveticaNeueRegular',
-                      fontWeight: FontWeight.w400,
-                      height: 1.1,
-                      color: const Color(0xFFA1A4B2),
-                    ),
-                  ),
+                  Text('We Wish you have a good day',
+                      style: TextStyle(
+                          fontSize: getFontSize(24),
+                          fontFamily: 'HelveticaNeueRegular',
+                          fontWeight: FontWeight.w300,
+                          color: const Color(0xFFA1A4B2))),
                   SizedBox(height: getSize(20)),
                   Row(
                     children: [
@@ -367,10 +358,10 @@ class _HomePage7State extends State<HomePage7> {
                     ],
                   ),
                   SizedBox(height: getSize(20)),
+                  // Daily Thought Section
                   Center(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(getSize(10)),
-                      clipBehavior: Clip.hardEdge,
                       child: Container(
                         width: getSize(374),
                         height: getSize(95),
@@ -415,28 +406,19 @@ class _HomePage7State extends State<HomePage7> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    'Daily Thought',
-                                    style: TextStyle(
-                                      fontSize: getFontSize(18),
-                                      fontFamily: 'HelveticaNeue',
-                                      fontWeight: FontWeight.w700,
-                                      height: 1.08,
-                                      color: Colors.white,
-                                    ),
-                                  ),
+                                  Text('Daily Thought',
+                                      style: TextStyle(
+                                          fontSize: getFontSize(18),
+                                          fontWeight: FontWeight.w700,
+                                          fontFamily: 'HelveticaNeueBold',
+                                          color: Colors.white)),
                                   SizedBox(height: getSize(5)),
-                                  Text(
-                                    'MEDITATION 3-10 MIN',
-                                    style: TextStyle(
-                                      fontSize: getFontSize(11),
-                                      fontFamily: 'HelveticaNeue',
-                                      fontWeight: FontWeight.w400,
-                                      height: 1.08,
-                                      letterSpacing: 0.05 * getFontSize(11),
-                                      color: Colors.white,
-                                    ),
-                                  ),
+                                  Text('MEDITATION 3-10 MIN',
+                                      style: TextStyle(
+                                          fontSize: getFontSize(11),
+                                          fontWeight: FontWeight.w400,
+                                          fontFamily: 'HelveticaNeueRegular',
+                                          color: Colors.white)),
                                 ],
                               ),
                             ),
@@ -472,19 +454,19 @@ class _HomePage7State extends State<HomePage7> {
                     style: TextStyle(
                       fontSize: getFontSize(24),
                       fontWeight: FontWeight.w400,
-                      height: 1.08,
                       color: const Color(0xFF3F414E),
-                      fontFamily: 'HelveticaNeueBold',
+                      fontFamily: 'HelveticaNeueRegular',
                     ),
                   ),
                   SizedBox(height: getSize(15)),
                   SizedBox(
-                    height: getSize(180),
+                    height: getSize(200),
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemCount: 10,
                       padding: EdgeInsets.only(right: getSize(20)),
-                      itemBuilder: (context, index) => buildHorizontalItem(index),
+                      itemBuilder: (context, index) =>
+                          buildHorizontalItem(index),
                     ),
                   ),
                   SizedBox(height: getSize(40)),
