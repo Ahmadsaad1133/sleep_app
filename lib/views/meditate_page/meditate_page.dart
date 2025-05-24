@@ -1,6 +1,11 @@
+// lib/views/meditate_page/meditate_page.dart
+
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+
 import '/views/home_page_7/home_page_7.dart';
+import '/views/music_v2/music_v2_page.dart';
 
 class MeditatePage extends StatefulWidget {
   const MeditatePage({Key? key}) : super(key: key);
@@ -10,7 +15,6 @@ class MeditatePage extends StatefulWidget {
 }
 
 class _MeditatePageState extends State<MeditatePage> {
-  int _navIndex = 1;
   int _categoryIndex = 0;
 
   final List<String> _categories = [
@@ -27,17 +31,6 @@ class _MeditatePageState extends State<MeditatePage> {
     'assets/images/kids.svg',
   ];
 
-  void _onNavTapped(int index) {
-    if (index == _navIndex) return;
-    setState(() => _navIndex = index);
-    if (index == 0) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomePage7()),
-      );
-    }
-  }
-
   void _onCategoryTapped(int index) {
     if (index == _categoryIndex) return;
     setState(() => _categoryIndex = index);
@@ -48,28 +41,26 @@ class _MeditatePageState extends State<MeditatePage> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: LayoutBuilder(builder: (context, constraints) {
-          final w = constraints.maxWidth;
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final w = constraints.maxWidth;
+            double scale;
+            if (w <= 300) {
+              scale = 0.65;
+            } else if (w <= 360) {
+              scale = 0.8;
+            } else if (w <= 414) {
+              scale = 0.95;
+            } else if (w <= 600) {
+              scale = 1.1;
+            } else if (w <= 900) {
+              scale = 1.3;
+            } else {
+              scale = 1.5;
+            }
+            final padding = 24.0 * scale;
 
-          double scale;
-          if (w <= 300) {
-            scale = 0.65;
-          } else if (w <= 360) {
-            scale = 0.8;
-          } else if (w <= 414) {
-            scale = 0.95;
-          } else if (w <= 600) {
-            scale = 1.1;
-          } else if (w <= 900) {
-            scale = 1.3;
-          } else {
-            scale = 1.5;
-          }
-
-          final horizontalPadding = 24.0 * scale;
-
-          return SingleChildScrollView(
-            child: Padding(
+            return SingleChildScrollView(
               padding: EdgeInsets.only(bottom: 16 * scale),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,333 +92,284 @@ class _MeditatePageState extends State<MeditatePage> {
                     ),
                   ),
                   SizedBox(height: 30 * scale),
+
+                  // CATEGORY SCROLL
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: _categories.asMap().entries.map((entry) {
-                              final idx = entry.key;
-                              final label = entry.value;
-                              final isActive = idx == _categoryIndex;
-                              return GestureDetector(
-                                onTap: () => _onCategoryTapped(idx),
-                                child: Padding(
-                                  padding: EdgeInsets.only(right: 16 * scale),
-                                  child: Column(
-                                    children: [
-                                      Container(
-                                        width: 70 * scale,
-                                        height: 70 * scale,
-                                        decoration: BoxDecoration(
-                                          color: isActive
-                                              ? const Color(0xFF8E97FD)
-                                              : const Color(0xFFA0A3B1),
-                                          borderRadius: BorderRadius.circular(28 * scale),
-                                        ),
-                                        child: Center(
-                                          child: idx < _icons.length
-                                              ? SvgPicture.asset(
-                                            _icons[idx],
-                                            width: 28 * scale,
-                                            height: 28 * scale,
-                                            color: Colors.white,
-                                          )
-                                              : null,
-                                        ),
-                                      ),
-                                      SizedBox(height: 8 * scale),
-                                      Text(
-                                        label,
-                                        style: TextStyle(
-                                          fontSize: 18 * scale,
-                                          fontFamily: 'HelveticaNeueRegular',
-                                          fontWeight: FontWeight.w400,
-                                          color: isActive
-                                              ? const Color(0xFF3F414E)
-                                              : const Color(0xFFA0A3B1),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                        SizedBox(height: 30 * scale),
-                        Center(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10 * scale),
-                            child: Container(
-                              width: w - horizontalPadding * 2,
-                              height: 95 * scale,
-                              color: const Color(0xFFFEE6C6),
-                              child: Stack(
+                    padding: EdgeInsets.only(left: padding),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: _categories.asMap().entries.map((entry) {
+                          final idx = entry.key;
+                          final label = entry.value;
+                          final isActive = idx == _categoryIndex;
+                          return Padding(
+                            padding: EdgeInsets.only(right: 16 * scale),
+                            child: GestureDetector(
+                              onTap: () => _onCategoryTapped(idx),
+                              child: Column(
                                 children: [
-                                  Positioned(
-                                    left: 0,
-                                    top: 0,
-                                    bottom: 0,
-                                    child: SvgPicture.asset(
-                                      'assets/images/frame105.svg',
-                                      width: 98 * scale,
-                                      height: 95 * scale,
-                                      fit: BoxFit.cover,
+                                  Container(
+                                    width: 70 * scale,
+                                    height: 70 * scale,
+                                    decoration: BoxDecoration(
+                                      color: isActive
+                                          ? const Color(0xFF8E97FD)
+                                          : const Color(0xFFA0A3B1),
+                                      borderRadius: BorderRadius.circular(28 * scale),
+                                    ),
+                                    child: Center(
+                                      child: idx < _icons.length
+                                          ? SvgPicture.asset(
+                                        _icons[idx],
+                                        width: 28 * scale,
+                                        height: 28 * scale,
+                                        color: Colors.white,
+                                      )
+                                          : const SizedBox.shrink(),
                                     ),
                                   ),
-                                  Positioned(
-                                    top: 0,
-                                    right: 0,
-                                    child: SvgPicture.asset(
-                                      'assets/images/frame107.svg',
-                                      width: 184 * scale,
-                                      height: 69 * scale,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                  Positioned(
-                                    bottom: 0,
-                                    left: 155 * scale,
-                                    child: SvgPicture.asset(
-                                      'assets/images/frame106.svg',
-                                      width: 64 * scale,
-                                      height: 25 * scale,
-                                      fit: BoxFit.contain,
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: EdgeInsets.only(left: 25 * scale, right: 16 * scale),
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Daily Calm',
-                                          style: TextStyle(
-                                            fontSize: 18 * scale,
-                                            fontWeight: FontWeight.w700,
-                                            color: Colors.black,
-                                            fontFamily: 'HelveticaNeueBold',
-                                          ),
-                                        ),
-                                        SizedBox(height: 5 * scale),
-                                        Text(
-                                          'APR 30  PAUSE PRACTICE',
-                                          style: TextStyle(
-                                            fontSize: 11 * scale,
-                                            fontWeight: FontWeight.w400,
-                                            color: Colors.black,
-                                            fontFamily: 'HelveticaNeueRegular',
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: Padding(
-                                      padding: EdgeInsets.only(right: 30 * scale),
-                                      child: Container(
-                                        width: 44 * scale,
-                                        height: 44 * scale,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF3F414E),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: const Center(
-                                          child: Icon(
-                                            Icons.play_arrow,
-                                            color: Color(0xFFF0F1F2),
-                                            size: 26,
-                                          ),
-                                        ),
-                                      ),
+                                  SizedBox(height: 8 * scale),
+                                  Text(
+                                    label,
+                                    style: TextStyle(
+                                      fontSize: 18 * scale,
+                                      color: isActive
+                                          ? const Color(0xFF3F414E)
+                                          : const Color(0xFFA0A3B1),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
-                        ),
-                        SizedBox(height: 30 * scale),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
 
-                        // Two cards row with both texts inside and aligned top
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                  SizedBox(height: 30 * scale),
+
+                  // DAILY CALM BANNER
+                  Center(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10 * scale),
+                      child: Container(
+                        width: w - padding * 2,
+                        height: 95 * scale,
+                        color: const Color(0xFFFEE6C6),
+                        child: Stack(
                           children: [
-                            Container(
-                              width: (w - horizontalPadding * 2 - 16 * scale) / 2,
-                              height: 210 * scale,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10 * scale),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(10 * scale),
-                                child: Stack(
-                                  children: [
-                                    SvgPicture.asset(
-                                      'assets/images/calm.svg',
-                                      fit: BoxFit.cover,
-                                      width: double.infinity,
-                                      height: double.infinity,
-                                    ),
-                                    Positioned(
-                                      bottom: 12 * scale,
-                                      left: 12 * scale,
-                                      child: Text(
-                                        '7 Days of Calm',
-                                        style: TextStyle(
-                                          fontSize: 18 * scale,
-                                          fontFamily: 'HelveticaNeueBold',
-                                          fontWeight: FontWeight.w700,
-                                          height: 1.08,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                            Positioned(
+                              left: 0,
+                              top: 0,
+                              bottom: 0,
+                              child: SvgPicture.asset(
+                                'assets/images/frame105.svg',
+                                width: 98 * scale,
+                                height: 95 * scale,
+                                fit: BoxFit.cover,
                               ),
                             ),
-                            Container(
-                              width: (w - horizontalPadding * 2 - 16 * scale) / 2,
-                              height: 167 * scale,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10 * scale),
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: SvgPicture.asset(
+                                'assets/images/frame107.svg',
+                                width: 184 * scale,
+                                height: 69 * scale,
+                                fit: BoxFit.cover,
                               ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(10 * scale),
-                                child: Stack(
-                                  children: [
-                                    SvgPicture.asset(
-                                      'assets/images/anxiet.svg',
-                                      fit: BoxFit.cover,
-                                      width: double.infinity,
-                                      height: double.infinity,
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              left: 155 * scale,
+                              child: SvgPicture.asset(
+                                'assets/images/frame106.svg',
+                                width: 64 * scale,
+                                height: 25 * scale,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(
+                                left: 25 * scale,
+                                right: 16 * scale,
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Daily Calm',
+                                    style: TextStyle(
+                                      fontSize: 18 * scale,
+                                      fontWeight: FontWeight.w700,
+                                      fontFamily: 'HelveticaNeueBold',
+                                      color: Colors.black,
                                     ),
-                                    Positioned(
-                                      bottom: 12 * scale,
-                                      left: 12 * scale,
-                                      child: Text(
-                                        'Anxiet Release',
-                                        style: TextStyle(
-                                          fontSize: 18 * scale,
-                                          fontFamily: 'HelveticaNeueBold',
-                                          fontWeight: FontWeight.w700,
-                                          height: 1.08,
-                                          color: Colors.white,
-                                        ),
-                                      ),
+                                  ),
+                                  SizedBox(height: 5 * scale),
+                                  Text(
+                                    'APR 30  PAUSE PRACTICE',
+                                    style: TextStyle(
+                                      fontSize: 11 * scale,
+                                      fontFamily: 'HelveticaNeueRegular',
+                                      fontWeight: FontWeight.w400,
+                                      color: Colors.black,
                                     ),
-                                  ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: Padding(
+                                padding: EdgeInsets.only(right: 30 * scale),
+                                child: Container(
+                                  width: 44 * scale,
+                                  height: 44 * scale,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF3F414E),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.play_arrow,
+                                      color: Color(0xFFF0F1F2),
+                                      size: 26,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        SizedBox(height: 30 * scale),
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(height: 30 * scale),
+
+                  // MEDITATION TILES
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: padding),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const MusicV2Page()),
+                            );
+                          },
+                          child: _MeditationTile(
+                            imageAsset: 'assets/images/calm.svg',
+                            title: '7 Days of Calm',
+                            scale: scale,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const MusicV2Page()),
+                            );
+                          },
+                          child: _MeditationTile(
+                            imageAsset: 'assets/images/anxiet.svg',
+                            title: 'Anxiety Release',
+                            scale: scale,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ],
               ),
-            ),
-          );
-        }),
-      ),
-      bottomNavigationBar: LayoutBuilder(
-        builder: (context, constraints) {
-          final w = constraints.maxWidth;
-
-          double scale;
-          if (w <= 300) {
-            scale = 0.7;
-          } else if (w <= 360) {
-            scale = 0.85;
-          } else if (w <= 414) {
-            scale = 1.0;
-          } else if (w <= 600) {
-            scale = 1.2;
-          } else if (w <= 900) {
-            scale = 1.4;
-          } else {
-            scale = 1.6;
-          }
-
-          final navBarHeight = 112 * scale;
-
-          return Container(
-            height: navBarHeight,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  offset: const Offset(0, -2),
-                  blurRadius: 10,
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildNavItem('assets/images/homeIcon.svg', 'Home', 0, scale),
-                _buildNavItem('assets/images/sleepIcon.svg', 'Meditate', 1, scale),
-                _buildNavItem('assets/images/meditateIcon.svg', 'Sleep', 2, scale),
-                _buildNavItem('assets/images/musicIcon.svg', 'Music', 3, scale),
-                _buildNavItem('assets/images/profileIcon.svg', 'Profile', 4, scale),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildNavItem(String asset, String label, int index, double scale) {
-    final isSelected = _navIndex == index;
-    return GestureDetector(
-      onTap: () => _onNavTapped(index),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 46 * scale,
-            height: 46 * scale,
-            decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFF8E97FD) : Colors.transparent,
-              borderRadius: BorderRadius.circular(18 * scale),
-            ),
-            child: Center(
-              child: SvgPicture.asset(
-                asset,
-                width: (isSelected ? 23 : 21) * scale,
-                height: 22 * scale,
-                color: isSelected ? Colors.white : null,
-              ),
-            ),
-          ),
-          SizedBox(height: 6 * scale),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12 * scale,
-              fontFamily: 'HelveticaNeueRegular',
-              fontWeight: FontWeight.w400,
-              color: isSelected
-                  ? const Color(0xFF8E97FD)
-                  : const Color(0xFFA0A3B1),
-            ),
-          ),
-        ],
+            );
+          },
+        ),
       ),
     );
   }
 }
 
+class _MeditationTile extends StatelessWidget {
+  final String imageAsset;
+  final String title;
+  final double scale;
+
+  const _MeditationTile({
+    required this.imageAsset,
+    required this.title,
+    required this.scale,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final width =
+        (MediaQuery.of(context).size.width - 48 * scale - 16 * scale) / 2;
+    // Use a fixed height so overlays align
+    final height = 210 * scale;
+    final overlayHeight = 51.81 * scale;
+    final overlayTop = height - overlayHeight;
+
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10 * scale)),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10 * scale),
+        child: Stack(
+          children: [
+            SvgPicture.asset(
+              imageAsset,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            ),
+            Positioned(
+              top: overlayTop,
+              left: 0,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8 * scale),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                  child: Container(
+                    width: 180.15 * scale,
+                    height: overlayHeight,
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.21),
+                      borderRadius: BorderRadius.circular(8 * scale),
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12 * scale,
+                      vertical: 14 * scale,
+                    ),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 16 * scale,
+                          fontWeight: FontWeight.w700,
+                          fontFamily: 'HelveticaNeueBold',
+                          height: 1.08,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

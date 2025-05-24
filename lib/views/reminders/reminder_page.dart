@@ -22,10 +22,10 @@ class _ReminderPageState extends State<ReminderPage> {
 
     // Scale factor based on screen width
     double scale;
-    if (screenWidth <= 320) {
-      scale = 0.65;
-    } else if (screenWidth <= 360) {
-      scale = 0.75;
+    if (screenWidth <= 330) {
+      scale = 0.55;
+    } else if (screenWidth <= 350) {
+      scale = 0.70;
     } else if (screenWidth <= 414) {
       scale = 0.85;
     } else if (screenWidth <= 600) {
@@ -37,17 +37,16 @@ class _ReminderPageState extends State<ReminderPage> {
     const double spacing = 20.0;
     final primary = const Color(0xFF8E97FD);
     final selectedDayColor = const Color(0xFF3F414E);
-    final unselectedPickerColor = const Color(0xFFA1A4B2);
 
     // Text styles
     final titleFontSize = 28 * scale;
     final subtitleFontSize = 16 * scale;
     final noThanksFontSize = 14 * scale;
 
-    final smallTitleStyle = TextStyle(
+    final extraBoldTitleStyle = TextStyle(
       fontFamily: 'HelveticaNeueBold',
-      fontSize: titleFontSize * 0.85,
-      fontWeight: FontWeight.w700,
+      fontSize: titleFontSize,
+      fontWeight: FontWeight.w900, // Extra bold
       height: 1.35,
       color: const Color(0xFF3F414E),
     );
@@ -70,15 +69,16 @@ class _ReminderPageState extends State<ReminderPage> {
     );
 
     // Day button size constraints
-    double dayButtonSize = 40 * scale;
+    double dayButtonSize = 50 * scale;
     dayButtonSize = dayButtonSize.clamp(30.0, 50.0);
+
+    final double leftPadding = 15 * scale;
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20 * scale)
-              .copyWith(top: 40 * scale),
+          padding: EdgeInsets.symmetric(horizontal: 10 * scale).copyWith(top: 40 * scale),
           child: Column(
             children: [
               // Content
@@ -87,29 +87,43 @@ class _ReminderPageState extends State<ReminderPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('What time would you', style: smallTitleStyle),
-                      SizedBox(height: 8 * scale),
-                      Text('like to meditate?', style: smallTitleStyle),
-                      SizedBox(height: 24 * scale),
-
-                      Text(
-                        'Any time you can choose but we recommend',
-                        style: largerSubtitleStyle,
+                      // First heading texts with left padding and top padding on the first line, extra bold style
+                      Padding(
+                        padding: EdgeInsets.only(left: leftPadding, top: 30 * scale),
+                        child: Text('What time would you', style: extraBoldTitleStyle),
                       ),
-                      Text(
-                        'first thing in the morning.',
-                        style: largerSubtitleStyle,
+                      SizedBox(height: 1 * scale),
+                      Padding(
+                        padding: EdgeInsets.only(left: leftPadding),
+                        child: Text('like to meditate?', style: extraBoldTitleStyle),
+                      ),
+                      SizedBox(height: 10 * scale),
+
+                      // First small subtitle texts with left padding
+                      Padding(
+                        padding: EdgeInsets.only(left: leftPadding),
+                        child: Text(
+                          'Any time you can choose but we recommend',
+                          style: largerSubtitleStyle,
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: leftPadding),
+                        child: Text(
+                          'first thing in the morning.',
+                          style: largerSubtitleStyle,
+                        ),
                       ),
                       SizedBox(height: spacing),
 
                       // Time picker with custom unselected color and larger size
                       Container(
                         width: double.infinity,
-                        height: 212 * scale,
+                        height: 230 * scale,
                         padding: EdgeInsets.symmetric(vertical: 8 * scale),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF5F5F5),
-                          borderRadius: BorderRadius.circular(12 * scale),
+                          borderRadius: BorderRadius.circular(16 * scale),
                         ),
                         child: CupertinoTheme(
                           data: CupertinoTheme.of(context).copyWith(
@@ -131,68 +145,80 @@ class _ReminderPageState extends State<ReminderPage> {
                             },
                           ),
                         ),
-
                       ),
                       SizedBox(height: spacing),
 
-                      Text('Which day would you', style: smallTitleStyle),
-                      SizedBox(height: 8 * scale),
-                      Text('like to meditate?', style: smallTitleStyle),
+                      // Second heading texts with left padding and extra bold style
+                      Padding(
+                        padding: EdgeInsets.only(left: leftPadding),
+                        child: Text('Which day would you', style: extraBoldTitleStyle),
+                      ),
+                      SizedBox(height: 1 * scale),
+                      Padding(
+                        padding: EdgeInsets.only(left: leftPadding),
+                        child: Text('like to meditate?', style: extraBoldTitleStyle),
+                      ),
                       SizedBox(height: spacing),
 
-                      Text(
-                        'Everyday is best, but we recommend picking',
-                        style: largerSubtitleStyle,
+                      // Second small subtitle texts with left padding
+                      Padding(
+                        padding: EdgeInsets.only(left: leftPadding),
+                        child: Text(
+                          'Everyday is best, but we recommend picking',
+                          style: largerSubtitleStyle,
+                        ),
                       ),
-                      Text('at least five.', style: largerSubtitleStyle),
+                      Padding(
+                        padding: EdgeInsets.only(left: leftPadding),
+                        child: Text('at least five.', style: largerSubtitleStyle),
+                      ),
                       SizedBox(height: spacing),
                     ],
                   ),
                 ),
               ),
 
-              // Days selector
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: _days.map((day) {
-                  final selected = _selectedDays.contains(day);
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        if (selected) {
-                          _selectedDays.remove(day);
-                        } else {
-                          _selectedDays.add(day);
-                        }
-                      });
-                    },
-                    child: Container(
-                      width: dayButtonSize,
-                      height: dayButtonSize,
-                      decoration: BoxDecoration(
-                        color: selected ? selectedDayColor : Colors.white,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: selected
-                              ? selectedDayColor
-                              : const Color(0xFFE6E7F2),
-                          width: 1.5,
+              // Days selector with horizontal padding
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 15 * scale),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: _days.map((day) {
+                    final selected = _selectedDays.contains(day);
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          if (selected) {
+                            _selectedDays.remove(day);
+                          } else {
+                            _selectedDays.add(day);
+                          }
+                        });
+                      },
+                      child: Container(
+                        width: dayButtonSize,
+                        height: dayButtonSize,
+                        decoration: BoxDecoration(
+                          color: selected ? selectedDayColor : Colors.white,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: selected ? selectedDayColor : const Color(0xFFE6E7F2),
+                            width: 1.5,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          day,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: selected ? Colors.white : const Color(0xFFA1A4B2),
+                            fontSize: dayButtonSize * 0.35,
+                          ),
                         ),
                       ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        day,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: selected
-                              ? Colors.white
-                              : const Color(0xFF3F414E),
-                          fontSize: dayButtonSize * 0.35,
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }).toList(),
+                ),
               ),
 
               SizedBox(height: spacing),
@@ -214,8 +240,7 @@ class _ReminderPageState extends State<ReminderPage> {
                       onPressed: () {
                         Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(
-                              builder: (_) => const HomePage7()),
+                          MaterialPageRoute(builder: (_) => const HomePage7()),
                         );
                       },
                       child: Text(
@@ -228,17 +253,16 @@ class _ReminderPageState extends State<ReminderPage> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 12 * scale),
+                  SizedBox(height: 40 * scale),
                   GestureDetector(
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                            builder: (_) => const HomePage7()),
+                        MaterialPageRoute(builder: (_) => const HomePage7()),
                       );
                     },
                     child: Padding(
-                      padding: const EdgeInsets.only(top: 5, bottom: 10),
+                      padding: const EdgeInsets.only(top: 0, bottom: 10),
                       child: Text(
                         'No Thanks',
                         style: noThanksButtonStyle,
