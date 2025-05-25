@@ -1,18 +1,23 @@
 // lib/main.dart
 
-import 'package:first_flutter_app/views/home_page/home_page.dart';
-import 'package:first_flutter_app/views/sleep_page/sleep_page.dart';
-import 'package:first_flutter_app/views/welcome_page/welcome_page.dart';
 import 'package:flutter/material.dart';
-import 'package:first_flutter_app/widgets/navbar.dart';
-import 'package:first_flutter_app/views/sign_in/sign_in_page.dart';
-import 'package:first_flutter_app/views/sign_up/sign_up_page.dart';
-import 'package:first_flutter_app/views/choose_topic/choose_topic_page.dart';
-import 'package:first_flutter_app/views/reminders/reminder_page.dart';
+
+// Your five “tabs”
 import 'package:first_flutter_app/views/home_page_7/home_page_7.dart';
 import 'package:first_flutter_app/views/meditate_page/meditate_page.dart';
 import 'package:first_flutter_app/views/music_page/music_page.dart';
 import 'package:first_flutter_app/views/profile_page/profile_page.dart';
+
+// Other standalone pages
+import 'package:first_flutter_app/views/home_page/home_page.dart';
+import 'package:first_flutter_app/views/welcome_page/welcome_page.dart';
+import 'package:first_flutter_app/views/sign_in/sign_in_page.dart';
+import 'package:first_flutter_app/views/sign_up/sign_up_page.dart';
+import 'package:first_flutter_app/views/choose_topic/choose_topic_page.dart';
+import 'package:first_flutter_app/views/reminders/reminder_page.dart';
+
+// Nav bar container
+import 'package:first_flutter_app/widgets/navbar.dart';
 
 void main() {
   runApp(const MyApp());
@@ -50,11 +55,6 @@ class MyApp extends StatelessWidget {
               builder: (_) => const SignUpPage(),
               settings: settings,
             );
-          case '/choose_topic':
-            return MaterialPageRoute(
-              builder: (_) => const WelcomePage(),
-              settings: settings,
-            );
 
           case '/choose_topic':
             return MaterialPageRoute(
@@ -69,21 +69,23 @@ class MyApp extends StatelessWidget {
             );
 
           case '/main':
+          // allow passing an optional initialIndex (0–4)
             final args = settings.arguments;
             int initialIndex = 0;
             if (args is int && args >= 0 && args < 5) {
               initialIndex = args;
             }
+
             return MaterialPageRoute(
               builder: (_) => NavBarContainer(
+                initialIndex: initialIndex,
                 pages: const [
                   HomePage7(),
                   MeditatePage(),
-                  SleepPage(),
+                  SizedBox.shrink(),
                   MusicPage(),
                   ProfilePage(),
                 ],
-                initialIndex: initialIndex,
               ),
               settings: settings,
             );
@@ -103,5 +105,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-
