@@ -25,7 +25,6 @@ class CourseDetailsPage extends StatelessWidget {
                   height: 288,
                   child: Stack(
                     children: [
-                      // Sun background
                       SvgPicture.asset(
                         'assets/images/sun.svg',
                         width: 414,
@@ -74,7 +73,6 @@ class CourseDetailsPage extends StatelessWidget {
                   ),
                 ),
               ),
-              // Content below
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20 * scale),
                 child: Column(

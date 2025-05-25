@@ -197,7 +197,7 @@ class _SignInPageState extends State<SignInPage> {
                         onPressed: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (_) => const SignUnPage(),
+                              builder: (_) => const SignUpPage(),
                             ),
                           );
                         },
@@ -284,7 +284,7 @@ class _SignInPageState extends State<SignInPage> {
       ),
       padding: EdgeInsets.zero,
       textStyle: TextStyle(
-        fontFamily: 'HelveticaNeueRegular',     // ← ensures HelveticaNeue
+        fontFamily: 'HelveticaNeueRegular',
         fontWeight: FontWeight.w400,
         fontSize: fontSize,
       ),
@@ -297,7 +297,7 @@ class _SignInPageState extends State<SignInPage> {
       padding: EdgeInsets.zero,
       elevation: 0,
       textStyle: TextStyle(
-        fontFamily: 'HelveticaNeueRegular',     // ← ensures HelveticaNeue
+        fontFamily: 'HelveticaNeueRegular',
         fontWeight: FontWeight.w400,
         fontSize: fontSize,
       ),

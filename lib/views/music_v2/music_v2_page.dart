@@ -10,8 +10,8 @@ class MusicV2Page extends StatefulWidget {
 
 class _MusicV2PageState extends State<MusicV2Page> {
   bool isPlaying = false;
-  double position = 0.0; // in minutes
-  final double duration = 45.0; // total minutes
+  double position = 0.0;
+  final double duration = 45.0;
 
   String formatTime(double minutes) {
     final totalSeconds = (minutes * 60).toInt();
@@ -35,7 +35,6 @@ class _MusicV2PageState extends State<MusicV2Page> {
       extendBody: true,
       extendBodyBehindAppBar: true,
       body: Stack(fit: StackFit.expand, children: [
-        // --- Background frames ---
         Positioned(
           top: 0,
           left: 0,
@@ -70,8 +69,6 @@ class _MusicV2PageState extends State<MusicV2Page> {
             ),
           ),
         ),
-
-        // --- Top icon row ---
         Positioned(
           top: 40 * scale,
           left: 20 * scale,
@@ -86,7 +83,7 @@ class _MusicV2PageState extends State<MusicV2Page> {
               Row(
                 children: [
                   Opacity(
-                    opacity: 0.5, // 50% visible
+                    opacity: 0.5,
                     child: SvgPicture.asset('assets/images/heart.svg', width: 55 * scale, height: 55 * scale),
                   ),
                   SizedBox(width: 10 * scale),
@@ -100,8 +97,6 @@ class _MusicV2PageState extends State<MusicV2Page> {
             ],
           ),
         ),
-
-        // --- Title ---
         Positioned(
           top: size.height * 0.5 - 40 * scale,
           left: 0,
@@ -132,8 +127,6 @@ class _MusicV2PageState extends State<MusicV2Page> {
             ],
           ),
         ),
-
-        // --- Audio controls + slider ---
         Positioned(
           top: size.height * 0.62,
           left: 20 * scale,

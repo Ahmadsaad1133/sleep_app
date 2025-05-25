@@ -273,29 +273,6 @@ class ChooseTopicPage extends StatelessWidget {
                                 Navigator.push(context, MaterialPageRoute(builder: (_) => const ReminderPage()));
                               },
                             ),
-                            SizedBox(height: 15 * scale),
-                            buildTopicWidget(
-                              baseWidth: 186,
-                              baseHeight: 220,
-                              color: const Color(0xFF8E97FD),
-                              svgAsset: 'assets/images/Widget1.svg',
-                              baseSvgWidth: 164,
-                              baseSvgHeight: 146,
-                              noPaddingTopForSvg: true,  // This ensures the SVG is aligned at the top without padding
-                              scale: scale,
-                              customLabelWidget: Text(
-                                'Reduce Stress',
-                                style: labelTextStyle.copyWith(
-                                  color: Colors.white,
-                                  fontFamily: 'HelveticaNeue',
-                                ),
-                                textAlign: TextAlign.left,
-                              ),
-                              onTap: () {
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => const ReminderPage()));
-                              },
-                            ),
-
                           ],
                         ),
                         Column(
@@ -379,25 +356,6 @@ class ChooseTopicPage extends StatelessWidget {
                                   ),
                                   textAlign: TextAlign.left,
                                 ),
-                              ),
-                              onTap: () {
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => const ReminderPage()));
-                              },
-                            ),
-                            SizedBox(height: 15 * scale),
-                            buildTopicWidget(
-                              baseWidth: 186,
-                              baseHeight: 220,
-                              color: const Color(0xFFD9A5B5),
-                              svgAsset: 'assets/images/Widget1.svg',
-                              baseSvgWidth: 164,
-                              baseSvgHeight: 146,
-                              noPaddingTopForSvg: true,
-                              scale: scale,
-                              customLabelWidget: Text(
-                                'Old Music',
-                                style: labelTextStyle,
-                                textAlign: TextAlign.center,
                               ),
                               onTap: () {
                                 Navigator.push(context, MaterialPageRoute(builder: (_) => const ReminderPage()));

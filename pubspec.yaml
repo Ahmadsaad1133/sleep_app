@@ -75,8 +75,9 @@ flutter:
     - assets/images/navigaterightTime.svg
     - assets/images/navigateleftTime.svg
     - assets/images/home105.svg
-    - assets/images/sleepframe.png
+    - assets/images/sleepframe.svg
     - assets/images/cloud.svg
+    - assets/images/birds.svg
 
   fonts:
     - family: AirbnbCereal

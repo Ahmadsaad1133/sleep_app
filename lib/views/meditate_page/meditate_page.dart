@@ -92,8 +92,6 @@ class _MeditatePageState extends State<MeditatePage> {
                     ),
                   ),
                   SizedBox(height: 30 * scale),
-
-                  // CATEGORY SCROLL
                   Padding(
                     padding: EdgeInsets.only(left: padding),
                     child: SingleChildScrollView(
@@ -149,8 +147,6 @@ class _MeditatePageState extends State<MeditatePage> {
                   ),
 
                   SizedBox(height: 30 * scale),
-
-                  // DAILY CALM BANNER
                   Center(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10 * scale),
@@ -250,8 +246,6 @@ class _MeditatePageState extends State<MeditatePage> {
                   ),
 
                   SizedBox(height: 30 * scale),
-
-                  // MEDITATION TILES
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: padding),
                     child: Row(
@@ -313,7 +307,6 @@ class _MeditationTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final width =
         (MediaQuery.of(context).size.width - 48 * scale - 16 * scale) / 2;
-    // Use a fixed height so overlays align
     final height = 210 * scale;
     final overlayHeight = 51.81 * scale;
     final overlayTop = height - overlayHeight;

@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '/views/welcome_page/welcome_page.dart'; // <-- adjust path as needed
 
-class SignUnPage extends StatefulWidget {
-  const SignUnPage({Key? key}) : super(key: key);
+class SignUpPage extends StatefulWidget {
+  const SignUpPage({Key? key}) : super(key: key);
 
   @override
-  State<SignUnPage> createState() => _SignUnPageState();
+  State<SignUpPage> createState() => _SignUnPageState();
 }
 
-class _SignUnPageState extends State<SignUnPage> {
+class _SignUnPageState extends State<SignUpPage> {
   bool _obscurePassword = true;
   bool _acceptedPolicy = false;
   final FocusNode _emailFocusNode = FocusNode();
@@ -62,7 +62,6 @@ class _SignUnPageState extends State<SignUnPage> {
       body: Stack(
         clipBehavior: Clip.none,
         children: [
-          // SVG background
           Positioned(
             top: 0,
             left: 0,

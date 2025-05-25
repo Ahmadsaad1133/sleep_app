@@ -37,8 +37,6 @@ class _ReminderPageState extends State<ReminderPage> {
     const double spacing = 20.0;
     final primary = const Color(0xFF8E97FD);
     final selectedDayColor = const Color(0xFF3F414E);
-
-    // Text styles
     final titleFontSize = 28 * scale;
     final subtitleFontSize = 16 * scale;
     final noThanksFontSize = 14 * scale;
@@ -46,7 +44,7 @@ class _ReminderPageState extends State<ReminderPage> {
     final extraBoldTitleStyle = TextStyle(
       fontFamily: 'HelveticaNeueBold',
       fontSize: titleFontSize,
-      fontWeight: FontWeight.w900, // Extra bold
+      fontWeight: FontWeight.w900,
       height: 1.35,
       color: const Color(0xFF3F414E),
     );
@@ -67,8 +65,6 @@ class _ReminderPageState extends State<ReminderPage> {
       letterSpacing: 1,
       color: selectedDayColor,
     );
-
-    // Day button size constraints
     double dayButtonSize = 50 * scale;
     dayButtonSize = dayButtonSize.clamp(30.0, 50.0);
 
@@ -81,13 +77,11 @@ class _ReminderPageState extends State<ReminderPage> {
           padding: EdgeInsets.symmetric(horizontal: 10 * scale).copyWith(top: 40 * scale),
           child: Column(
             children: [
-              // Content
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // First heading texts with left padding and top padding on the first line, extra bold style
                       Padding(
                         padding: EdgeInsets.only(left: leftPadding, top: 30 * scale),
                         child: Text('What time would you', style: extraBoldTitleStyle),
@@ -98,8 +92,6 @@ class _ReminderPageState extends State<ReminderPage> {
                         child: Text('like to meditate?', style: extraBoldTitleStyle),
                       ),
                       SizedBox(height: 10 * scale),
-
-                      // First small subtitle texts with left padding
                       Padding(
                         padding: EdgeInsets.only(left: leftPadding),
                         child: Text(
@@ -115,8 +107,6 @@ class _ReminderPageState extends State<ReminderPage> {
                         ),
                       ),
                       SizedBox(height: spacing),
-
-                      // Time picker with custom unselected color and larger size
                       Container(
                         width: double.infinity,
                         height: 230 * scale,
@@ -130,7 +120,7 @@ class _ReminderPageState extends State<ReminderPage> {
                             textTheme: CupertinoTextThemeData(
                               dateTimePickerTextStyle: TextStyle(
                                 fontSize: 30 * scale,
-                                color: Colors.black, // Set to black for selected items
+                                color: Colors.black,
                               ),
                             ),
                           ),
@@ -147,8 +137,6 @@ class _ReminderPageState extends State<ReminderPage> {
                         ),
                       ),
                       SizedBox(height: spacing),
-
-                      // Second heading texts with left padding and extra bold style
                       Padding(
                         padding: EdgeInsets.only(left: leftPadding),
                         child: Text('Which day would you', style: extraBoldTitleStyle),
@@ -159,8 +147,6 @@ class _ReminderPageState extends State<ReminderPage> {
                         child: Text('like to meditate?', style: extraBoldTitleStyle),
                       ),
                       SizedBox(height: spacing),
-
-                      // Second small subtitle texts with left padding
                       Padding(
                         padding: EdgeInsets.only(left: leftPadding),
                         child: Text(
@@ -177,8 +163,6 @@ class _ReminderPageState extends State<ReminderPage> {
                   ),
                 ),
               ),
-
-              // Days selector with horizontal padding
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 15 * scale),
                 child: Row(
@@ -222,8 +206,6 @@ class _ReminderPageState extends State<ReminderPage> {
               ),
 
               SizedBox(height: spacing),
-
-              // Save button + No Thanks
               Column(
                 children: [
                   SizedBox(

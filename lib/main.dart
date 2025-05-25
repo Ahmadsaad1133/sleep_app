@@ -1,55 +1,107 @@
+// lib/main.dart
 
-import 'package:flutter/material.dart';
 import 'package:first_flutter_app/views/home_page/home_page.dart';
+import 'package:first_flutter_app/views/sleep_page/sleep_page.dart';
+import 'package:first_flutter_app/views/welcome_page/welcome_page.dart';
+import 'package:flutter/material.dart';
+import 'package:first_flutter_app/widgets/navbar.dart';
 import 'package:first_flutter_app/views/sign_in/sign_in_page.dart';
 import 'package:first_flutter_app/views/sign_up/sign_up_page.dart';
-import 'package:first_flutter_app/views/welcome_page/welcome_page.dart';
 import 'package:first_flutter_app/views/choose_topic/choose_topic_page.dart';
 import 'package:first_flutter_app/views/reminders/reminder_page.dart';
 import 'package:first_flutter_app/views/home_page_7/home_page_7.dart';
 import 'package:first_flutter_app/views/meditate_page/meditate_page.dart';
-import 'package:first_flutter_app/views/sleep_page/sleep_page.dart';
-import 'package:first_flutter_app/widgets/navbar.dart';
+import 'package:first_flutter_app/views/music_page/music_page.dart';
+import 'package:first_flutter_app/views/profile_page/profile_page.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
       title: 'Flutter App',
-
-      routes: {
-        '/home':         (_) => const HomePage(),
-        '/sign_in':      (_) => const SignInPage(),
-        '/sign_up':      (_) => const SignUnPage(),
-        '/welcome':      (_) => const WelcomePage(),
-        '/choose_topic': (_) => const ChooseTopicPage(),
-        '/reminders':    (_) => const ReminderPage(),
-        '/tabs': (_) => const TabsContainer(),
-      },
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+      ),
       initialRoute: '/home',
+      onGenerateRoute: (RouteSettings settings) {
+        switch (settings.name) {
+          case '/home':
+            return MaterialPageRoute(
+              builder: (_) => const HomePage(),
+              settings: settings,
+            );
+
+          case '/sign_in':
+            return MaterialPageRoute(
+              builder: (_) => const SignInPage(),
+              settings: settings,
+            );
+
+          case '/sign_up':
+            return MaterialPageRoute(
+              builder: (_) => const SignUpPage(),
+              settings: settings,
+            );
+          case '/choose_topic':
+            return MaterialPageRoute(
+              builder: (_) => const WelcomePage(),
+              settings: settings,
+            );
+
+          case '/choose_topic':
+            return MaterialPageRoute(
+              builder: (_) => const ChooseTopicPage(),
+              settings: settings,
+            );
+
+          case '/reminders':
+            return MaterialPageRoute(
+              builder: (_) => const ReminderPage(),
+              settings: settings,
+            );
+
+          case '/main':
+            final args = settings.arguments;
+            int initialIndex = 0;
+            if (args is int && args >= 0 && args < 5) {
+              initialIndex = args;
+            }
+            return MaterialPageRoute(
+              builder: (_) => NavBarContainer(
+                pages: const [
+                  HomePage7(),
+                  MeditatePage(),
+                  SleepPage(),
+                  MusicPage(),
+                  ProfilePage(),
+                ],
+                initialIndex: initialIndex,
+              ),
+              settings: settings,
+            );
+
+          default:
+            return MaterialPageRoute(
+              builder: (_) => Scaffold(
+                appBar: AppBar(title: const Text('Page Not Found')),
+                body: Center(
+                  child: Text('No route defined for ${settings.name}'),
+                ),
+              ),
+              settings: settings,
+            );
+        }
+      },
     );
   }
 }
-class TabsContainer extends StatelessWidget {
-  const TabsContainer({Key? key}) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
-    final navbarPages = <Widget>[
-      const HomePage7(),
-      const MeditatePage(),
-      const SleepPage(),
-    ];
 
-    return NavBarContainer(
-      pages: navbarPages,
-      scale: 1.0,
-    );
-  }
-}
