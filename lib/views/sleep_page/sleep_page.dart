@@ -6,6 +6,7 @@ import 'package:first_flutter_app/views/meditate_page/meditate_page.dart';
 import 'package:first_flutter_app/views/sleep/sleep_flow_page.dart';
 import 'package:first_flutter_app/views/music_page/music_page.dart';
 import 'package:first_flutter_app/views/profile_Page/profile_page.dart';
+import 'package:first_flutter_app/views/night_island/night_island_page.dart';
 
 class SleepPage extends StatefulWidget {
   const SleepPage({Key? key}) : super(key: key);
@@ -164,7 +165,7 @@ class _SleepPageState extends State<SleepPage> {
                 children: [
                   const SizedBox(height: 50),
 
-                  // PAGE CONTENT WITH LEFT/RIGHT PADDING except categories row
+                  // Page title and subtitle
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: padding),
                     child: Column(
@@ -181,7 +182,7 @@ class _SleepPageState extends State<SleepPage> {
                         ),
                         SizedBox(height: 15 * scale),
                         Text(
-                          'Soothing bedtime stories to help you fall\n into a deep and natural sleep',
+                          'Soothing bedtime stories to help you fall\ninto a deep and natural sleep',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 18 * scale,
@@ -195,19 +196,21 @@ class _SleepPageState extends State<SleepPage> {
                       ],
                     ),
                   ),
+
+                  // Category chips
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
-                    padding: EdgeInsets.zero,
                     child: Row(
                       children: categories.asMap().entries.map((entry) {
                         final idx = entry.key;
                         final label = entry.value;
                         final isActive = idx == categoryIndex;
                         final isLast = idx == categories.length - 1;
-
                         return Padding(
-                          padding:
-                          EdgeInsets.only(left: idx == 0 ? padding : 0, right: isLast ? padding : 16 * scale),
+                          padding: EdgeInsets.only(
+                            left: idx == 0 ? padding : 0,
+                            right: isLast ? padding : 16 * scale,
+                          ),
                           child: GestureDetector(
                             onTap: () => setState(() => categoryIndex = idx),
                             child: Column(
@@ -219,8 +222,7 @@ class _SleepPageState extends State<SleepPage> {
                                     color: isActive
                                         ? const Color(0xFF8E97FD)
                                         : const Color(0xFF586894),
-                                    borderRadius:
-                                    BorderRadius.circular(28 * scale),
+                                    borderRadius: BorderRadius.circular(28 * scale),
                                   ),
                                   child: Center(
                                     child: idx < icons.length
@@ -252,6 +254,8 @@ class _SleepPageState extends State<SleepPage> {
                   ),
 
                   SizedBox(height: 30 * scale),
+
+                  // Featured story card
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: padding),
                     child: Column(
@@ -306,8 +310,7 @@ class _SleepPageState extends State<SleepPage> {
                                           height: 35 * scale,
                                           decoration: BoxDecoration(
                                             color: const Color(0xFFEBEAEC),
-                                            borderRadius:
-                                            BorderRadius.circular(25),
+                                            borderRadius: BorderRadius.circular(25),
                                           ),
                                           child: Center(
                                             child: Text(
@@ -319,8 +322,7 @@ class _SleepPageState extends State<SleepPage> {
                                                     ? 14
                                                     : 12,
                                                 color: const Color(0xFF3F414E),
-                                                fontFamily:
-                                                'HelveticaNeueRegular',
+                                                fontFamily: 'HelveticaNeueRegular',
                                                 fontWeight: FontWeight.w600,
                                               ),
                                             ),
@@ -337,29 +339,57 @@ class _SleepPageState extends State<SleepPage> {
 
                         SizedBox(height: 30 * scale),
 
+                        // Last two rows with navigation on first card
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            buildLabeledCard(
-                                'assets/images/happycloud.svg', 'Night Island'),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const NightIslandPage(),
+                                  ),
+                                );
+                              },
+                              child: buildLabeledCard(
+                                'assets/images/happycloud.svg',
+                                'Night Island',
+                              ),
+                            ),
                             SizedBox(width: 16 * containersScale),
                             buildLabeledCard(
-                                'assets/images/happybirds.svg', 'Sweet Sleep'),
+                              'assets/images/happybirds.svg',
+                              'Sweet Sleep',
+                            ),
                           ],
                         ),
+
                         SizedBox(height: 30 * scale),
+
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            buildLabeledCard(
-                                'assets/images/bowlmoon.svg', 'Night Island'),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const NightIslandPage(),
+                                  ),
+                                );
+                              },
+                              child: buildLabeledCard(
+                                'assets/images/bowlmoon.svg',
+                                'Night Island',
+                              ),
+                            ),
                             SizedBox(width: 16 * containersScale),
                             buildLabeledCard(
-                                'assets/images/pinkmoon.svg', 'Night Island'),
+                              'assets/images/pinkmoon.svg',
+                              'Night Island',
+                            ),
                           ],
                         ),
+
                         SizedBox(height: 30 * scale),
                       ],
                     ),
