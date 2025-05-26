@@ -210,7 +210,7 @@ class VoiceList extends StatelessWidget {
     final scale = screenWidth / 375 * 0.8;
 
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 30 * scale, horizontal: 20 * scale),
+      padding: EdgeInsets.symmetric(vertical: 40 * scale, horizontal: 20 * scale),
       child: Column(
         children: const [
           ListItem(title: 'Focus Attention', minutes: 10),

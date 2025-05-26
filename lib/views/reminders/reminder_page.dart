@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-
-// Update this path to point at your actual HomePage file location:
 import '/views/home_page_7/home_Page_7.dart';
 
 class ReminderPage extends StatefulWidget {

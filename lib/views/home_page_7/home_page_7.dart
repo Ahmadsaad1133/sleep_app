@@ -1,5 +1,3 @@
-// lib/views/home_page_7/home_page_7.dart
-
 import 'package:first_flutter_app/views/music_page/music_Page.dart';
 import 'package:first_flutter_app/views/profile_Page/profile_page.dart';
 import 'package:first_flutter_app/views/welcome_sleep/welcome_sleep_page.dart';
@@ -22,7 +20,6 @@ class _HomePage7State extends State<HomePage7> {
 
   void _onNavItemTapped(int index) {
     if (index == 2) {
-      // Navigate to WelcomeSleepPage when sleep icon is pressed
       Navigator.push(
         context,
         MaterialPageRoute(

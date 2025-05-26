@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '/views/music_player/music_player_page.dart';
 
 class SleepMusicPage extends StatefulWidget {
   final ValueNotifier<bool> onNavbarVisibilityChange;
@@ -41,103 +42,121 @@ class _SleepMusicPageState extends State<SleepMusicPage> {
 
     final cardScale = scale * 1.10;
 
-    Widget buildCard(String asset, String title1, String title2) {
-      return SizedBox(
-        width: 177 * cardScale,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 177 * cardScale,
-              height: 122 * cardScale,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10 * cardScale),
-                color: Colors.transparent,
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10 * cardScale),
-                child: SvgPicture.asset(
-                  asset,
-                  width: 177 * cardScale,
-                  height: 122 * cardScale,
-                  fit: BoxFit.cover,
+    Widget buildCard(String asset, String title1, String title2, {VoidCallback? onTap}) {
+      return GestureDetector(
+        onTap: onTap,
+        child: SizedBox(
+          width: 177 * cardScale,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 177 * cardScale,
+                height: 122 * cardScale,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10 * cardScale),
+                  color: Colors.transparent,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10 * cardScale),
+                  child: SvgPicture.asset(
+                    asset,
+                    width: 177 * cardScale,
+                    height: 122 * cardScale,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
-            ),
-            SizedBox(height: 8 * cardScale),
-            Text(
-              title1,
-              style: TextStyle(
-                fontSize: 18 * cardScale,
-                height: 1.08,
-                color: const Color(0xFFE6E7F2),
-                fontFamily: 'HelveticaNeueBold',
+              SizedBox(height: 8 * cardScale),
+              Text(
+                title1,
+                style: TextStyle(
+                  fontSize: 18 * cardScale,
+                  height: 1.08,
+                  color: const Color(0xFFE6E7F2),
+                  fontFamily: 'HelveticaNeueBold',
+                ),
               ),
-            ),
-            SizedBox(height: 4 * cardScale),
-            Text(
-              title2,
-              style: TextStyle(
-                fontSize: 11 * cardScale,
-                fontWeight: FontWeight.w400,
-                letterSpacing: 0.55 * cardScale,
-                color: const Color(0xFF98A1BD),
-                fontFamily: 'HelveticaNeueRegular',
+              SizedBox(height: 4 * cardScale),
+              Text(
+                title2,
+                style: TextStyle(
+                  fontSize: 11 * cardScale,
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: 0.55 * cardScale,
+                  color: const Color(0xFF98A1BD),
+                  fontFamily: 'HelveticaNeueRegular',
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     }
 
-    Widget buildCardWithBackground(
-        String backgroundAsset,
-        String title1,
-        String title2,
-        ) {
-      return SizedBox(
-        width: 177 * cardScale,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 177 * cardScale,
-              height: 122 * cardScale,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10 * cardScale),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10 * cardScale),
-                child: SvgPicture.asset(
-                  backgroundAsset,
-                  fit: BoxFit.cover,
+    Widget buildCardWithBackground(String backgroundAsset, String title1, String title2, {VoidCallback? onTap}) {
+      return GestureDetector(
+        onTap: onTap,
+        child: SizedBox(
+          width: 177 * cardScale,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 177 * cardScale,
+                height: 122 * cardScale,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10 * cardScale),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10 * cardScale),
+                  child: SvgPicture.asset(
+                    backgroundAsset,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
-            ),
-            SizedBox(height: 8 * cardScale),
-            Text(
-              title1,
-              style: TextStyle(
-                fontSize: 18 * cardScale,
-                height: 1.08,
-                color: const Color(0xFFE6E7F2),
-                fontFamily: 'HelveticaNeueBold',
+              SizedBox(height: 8 * cardScale),
+              Text(
+                title1,
+                style: TextStyle(
+                  fontSize: 18 * cardScale,
+                  height: 1.08,
+                  color: const Color(0xFFE6E7F2),
+                  fontFamily: 'HelveticaNeueBold',
+                ),
               ),
-            ),
-            SizedBox(height: 4 * cardScale),
-            Text(
-              title2,
-              style: TextStyle(
-                fontSize: 11 * cardScale,
-                fontWeight: FontWeight.w400,
-                letterSpacing: 0.55 * cardScale,
-                color: const Color(0xFF98A1BD),
-                fontFamily: 'HelveticaNeueRegular',
+              SizedBox(height: 4 * cardScale),
+              Text(
+                title2,
+                style: TextStyle(
+                  fontSize: 11 * cardScale,
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: 0.55 * cardScale,
+                  color: const Color(0xFF98A1BD),
+                  fontFamily: 'HelveticaNeueRegular',
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
+    }
+
+    void _navigateToPlayer({required bool hideNavbar}) {
+      // Hide navbar if requested
+      if (hideNavbar) widget.onNavbarVisibilityChange.value = false;
+      Navigator.of(context)
+          .push(
+        MaterialPageRoute(
+          builder: (_) => MusicPlayerPage(
+            onNavbarVisibilityChange: widget.onNavbarVisibilityChange,
+          ),
+        ),
+      )
+          .then((_) {
+        widget.onNavbarVisibilityChange.value = true;
+      });
     }
 
     return Scaffold(
@@ -200,6 +219,7 @@ class _SleepMusicPageState extends State<SleepMusicPage> {
                         'assets/images/happycloud.svg',
                         'Night Island',
                         '45 MIN   SLEEP MUSIC',
+                        onTap: () => _navigateToPlayer(hideNavbar: true),
                       ),
                     if (i == 1)
                       buildCard(
@@ -212,6 +232,7 @@ class _SleepMusicPageState extends State<SleepMusicPage> {
                         'assets/images/happycloud.svg',
                         'Night Island',
                         '45 MIN   SLEEP MUSIC',
+                        onTap: () => _navigateToPlayer(hideNavbar: true),
                       )
                     else
                       buildCard(

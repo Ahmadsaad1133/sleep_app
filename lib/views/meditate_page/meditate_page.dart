@@ -1,5 +1,3 @@
-// lib/views/meditate_page/meditate_page.dart
-
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';

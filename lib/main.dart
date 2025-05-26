@@ -63,7 +63,6 @@ class MyApp extends StatelessWidget {
             );
 
           case '/main':
-          // allow passing an optional initialIndex (0–4)
             final args = settings.arguments;
             int initialIndex = 0;
             if (args is int && args >= 0 && args < 5) {
