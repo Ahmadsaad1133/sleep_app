@@ -1,14 +1,9 @@
-// lib/main.dart
 
 import 'package:flutter/material.dart';
-
-// Your five “tabs”
 import 'package:first_flutter_app/views/home_page_7/home_page_7.dart';
 import 'package:first_flutter_app/views/meditate_page/meditate_page.dart';
 import 'package:first_flutter_app/views/music_page/music_page.dart';
 import 'package:first_flutter_app/views/profile_page/profile_page.dart';
-
-// Other standalone pages
 import 'package:first_flutter_app/views/home_page/home_page.dart';
 import 'package:first_flutter_app/views/welcome_page/welcome_page.dart';
 import 'package:first_flutter_app/views/sign_in/sign_in_page.dart';
@@ -16,7 +11,6 @@ import 'package:first_flutter_app/views/sign_up/sign_up_page.dart';
 import 'package:first_flutter_app/views/choose_topic/choose_topic_page.dart';
 import 'package:first_flutter_app/views/reminders/reminder_page.dart';
 
-// Nav bar container
 import 'package:first_flutter_app/widgets/navbar.dart';
 
 void main() {

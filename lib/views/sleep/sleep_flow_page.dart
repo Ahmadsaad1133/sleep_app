@@ -17,7 +17,6 @@ class _SleepFlowPageState extends State<SleepFlowPage> {
   @override
   void initState() {
     super.initState();
-    // Ensure the navbar is visible when entering the page
     widget.onNavbarVisibilityChange(true);
   }
 

@@ -1,8 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-class NightIslandPage extends StatelessWidget {
-  const NightIslandPage({Key? key}) : super(key: key);
+class NightIslandPage extends StatefulWidget {
+  final ValueNotifier<bool> onNavbarVisibilityChange;
+  const NightIslandPage({Key? key, required this.onNavbarVisibilityChange}) : super(key: key);
+
+  @override
+  _NightIslandPageState createState() => _NightIslandPageState();
+}
+
+class _NightIslandPageState extends State<NightIslandPage> {
+  @override
+  void initState() {
+    super.initState();
+    widget.onNavbarVisibilityChange.value = false;
+  }
+
+  @override
+  void dispose() {
+    widget.onNavbarVisibilityChange.value = true;
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

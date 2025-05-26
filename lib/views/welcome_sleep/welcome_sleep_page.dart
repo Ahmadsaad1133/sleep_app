@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:first_flutter_app/views/sleep_page/sleep_page.dart';
+import 'package:first_flutter_app/views/sleep_shell/sleep_shell_page.dart';
 
 class WelcomeSleepPage extends StatelessWidget {
   const WelcomeSleepPage({Key? key}) : super(key: key);
@@ -17,15 +17,12 @@ class WelcomeSleepPage extends StatelessWidget {
       backgroundColor: const Color(0xFF03174C),
       body: Stack(
         children: [
-          // Background SVG
           Positioned.fill(
             child: SvgPicture.asset(
               'assets/images/sleepframe.svg',
               fit: BoxFit.cover,
             ),
           ),
-
-          // Cloud SVG
           Positioned(
             top: 71 * scale,
             left: -9 * scale,
@@ -41,8 +38,6 @@ class WelcomeSleepPage extends StatelessWidget {
             child: Column(
               children: [
                 SizedBox(height: 50 * scale),
-
-                // Centered text with no right padding
                 Center(
                   child: Column(
                     children: [
@@ -78,8 +73,6 @@ class WelcomeSleepPage extends StatelessWidget {
                 ),
 
                 const Spacer(),
-
-                // Birds SVG
                 SvgPicture.asset(
                   'assets/images/birds.svg',
                   width: 340 * scale,
@@ -88,8 +81,6 @@ class WelcomeSleepPage extends StatelessWidget {
                 ),
 
                 const Spacer(),
-
-                // Get Started Button
                 Padding(
                   padding: EdgeInsets.only(bottom: 20 * scale),
                   child: SizedBox(
@@ -99,7 +90,7 @@ class WelcomeSleepPage extends StatelessWidget {
                       onPressed: () {
                         Navigator.of(context).pushReplacement(
                           MaterialPageRoute(
-                            builder: (_) => const SleepPage(),
+                            builder: (_) => const SleepShellPage(),
                           ),
                         );
                       },

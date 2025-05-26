@@ -85,6 +85,7 @@ flutter:
     - assets/images/happybirds.svg
     - assets/images/bowlmoon.svg
     - assets/images/pinkmoon.svg
+    - assets/images/happycloud2.svg
   fonts:
     - family: AirbnbCereal
       fonts:

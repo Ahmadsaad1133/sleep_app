@@ -6,12 +6,14 @@ class CustomNavbar extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onTap;
   final Color backgroundColor;
+  final List<int> disabledIndices;
 
   const CustomNavbar({
     Key? key,
     required this.selectedIndex,
     required this.onTap,
     this.backgroundColor = Colors.white,
+    this.disabledIndices = const [],
   }) : super(key: key);
 
   static const double _navHeight = 107.0;
@@ -55,9 +57,12 @@ class CustomNavbar extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: List.generate(_labels.length, (i) {
             final isSelected = i == selectedIndex;
+            final isDisabled = disabledIndices.contains(i);
             return GestureDetector(
               onTap: () {
-                if (!isSelected) onTap(i); // ✅ Only trigger if not already selected
+                if (!isSelected && !isDisabled) {
+                  onTap(i);
+                }
               },
               behavior: HitTestBehavior.opaque,
               child: Column(
@@ -128,7 +133,10 @@ class _NavBarContainerState extends State<NavBarContainer> {
   }
 
   void _onNavItemTapped(int newIndex) {
-    if (newIndex == _currentIndex) return; // ✅ Prevent redundant navigation
+    if (_currentIndex == 2 && newIndex != 2) {
+      return;
+    }
+    if (newIndex == _currentIndex) return;
     setState(() {
       _currentIndex = newIndex;
       _showNavbar = true;
@@ -141,15 +149,16 @@ class _NavBarContainerState extends State<NavBarContainer> {
 
   @override
   Widget build(BuildContext context) {
-    final contentPages = widget.pages.asMap().entries.map<Widget>((e) {
+    final List<Widget> contentPages = widget.pages.asMap().entries.map<Widget>((e) {
       if (e.key == 2) {
-        // Special handling for Sleep tab (index 2)
         return SleepFlowPage(
           onNavbarVisibilityChange: _handleNavbarVisibility,
         );
       }
       return e.value;
     }).toList();
+
+    final List<int> disabledIndices = _currentIndex == 2 ? [0, 1, 3, 4] : <int>[];
 
     return Scaffold(
       body: IndexedStack(
@@ -161,6 +170,7 @@ class _NavBarContainerState extends State<NavBarContainer> {
         selectedIndex: _currentIndex,
         onTap: _onNavItemTapped,
         backgroundColor: widget.navbarBackgroundColor,
+        disabledIndices: disabledIndices,
       )
           : null,
     );
