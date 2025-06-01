@@ -1,6 +1,11 @@
+// lib/widgets/navbar.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:first_flutter_app/views/sleep/sleep_flow_page.dart';
+
+import '../constants/nav_constants.dart';
+import '../constants/colors.dart';
+import '../constants/sizes.dart';
+import 'package:first_flutter_app/views/sleep/flow_page.dart';
 
 class CustomNavbar extends StatelessWidget {
   final int selectedIndex;
@@ -16,33 +21,12 @@ class CustomNavbar extends StatelessWidget {
     this.disabledIndices = const [],
   }) : super(key: key);
 
-  static const double _navHeight = 107.0;
-  static const double _iconSize = 22.0;
-  static const double _fontSize = 12.0;
-  static const Color _activeColor = Color(0xFF8E97FD);
-  static const Color _inactiveColor = Color(0xFFA0A3B1);
-
-  static const _assets = [
-    'assets/images/home105.svg',
-    'assets/images/meditateIcon.svg',
-    'assets/images/sleepIcon.svg',
-    'assets/images/musicIcon.svg',
-    'assets/images/profileIcon.svg',
-  ];
-  static const _labels = [
-    'Home',
-    'Meditate',
-    'Sleep',
-    'Music',
-    'Profile',
-  ];
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       top: false,
       child: Container(
-        height: _navHeight,
+        height: AppSizes.navbarHeight,
         decoration: BoxDecoration(
           color: backgroundColor,
           boxShadow: [
@@ -55,47 +39,57 @@ class CustomNavbar extends StatelessWidget {
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: List.generate(_labels.length, (i) {
-            final isSelected = i == selectedIndex;
-            final isDisabled = disabledIndices.contains(i);
-            return GestureDetector(
-              onTap: () {
-                if (!isSelected && !isDisabled) {
-                  onTap(i);
-                }
-              },
-              behavior: HitTestBehavior.opaque,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: isSelected ? _activeColor : Colors.transparent,
-                      shape: BoxShape.circle,
+          children: List.generate(
+            AppNavConstants.labels.length,
+                (i) {
+              final isSelected = i == selectedIndex;
+              final isDisabled = disabledIndices.contains(i);
+
+              return GestureDetector(
+                onTap: () {
+                  if (!isSelected && !isDisabled) {
+                    onTap(i);
+                  }
+                },
+                behavior: HitTestBehavior.opaque,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: AppSizes.navbarCircleSize,
+                      height: AppSizes.navbarCircleSize,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.navbarActive
+                            : Colors.transparent,
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: SvgPicture.asset(
+                        AppNavConstants.iconPaths[i],
+                        width: AppSizes.navbarIconSize,
+                        height: AppSizes.navbarIconSize,
+                        color: isSelected
+                            ? Colors.white
+                            : AppColors.navbarInactive,
+                      ),
                     ),
-                    alignment: Alignment.center,
-                    child: SvgPicture.asset(
-                      _assets[i],
-                      width: _iconSize,
-                      height: _iconSize,
-                      color: isSelected ? Colors.white : _inactiveColor,
+                    const SizedBox(height: AppSizes.navbarLabelSpacing),
+                    Text(
+                      AppNavConstants.labels[i],
+                      style: TextStyle(
+                        fontSize: AppSizes.navbarFontSize,
+                        fontWeight: FontWeight.w400,
+                        color: isSelected
+                            ? AppColors.navbarActive
+                            : AppColors.navbarInactive,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _labels[i],
-                    style: TextStyle(
-                      fontSize: _fontSize,
-                      fontWeight: FontWeight.w400,
-                      color: isSelected ? _activeColor : _inactiveColor,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -112,10 +106,15 @@ class NavBarContainer extends StatefulWidget {
     required this.pages,
     this.initialIndex = 0,
     this.navbarBackgroundColor = Colors.white,
-  })  : assert(pages.length == CustomNavbar._labels.length,
-  'pages length must match labels/assets count'),
-        assert(initialIndex >= 0 && initialIndex < CustomNavbar._labels.length,
-        'initialIndex out of range'),
+  })  : assert(
+  pages.length == AppNavConstants.labels.length,
+  'pages length must match labels/assets count',
+  ),
+        assert(
+        initialIndex >= 0 &&
+            initialIndex < AppNavConstants.labels.length,
+        'initialIndex out of range',
+        ),
         super(key: key);
 
   @override
@@ -123,6 +122,8 @@ class NavBarContainer extends StatefulWidget {
 }
 
 class _NavBarContainerState extends State<NavBarContainer> {
+  static const int _sleepIndex = 2;
+
   late int _currentIndex;
   bool _showNavbar = true;
 
@@ -132,11 +133,26 @@ class _NavBarContainerState extends State<NavBarContainer> {
     _currentIndex = widget.initialIndex;
   }
 
-  void _onNavItemTapped(int newIndex) {
-    if (_currentIndex == 2 && newIndex != 2) {
-      return;
+  bool get _isOnSleepPage => _currentIndex == _sleepIndex;
+  bool _isNavDisabled(int newIndex) {
+    if (_isOnSleepPage && newIndex != _sleepIndex) {
+      return true;
     }
+    return false;
+  }
+  List<int> get _disabledIndices {
+    if (_isOnSleepPage) {
+      return List<int>.generate(AppNavConstants.labels.length, (i) => i)
+          .where((i) => i != _sleepIndex)
+          .toList();
+    }
+    return <int>[];
+  }
+
+  void _onNavItemTapped(int newIndex) {
+    if (_isNavDisabled(newIndex)) return;
     if (newIndex == _currentIndex) return;
+
     setState(() {
       _currentIndex = newIndex;
       _showNavbar = true;
@@ -149,16 +165,16 @@ class _NavBarContainerState extends State<NavBarContainer> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> contentPages = widget.pages.asMap().entries.map<Widget>((e) {
-      if (e.key == 2) {
-        return SleepFlowPage(
-          onNavbarVisibilityChange: _handleNavbarVisibility,
-        );
-      }
-      return e.value;
-    }).toList();
-
-    final List<int> disabledIndices = _currentIndex == 2 ? [0, 1, 3, 4] : <int>[];
+    final List<Widget> contentPages = widget.pages.asMap().entries.map<Widget>(
+          (entry) {
+        if (entry.key == _sleepIndex) {
+          return SleepFlowPage(
+            onNavbarVisibilityChange: _handleNavbarVisibility,
+          );
+        }
+        return entry.value;
+      },
+    ).toList();
 
     return Scaffold(
       body: IndexedStack(
@@ -170,7 +186,7 @@ class _NavBarContainerState extends State<NavBarContainer> {
         selectedIndex: _currentIndex,
         onTap: _onNavItemTapped,
         backgroundColor: widget.navbarBackgroundColor,
-        disabledIndices: disabledIndices,
+        disabledIndices: _disabledIndices,
       )
           : null,
     );
