@@ -281,22 +281,28 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
   Widget _buildWeeklyTrend() {
     return _NeoCard(
       padding: EdgeInsets.all(16.r),
-      child: Column(
+      child: widget.weeklyTrend.isEmpty
+          ? Text('Failed to load weekly trend.',
+          style: TextStyle(color: Colors.white60, fontSize: 13.sp))
+          : Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _sectionTitle('Weekly Trend', Icons.show_chart),
           SizedBox(height: 10.h),
           SizedBox(
             height: 80.h,
-            child: _Sparkline(points: widget.weeklyTrend.isEmpty ? [0,0,0] : widget.weeklyTrend),
+            child: _Sparkline(points: widget.weeklyTrend),
           ),
           SizedBox(height: 8.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _miniStat('Avg', _avg(widget.weeklyTrend).toStringAsFixed(1) + ' h'),
-              _miniStat('Best', _max(widget.weeklyTrend).toStringAsFixed(1) + ' h'),
-              _miniStat('Worst', _min(widget.weeklyTrend).toStringAsFixed(1) + ' h'),
+              _miniStat('Avg',
+                  _avg(widget.weeklyTrend).toStringAsFixed(1) + ' h'),
+              _miniStat('Best',
+                  _max(widget.weeklyTrend).toStringAsFixed(1) + ' h'),
+              _miniStat('Worst',
+                  _min(widget.weeklyTrend).toStringAsFixed(1) + ' h'),
             ],
           ),
         ],
@@ -334,7 +340,7 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
                 _sectionTitle('AI Highlights', Icons.auto_awesome),
                 SizedBox(height: 6.h),
                 if (widget.aiHighlights.isEmpty)
-                  Text('No highlights today',
+                  Text('Failed to load AI highlights.',
                       style: TextStyle(color: Colors.white60, fontSize: 13.sp))
                 else
                   ...widget.aiHighlights.take(5).map((t) => Padding(
@@ -400,17 +406,17 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
             );
           }
           if (snap.hasError) {
-            return Text('No API data for comparison.',
+            return Text('Error: ${snap.error}',
                 style: TextStyle(color: Colors.white60, fontSize: 13.sp));
           }
-          final data = (snap.data ?? const {}) as Map<String, dynamic>;
-          if (data.isEmpty) {
-            return Text('No API data for comparison.',
+          if (!snap.hasData || (snap.data?.isEmpty ?? true)) {
+            return Text('Failed to load comparison data.',
                 style: TextStyle(color: Colors.white60, fontSize: 13.sp));
           }
-          final better = (data['better'] ?? '—').toString();
-          final worse  = (data['worse'] ?? '—').toString();
-          final delta  = (data['delta'] ?? 0).toString();
+          final data = snap.data!;
+          final better = data['better'].toString();
+          final worse  = data['worse'].toString();
+          final delta  = data['delta'].toString();
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -443,7 +449,7 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
           _sectionTitle('Lifestyle Correlations', Icons.insights),
           SizedBox(height: 10.h),
           if (list.isEmpty)
-            Text('No correlations found yet.',
+            Text('Failed to load correlations.',
                 style: TextStyle(color: Colors.white60, fontSize: 13.sp))
           else
             Wrap(

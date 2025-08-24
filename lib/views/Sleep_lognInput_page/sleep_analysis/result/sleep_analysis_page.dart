@@ -258,12 +258,11 @@ class _SleepAnalysisResultPageContentState
         return _getFallbackComparison();
 
       // Get recent logs
-      final query =
-      await FirebaseFirestore.instance
+      final query = await FirebaseFirestore.instance
           .collection('user_sleep_logs')
-          .where('userId', isEqualTo: user.uid)
-          .orderBy('date',
-          descending: true)
+          .doc(user.uid)
+          .collection('logs')
+          .orderBy('date', descending: true)
           .limit(2)
           .get();
 
@@ -392,16 +391,27 @@ class _SleepAnalysisResultPageContentState
 
   // Additional helpers and fallback implementations
 
-  /// Normalize the daily comparison map to contain `better`, `worse` and `delta` keys.
-  Map<String, dynamic> _normalizeDailyComparison(Map<String, dynamic>? raw) {
-    if (raw == null || raw.isEmpty) {
+  /// Normalize the daily comparison map to ensure the UI always receives
+  /// `better`, `worse` and `delta` keys. The API may return values with
+  /// arbitrary types or even `Map<dynamic, dynamic>`; this helper converts the
+  /// structure into a stable `Map<String, dynamic>` before extracting values.
+  Map<String, dynamic> _normalizeDailyComparison(Map? raw) {
+    // Convert any dynamic map into a string-keyed map first.
+    final Map<String, dynamic> map =
+    raw == null ? <String, dynamic>{} : _convertDynamicMap(raw as Map);
+
+    if (map.isEmpty) {
       return {'better': '—', 'worse': '—', 'delta': 0};
     }
-    if (raw.containsKey('better') || raw.containsKey('worse') || raw.containsKey('delta')) {
-      return raw;
+    // If the API already provides the expected keys, forward the values.
+    if (map.containsKey('better') &&
+        map.containsKey('worse') &&
+        map.containsKey('delta')) {
+      return map;
     }
-    final todayRaw = raw['today'];
-    final yesterdayRaw = raw['yesterday'];
+    final todayRaw = map['today'];
+    final yesterdayRaw = map['yesterday'];
+
     double todayVal = 0.0;
     double yesterdayVal = 0.0;
     if (todayRaw is num) {
@@ -436,15 +446,17 @@ class _SleepAnalysisResultPageContentState
     return _normalizeDailyComparison(raw);
   }
 
-  /// Load up to 7 sleep logs and compute their durations in hours. The results
-  /// are stored in `_weeklyTrendData` in chronological order.
+  /// Wrapper around `_getDailyComparison` that returns a normalized map for the
+  /// UI. Any response from the backend is sanitized through
+  /// [_normalizeDailyComparison] before being fed to the widget tree.
   Future<void> _loadWeeklyTrendData() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
       final query = await FirebaseFirestore.instance
           .collection('user_sleep_logs')
-          .where('userId', isEqualTo: user.uid)
+          .doc(user.uid)
+          .collection('logs')
           .orderBy('date', descending: true)
           .limit(7)
           .get();
@@ -744,13 +756,11 @@ class _SleepAnalysisResultPageContentState
         throw Exception('User not logged in');
       }
 
-      final query =
-      await FirebaseFirestore.instance
+      final query = await FirebaseFirestore.instance
           .collection('user_sleep_logs')
-          .where('userId',
-          isEqualTo: user.uid)
-          .orderBy('date',
-          descending: true)
+          .doc(user.uid)
+          .collection('logs')
+          .orderBy('date', descending: true)
           .limit(3)
           .get();
 
