@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   static const Color background        = Color(0xFFFFFFFF);
+  static const Color background3 =      Color(0xFF8E97FD);
   static const Color reduceStress       = Color(0xFF8E97FD);
   static const Color increaseHappiness  = Color(0xFFFEB18F);
   static const Color personalGrowth     = Color(0xFF6CB28E);
@@ -85,5 +86,51 @@ class AppColors {
   static const Color navbarActive        = Color(0xFF8E97FD);
   static const Color navbarInactive      = Color(0xFFA0A3B1);
   static const Color navbarShadow        = Color(0x0D000000); // black.withOpacity(0.05)
+  static const excellentSleep = Color(0xFFE8F5E9);
+  static const excellentSleepText = Color(0xFF2E7D32);
+  static const goodSleep = Color(0xFFE1F5FE);
+  static const goodSleepText = Color(0xFF0288D1);
+  static const averageSleep = Color(0xFFFFF8E1);
+  static const averageSleepText = Color(0xFFF57C00);
+  static const belowAverageSleep = Color(0xFFFFF3E0);
+  static const belowAverageSleepText = Color(0xFFEF6C00);
+  static const poorSleep = Color(0xFFFFEBEE);
+  static const poorSleepText = Color(0xFFD32F2F);
+  static const Color errorColor = Color(0xFFFF5252);
+  static const Color primaryBlue = Color(0xFF1A73E8);
+  static const Color lightBlue = Color(0xFF8AB4F8);
+  static const Color accentAmber = Color(0xFFFFA000);
+  static const Color positiveGreen = Color(0xFF34A853);
+  static const Color warningOrange = Color(0xFFFBBC05);
+  static const Color negativeRed = Color(0xFFEA4335);
+  // Add to AppColors class
+  static const Color caffeineColor = Color(0xFF6D4C41);
+  static const Color exerciseColor = Color(0xFF2E7D32);
+  static const Color screenTimeColor = Color(0xFF1565C0);
+  static const Color dietColor = Color(0xFFEF6C00);
+  static const Color medicationColor = Color(0xFFC2185B);
+  static const Color disturbanceColor = Color(0xFF6A1B9A);
+  static const Color cardBackground2 = Color(0xFFF9F9F9);
+  static const Color primaryColor = Color(0xFF4361EE);
+  static const Color textPrimary2 = Color(0xFF2D3748);
+  static const Color primaryColor3 = Color(0xFF4361EE);
+  static const Color secondaryColor = Color(0xFF3A0CA3);
+  static const Color successColor = Color(0xFF4CAF50);
+  static const Color successLight = Color(0xFF8BC34A);
+  static const Color warningColor = Color(0xFFFF9800);
+  static const Color warningLight = Color(0xFFFFC107);
+  static const Color errorColor3 = Color(0xFFF44336);
+  static const Color errorLight = Color(0xFFFF5252);
+  static const Color infoColor = Color(0xFF2196F3);
+  static const Color infoLight = Color(0xFF03A9F4);
+  static const Color textPrimary3 = Color(0xFF2D3748);
+  static const Color deepSleep = Color(0xFF2196F3);
+  static const Color remSleep = Color(0xFF9C27B0);
+  static const Color lightSleep = Color(0xFF4CAF50);
+  static const Color tealPrimary = Colors.teal;
+  static const excellentQuality = Color(0xFF4CAF50);
+  static const goodQuality = Color(0xFFFFC107);
+  static const fairQuality = Color(0xFFFF9800);
+  static const poorQuality = Color(0xFFF44336);
 }
 

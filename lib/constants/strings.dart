@@ -25,12 +25,12 @@ class AppStrings {
   static const String widget5             = 'assets/images/Widget5.svg';
   static const String widget6             = 'assets/images/Widget6.svg';
   static const String homeSilent          = 'Silent';
-  static const String homeMoon            = 'Moon';
+  static const String homeMoon            = 'Veil';
   static const String homeHeaderText2      = 'Good Morning, Afsar';
   static const String homeHeaderDiscription     = 'We Wish you have a good day';
   static const String homeHeaderImage     = 'assets/images/sun.svg'; // if you want to keep this here
-  static const String weAreWhatWeDo       = 'We are what we do';
-  static const String homeDescription     = 'Thousands of people are using Silent Moon\nfor smalls meditation';
+  static const String weAreWhatWeDo       = 'Sleep well , Live well , Be well';
+  static const String homeDescription     = 'Join thousands who find calm and restful meditation\nevery day with Silent Veil';
   static const String signUpButton        = 'SIGN UP';
   static const String alreadyHaveAccount  = 'ALREADY HAVE AN ACCOUNT? ';
   static const String logIn               = 'LOG IN';
@@ -88,6 +88,7 @@ class AppStrings {
   static const String forgotPassword = 'Forgot Password?';
   static const String dontHaveAccount = "Don't have an account? ";
   static const String signUp = 'Sign Up';
+  static const String fullMoon = 'assets/images/fullmoon.svg';
   static const List<String> meditateCategories = [
     'All', 'My', 'Anxious', 'Sleep', 'Kids',
     'Calm', 'Peace', 'Clear', 'Balance',
@@ -117,7 +118,11 @@ class AppStrings {
   static const String validationEmailRequired = 'Please enter your email';
   static const String validationEmailInvalid = 'Please enter a valid email';
   static const String validationConfirmEmailRequired =
+
       'Please confirm your email';
+  static const String loginErrorGeneric = "An error occurred during login. Please try again later.";
+  static const String loginErrorUserNotFound = "No user found for that email.";
+  static const String loginErrorWrongPassword = "Wrong password provided.";
   static const String validationEmailsDontMatch =
       'Email and confirmation do not match';
   static const String validationPasswordRequired =
@@ -181,5 +186,16 @@ class AppStrings {
   static const String sleep    = 'Sleep';
   static const String music    = 'Music';
   static const String profile  = 'Profile';
+  static const signupFailed = 'Signup failed';
+  static const emailAlreadyInUse = 'This email is already registered';
+  static const invalidEmailFormat = 'Invalid email format';
+  static const weakPassword = 'Password must be at least 6 characters';
+  static const confirmPasswordHint = 'Confirm Password';
+  static const confirmPasswordRequired = 'Please confirm your password';
+  static const passwordsDoNotMatch = 'Passwords do not match';
+  static const signupErrorGeneric = 'Sign up failed';
+  static const emailInUseError = 'Email already in use';
+  static const weakPasswordError = 'Password is too weak';
+  static const confirmPasswordLabel = 'Confirm Password';
 }
 

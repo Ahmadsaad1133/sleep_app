@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "394155869139",
+    "project_id": "sleep-moon-973d5",
+    "storage_bucket": "sleep-moon-973d5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:394155869139:android:03e7c74cfd98ab6e442526",
+        "android_client_info": {
+          "package_name": "com.ahmad.sleepmoon"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVTz_9tBkGPfbu9oGOC-vkLuwxg-BcIk8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:394155869139:android:4bb442d949745c4e442526",
+        "android_client_info": {
+          "package_name": "com.example.ahmad"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVTz_9tBkGPfbu9oGOC-vkLuwxg-BcIk8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:394155869139:android:a4c777a65102d81c442526",
+        "android_client_info": {
+          "package_name": "com.example.first_flutter_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVTz_9tBkGPfbu9oGOC-vkLuwxg-BcIk8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

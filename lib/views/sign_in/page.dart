@@ -1,5 +1,10 @@
+// lib/views/sign_in/page.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import '../../routes.dart';
 import '/constants/colors.dart';
 import '/constants/sizes.dart';
 import '/constants/strings.dart';
@@ -18,12 +23,15 @@ class SignInPage extends StatefulWidget {
 
 class _SignInPageState extends State<SignInPage> {
   final _formKey = GlobalKey<FormState>();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  bool _obscurePassword = true;
   final FocusNode _emailFocusNode = FocusNode();
   final FocusNode _passwordFocusNode = FocusNode();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  bool _obscurePassword = true;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -43,42 +51,76 @@ class _SignInPageState extends State<SignInPage> {
     super.dispose();
   }
 
-  void _tryLogin() {
-    if (_formKey.currentState?.validate() ?? false) {
+  Future<void> _tryLogin() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      if (credential.user != null && mounted) {
+        Navigator.of(context).pushReplacementNamed(Routes.home);
+      }
+    } on FirebaseAuthException catch (e) {
+      String message = AppStrings.loginErrorGeneric;
+      if (e.code == 'user-not-found') {
+        message = AppStrings.loginErrorUserNotFound;
+      } else if (e.code == 'wrong-password') {
+        message = AppStrings.loginErrorWrongPassword;
+      } else if (e.code == 'invalid-email') {
+        message = AppStrings.emailInvalidError;
+      } else if (e.code == 'user-disabled') {
+        message = 'Account disabled';
+      } else if (e.code == 'too-many-requests') {
+        message = 'Too many attempts. Try later';
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${AppStrings.loginErrorGeneric}\n${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
+    final h = MediaQuery.of(context).size.height;
+
     const svgOrigW = 547.0, svgOrigH = 428.0;
     final svgHeight = w * (svgOrigH / svgOrigW);
-
-    final double titleFontSize = (w * AppSizes.titleFontFactor).clamp(
-      AppSizes.titleFontMin,
-      AppSizes.titleFontMax,
-    );
-    final double socialButtonHeight = (w * AppSizes.socialButtonHeightFactor)
-        .clamp(AppSizes.socialButtonHeightMin, AppSizes.socialButtonHeightMax);
-    final double socialButtonFontSize = (w * AppSizes.socialButtonFontFactor)
-        .clamp(AppSizes.socialButtonFontMin, AppSizes.socialButtonFontMax);
-    final double orFontSize = (w * AppSizes.orFontFactor)
-        .clamp(AppSizes.orFontMin, AppSizes.orFontMax);
-    final double inputFontSize = (w * AppSizes.inputFontFactor)
-        .clamp(AppSizes.inputFontMin, AppSizes.inputFontMax);
-    final double inputHeight = w < 320
+    final topSpacing = (h * 0.05).clamp(AppSizes.topSpacing, AppSizes.topSpacing2);
+    final sectionSpacing = (h * 0.03).clamp(AppSizes.sectionSpacing2, AppSizes.sectionGap);
+    final elementSpacing = (h * 0.02).clamp(AppSizes.pageGapSmall, AppSizes.elementSpacing);
+    final bottomSpacing = (h * 0.04).clamp(AppSizes.bottomSpacing, AppSizes.pageGapMedium);
+    final titleFontSize = (w * AppSizes.titleFontFactor).clamp(AppSizes.titleFontMin, AppSizes.titleFontMax);
+    final socialButtonHeight = (w * AppSizes.socialButtonHeightFactor).clamp(AppSizes.socialButtonHeightMin, AppSizes.socialButtonHeightMax);
+    final socialButtonFontSize = (w * AppSizes.socialButtonFontFactor).clamp(AppSizes.socialButtonFontMin, AppSizes.socialButtonFontMax);
+    final orFontSize = (w * AppSizes.orFontFactor).clamp(AppSizes.orFontMin, AppSizes.orFontMax);
+    final inputFontSize = (w * AppSizes.inputFontFactor).clamp(AppSizes.inputFontMin, AppSizes.inputFontMax);
+    final inputHeight = w < AppSizes.xs
         ? AppSizes.inputHeightXS
-        : w < 400
+        : w < AppSizes.sm
         ? AppSizes.inputHeightS
-        : w < 600
+        : w < AppSizes.md
         ? AppSizes.inputHeightM
         : AppSizes.inputHeightL;
-    final double loginButtonHeight = (w * AppSizes.loginButtonHeightFactor)
-        .clamp(AppSizes.loginButtonHeightMin, AppSizes.loginButtonHeightMax);
-    final double navigateIconSize = (w * AppSizes.navigateIconFactor)
-        .clamp(AppSizes.navigateIconMin, AppSizes.navigateIconMax);
-    final double forgotFontSize = (w * AppSizes.forgotFontFactor)
-        .clamp(AppSizes.forgotFontMin, AppSizes.forgotFontMax);
+    final loginButtonHeight = (w * AppSizes.loginButtonHeightFactor).clamp(AppSizes.loginButtonHeightMin, AppSizes.loginButtonHeightMax);
+    final navigateIconSize = (w * AppSizes.navigateIconFactor).clamp(AppSizes.navigateIconMin, AppSizes.navigateIconMax);
+    final forgotFontSize = (w * AppSizes.forgotFontFactor).clamp(AppSizes.forgotFontMin, AppSizes.forgotFontMax);
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -90,27 +132,22 @@ class _SignInPageState extends State<SignInPage> {
             left: 0,
             right: 0,
             height: svgHeight,
-            child: SvgPicture.asset(
-              AppAssets.frameBackground,
-              fit: BoxFit.cover,
-            ),
+            child: SvgPicture.asset(AppAssets.frameBackground, fit: BoxFit.cover),
           ),
 
           SafeArea(
             child: Padding(
-              padding:
-              const EdgeInsets.symmetric(horizontal: AppSizes.horizontalPadding),
+              padding: const EdgeInsets.symmetric(horizontal: AppSizes.horizontalPadding),
               child: SingleChildScrollView(
-                padding: const EdgeInsets.only(
-                  bottom: AppSizes.horizontalPadding,
-                ),
                 physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.only(bottom: bottomSpacing),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const SizedBox(height: AppSizes.topSpacing),
+                      SizedBox(height: topSpacing),
+
                       Row(
                         children: [
                           GestureDetector(
@@ -124,9 +161,8 @@ class _SignInPageState extends State<SignInPage> {
                           const Spacer(),
                         ],
                       ),
-                      const SizedBox(height: AppSizes.topSpacing),
 
-                      // ▶︎ Page Title
+                      SizedBox(height: topSpacing),
                       Text(
                         AppStrings.welcomeBack,
                         textAlign: TextAlign.center,
@@ -138,7 +174,9 @@ class _SignInPageState extends State<SignInPage> {
                           color: AppColors.textDark,
                         ),
                       ),
-                      const SizedBox(height: AppSizes.sectionSpacing),
+
+                      SizedBox(height: sectionSpacing),
+
                       SocialButton(
                         assetPath: AppAssets.facebookLogo,
                         label: AppStrings.continueFacebook,
@@ -147,11 +185,11 @@ class _SignInPageState extends State<SignInPage> {
                         height: socialButtonHeight,
                         fontSize: socialButtonFontSize,
                         outlined: false,
-                        onPressed: () {
-                          // TODO: implement Facebook login
-                        },
+                        onPressed: () {/* TODO */},
                       ),
-                      const SizedBox(height: AppSizes.elementSpacing),
+
+                      SizedBox(height: elementSpacing),
+
                       SocialButton(
                         assetPath: AppAssets.googleLogo,
                         label: AppStrings.continueGoogle,
@@ -160,13 +198,13 @@ class _SignInPageState extends State<SignInPage> {
                         height: socialButtonHeight,
                         fontSize: socialButtonFontSize,
                         outlined: true,
-                        onPressed: () {
-                          // TODO: implement Google login
-                        },
+                        onPressed: () {/* TODO */},
                       ),
-                      const SizedBox(height: AppSizes.sectionSpacing),
+
+                      SizedBox(height: sectionSpacing),
                       Text(
                         AppStrings.orLoginWithEmail,
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: orFontSize,
                           fontFamily: AppFonts.helveticaBold,
@@ -174,9 +212,10 @@ class _SignInPageState extends State<SignInPage> {
                           letterSpacing: orFontSize * 0.05,
                           color: AppColors.textGrey,
                         ),
-                        textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: AppSizes.sectionSpacing),
+
+                      SizedBox(height: sectionSpacing),
+
                       CustomInputField(
                         label: AppStrings.emailLabel,
                         hintText: AppStrings.emailHint,
@@ -188,16 +227,16 @@ class _SignInPageState extends State<SignInPage> {
                           if (value == null || value.trim().isEmpty) {
                             return AppStrings.emailEmptyError;
                           }
-                          final emailRegex = RegExp(
-                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                          );
-                          if (!emailRegex.hasMatch(value.trim())) {
+                          final regex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                          if (!regex.hasMatch(value.trim())) {
                             return AppStrings.emailInvalidError;
                           }
                           return null;
                         },
                       ),
-                      const SizedBox(height: AppSizes.elementSpacing),
+
+                      SizedBox(height: elementSpacing),
+
                       CustomInputField(
                         label: AppStrings.passwordLabel,
                         hintText: AppStrings.passwordHint,
@@ -207,14 +246,8 @@ class _SignInPageState extends State<SignInPage> {
                         focusNode: _passwordFocusNode,
                         controller: _passwordController,
                         suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                          ),
-                          onPressed: () => setState(
-                                () => _obscurePassword = !_obscurePassword,
-                          ),
+                          icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -226,17 +259,18 @@ class _SignInPageState extends State<SignInPage> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: AppSizes.sectionSpacing),
+
+                      SizedBox(height: sectionSpacing),
+
                       SizedBox(
                         height: loginButtonHeight,
                         child: ElevatedButton(
-                          onPressed: _tryLogin,
+                          onPressed: _isLoading ? null : _tryLogin,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primaryPurple,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
-                              borderRadius:
-                              BorderRadius.circular(AppSizes.buttonRadius),
+                              borderRadius: BorderRadius.circular(AppSizes.buttonRadius),
                             ),
                             textStyle: TextStyle(
                               fontFamily: AppFonts.helveticaRegular,
@@ -244,18 +278,20 @@ class _SignInPageState extends State<SignInPage> {
                               fontSize: socialButtonFontSize,
                             ),
                           ),
-                          child: Text(
+                          child: _isLoading
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              : Text(
                             AppStrings.loginButton,
                             style: const TextStyle(letterSpacing: 1),
                           ),
                         ),
                       ),
-                      const SizedBox(height: AppSizes.elementSpacing),
+
+                      SizedBox(height: elementSpacing),
+
                       Center(
                         child: TextButton(
-                          onPressed: () {
-                            // TODO: implement forgot password
-                          },
+                          onPressed: () {/* TODO */},
                           child: Text(
                             AppStrings.forgotPassword,
                             style: TextStyle(
@@ -269,14 +305,14 @@ class _SignInPageState extends State<SignInPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: AppSizes.sectionSpacing),
+
+                      SizedBox(height: sectionSpacing),
+
                       Center(
                         child: TextButton(
                           onPressed: () {
                             Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const SignUpPage(),
-                              ),
+                              MaterialPageRoute(builder: (_) => const SignUpPage()),
                             );
                           },
                           child: RichText(
@@ -302,7 +338,8 @@ class _SignInPageState extends State<SignInPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: AppSizes.bottomSpacing),
+
+                      SizedBox(height: bottomSpacing),
                     ],
                   ),
                 ),

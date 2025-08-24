@@ -1,4 +1,3 @@
-// lib/widgets/navbar.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -25,70 +24,116 @@ class CustomNavbar extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       top: false,
-      child: Container(
-        height: AppSizes.navbarHeight,
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              offset: const Offset(0, -2),
-              blurRadius: 10,
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: List.generate(
-            AppNavConstants.labels.length,
-                (i) {
-              final isSelected = i == selectedIndex;
-              final isDisabled = disabledIndices.contains(i);
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          height: AppSizes.navbarHeight,
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.15),
+                offset: const Offset(0, 6),
+                blurRadius: 20,
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: List.generate(
+              AppNavConstants.labels.length,
+                  (i) {
+                final isSelected = i == selectedIndex;
+                final isDisabled = disabledIndices.contains(i);
 
-              return GestureDetector(
-                onTap: () {
-                  if (!isSelected && !isDisabled) {
-                    onTap(i);
-                  }
-                },
-                behavior: HitTestBehavior.opaque,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: AppSizes.navbarCircleSize,
-                      height: AppSizes.navbarCircleSize,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.navbarActive
-                            : Colors.transparent,
-                        shape: BoxShape.circle,
-                      ),
-                      alignment: Alignment.center,
-                      child: SvgPicture.asset(
-                        AppNavConstants.iconPaths[i],
-                        width: AppSizes.navbarIconSize,
-                        height: AppSizes.navbarIconSize,
-                        color: isSelected
-                            ? Colors.white
-                            : AppColors.navbarInactive,
-                      ),
+                return GestureDetector(
+                  onTap: () {
+                    if (!isSelected && !isDisabled) {
+                      onTap(i);
+                    }
+                  },
+                  behavior: HitTestBehavior.opaque,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: AppSizes.navbarCircleSize + 8,
+                          height: AppSizes.navbarCircleSize + 8,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: isSelected
+                                ? LinearGradient(
+                              colors: [
+                                AppColors.navbarActive,
+                                AppColors.navbarActive.withOpacity(0.9),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                                : LinearGradient(
+                              colors: [
+                                backgroundColor.withOpacity(0.95),
+                                backgroundColor,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.white.withOpacity(0.8),
+                                offset: const Offset(-3, -3),
+                                blurRadius: 6,
+                              ),
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                offset: const Offset(3, 3),
+                                blurRadius: 6,
+                              ),
+                            ],
+                          ),
+                          alignment: Alignment.center,
+                          child: SvgPicture.asset(
+                            AppNavConstants.iconPaths[i],
+                            width: AppSizes.navbarIconSize,
+                            height: AppSizes.navbarIconSize,
+                            color: isSelected
+                                ? Colors.white
+                                : AppColors.navbarInactive,
+                          ),
+                        ),
+                        const SizedBox(height: AppSizes.navbarLabelSpacing),
+                        Text(
+                          AppNavConstants.labels[i],
+                          style: TextStyle(
+                            fontSize: AppSizes.navbarFontSize,
+                            fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.w400,
+                            color: isSelected
+                                ? AppColors.navbarActive
+                                : AppColors.navbarInactive,
+                            shadows: isSelected
+                                ? [
+                              Shadow(
+                                offset: Offset(1, 1),
+                                blurRadius: 2,
+                                color: Colors.black.withOpacity(0.2),
+                              ),
+                            ]
+                                : [],
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: AppSizes.navbarLabelSpacing),
-                    Text(
-                      AppNavConstants.labels[i],
-                      style: TextStyle(
-                        fontSize: AppSizes.navbarFontSize,
-                        fontWeight: FontWeight.w400,
-                        color: isSelected
-                            ? AppColors.navbarActive
-                            : AppColors.navbarInactive,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -134,12 +179,11 @@ class _NavBarContainerState extends State<NavBarContainer> {
   }
 
   bool get _isOnSleepPage => _currentIndex == _sleepIndex;
+
   bool _isNavDisabled(int newIndex) {
-    if (_isOnSleepPage && newIndex != _sleepIndex) {
-      return true;
-    }
-    return false;
+    return _isOnSleepPage && newIndex != _sleepIndex;
   }
+
   List<int> get _disabledIndices {
     if (_isOnSleepPage) {
       return List<int>.generate(AppNavConstants.labels.length, (i) => i)
@@ -177,18 +221,25 @@ class _NavBarContainerState extends State<NavBarContainer> {
     ).toList();
 
     return Scaffold(
+      extendBody: true,
       body: IndexedStack(
         index: _currentIndex,
         children: contentPages,
       ),
-      bottomNavigationBar: _showNavbar
-          ? CustomNavbar(
-        selectedIndex: _currentIndex,
-        onTap: _onNavItemTapped,
-        backgroundColor: widget.navbarBackgroundColor,
-        disabledIndices: _disabledIndices,
-      )
-          : null,
+      bottomNavigationBar: AnimatedSlide(
+        duration: const Duration(milliseconds: 300),
+        offset: _showNavbar ? Offset.zero : const Offset(0, 1),
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 300),
+          opacity: _showNavbar ? 1.0 : 0.0,
+          child: CustomNavbar(
+            selectedIndex: _currentIndex,
+            onTap: _onNavItemTapped,
+            backgroundColor: widget.navbarBackgroundColor,
+            disabledIndices: _disabledIndices,
+          ),
+        ),
+      ),
     );
   }
 }

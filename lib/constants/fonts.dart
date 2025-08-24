@@ -5,12 +5,18 @@ import 'colors.dart';
 class AppFonts {
   static const String helveticaBold = 'HelveticaNeueBold';
   static const String helveticaRegular = 'HelveticaNeueRegular';
-
+  static const String AirbnbCerealBook = 'AirbnbCereal';
   static const FontWeight light = FontWeight.w300;
   static const FontWeight medium = FontWeight.w600;
   static const FontWeight bold = FontWeight.w700;
   static const FontWeight navLabelWeight = FontWeight.w400;
   static const String mainFontFamily  = 'YourFontFamilyName';
+  static const String ComfortaaLight = 'ComfortaaLight';
+  static const String ComfortaaBold = 'ComfortaaBold';
+  static const String ComfortaaRegular = 'ComfortaaRegular';
+  static const String nunitoSansRegular = 'nunitoSansRegular';
+  static const String nunitoSansBold = 'nunitoSansBold';
+  static const String PlayfairDisplay = 'PlayfairDisplay';
 }
 
 /// Common TextStyles used across the app
@@ -22,6 +28,8 @@ class AppTextStyles {
     height: 1.35,
     color: AppColors.bodyPrimary,
   );
+
+
 
   static TextStyle subheading(double scale) => TextStyle(
     fontFamily: AppFonts.helveticaRegular,
@@ -142,4 +150,6 @@ class AppTextStyles {
     letterSpacing: 0.55 * scale,
     color: AppColors.bodySecondary,
   );
+
+
 }

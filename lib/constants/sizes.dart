@@ -76,7 +76,7 @@ class AppSizes {
   static const double btnWidthSmall = 70.0;
   static const double btnWidthMed = 90.0;
   static const double btnWidthLarge = 110.0;
-  static const double btnHeight = 35.0;
+  static const double btnHeight = 20.0;
   static const double cardTextTop = 120.0;
   static const double cardTextSide = 16.0;
   static const double cardTextBottom = 16.0;

@@ -1,18 +1,29 @@
+// android/app/build.gradle (module: app)
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    // The Flutter Gradle Plugin must come after Android and Kotlin plugins:
     id("dev.flutter.flutter-gradle-plugin")
+    // Apply Google Services (Firebase) plugin last:
+    id("com.google.gms.google-services")
 }
 
 android {
     namespace = "com.example.first_flutter_app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+
+    // ─── Override NDK version to satisfy Firebase plugin requirements ───
+    ndkVersion = "27.0.12077973"
+    // ────────────────────────────────────────────────────────────────────
 
     compileOptions {
+        // Enable Java 11 language features
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+
+        // ⚠️ Enable core-library desugaring for plugins that use newer Java APIs
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -20,20 +31,16 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.first_flutter_app"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        minSdk = 23        // تأكد إن حد أدنى SDK لا يقل عن 21
+        targetSdk = 33     // آخر نسخة متوفرة
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // For now, we’re using the debug keystore:
             signingConfig = signingConfigs.getByName("debug")
         }
     }
@@ -41,4 +48,11 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Core-library desugaring support (required by flutter_local_notifications)
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+
+    // أي dependencies إضافية…
 }

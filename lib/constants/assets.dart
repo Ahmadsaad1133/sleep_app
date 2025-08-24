@@ -2,7 +2,7 @@ class AppAssets {
   static const String courseHeader = 'assets/images/sun.svg';
   static const String courseHeader2 = 'assets/images/happycloud.svg';
   static const String bowlMoon = 'assets/images/happycloud2.svg';
-  static const String homeheader = 'assets/images/Image1.svg';
+  static const String homeheader = 'assets/images/Image1.png';
   static const String homeIcon = 'assets/images/logo.svg';
   static const String bgframe = 'assets/images/UnionFrame.svg';
   static const String backButton = 'assets/images/NavigateLeft.svg';
@@ -53,7 +53,7 @@ class AppAssets {
   static const String cardBowlMoon    = 'assets/images/bowlmoon.svg';
   static const String cardPinkMoon    = 'assets/images/pinkmoon.svg';
   static const String logoSvgPath       = 'assets/images/logo2.svg';
-  static const String welcomeBackground = 'assets/images/WelcomeImage.png';
+  static const String welcomeBackground = 'assets/images/WelcomeImage.jpg';
   static const String cloudSvg = 'assets/images/cloud.svg';
   static const String birdsSvg = 'assets/images/birds.svg';
   static const String iconHome     = 'assets/images/home105.svg';
@@ -61,4 +61,7 @@ class AppAssets {
   static const String iconSleep2    = 'assets/images/sleepIcon.svg';
   static const String iconMusic    = 'assets/images/musicIcon.svg';
   static const String iconProfile  = 'assets/images/profileIcon.svg';
+  static const String fullMoon = 'assets/images/fullmoon.svg';
+  static const String splashImage = 'assets/images/splash_image.jpg';
+  static const String coffeeIcon =  'assets/images/coffeeIcon.svg';
 }

@@ -1,96 +1,188 @@
+import 'package:first_flutter_app/constants/fonts.dart';
+import 'package:first_flutter_app/constants/sizes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '/constants/sizes.dart';
-import '/constants/colors.dart';
-import '/constants/fonts.dart';
-import '/constants/strings.dart';
-import '/constants/assets.dart';
-class DailyThoughtCard extends StatelessWidget {
-  const DailyThoughtCard({Key? key}) : super(key: key);
+
+import '../../constants/assets.dart';
+
+/// A bold, modern 2025 DailyThoughtCard with gradient, animations, and neumorphic play button.
+class DailyThoughtCard extends StatefulWidget {
+  final VoidCallback? onPlay;
+  const DailyThoughtCard({Key? key, this.onPlay}) : super(key: key);
+
+  @override
+  _DailyThoughtCardState createState() => _DailyThoughtCardState();
+}
+
+class _DailyThoughtCardState extends State<DailyThoughtCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scaleAnim;
+  late final Animation<Offset> _slideAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..forward();
+
+    _scaleAnim = Tween<double>(begin: 0.8, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
+    );
+    _slideAnim = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero)
+        .animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    const baseWidth = 414.0;
-    final scale = (width / baseWidth).clamp(0.8, 1.2);
-    double s(double v) => v * scale;
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final bool isSmallScreen = screenWidth <= AppSizes.sm;
 
-    return Center(
-      child: AspectRatio(
-        aspectRatio: 374 / 95,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(s(AppSizes.cardRadius)),
+    return SlideTransition(
+      position: _slideAnim,
+      child: ScaleTransition(
+        scale: _scaleAnim,
+        child: AspectRatio(
+          aspectRatio: 374 / 120,
           child: Container(
-            color: AppColors.dailyThoughtBg,
+            margin: const EdgeInsets.all(AppSizes.pageGapSmall),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppSizes.borderRadiusHigh),
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).colorScheme.primary,
+                  Theme.of(context).colorScheme.secondary,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            clipBehavior: Clip.hardEdge,
             child: Stack(
               children: [
                 Positioned.fill(
                   child: SvgPicture.asset(
                     AppAssets.dailyFrame1,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.topRight,
-                  child: SvgPicture.asset(
-                    AppAssets.dailyFrame2,
-                    width: s(184),
-                    height: s(69),
+                    width: AppSizes.dailyFrame1Width,
+                    height: AppSizes.dailyFrame1Height,
                     fit: BoxFit.cover,
                   ),
                 ),
                 Positioned(
-                  bottom: 0,
-                  left: width * 0.37,
+                  top: -10,
+                  right: -20,
+                  child: SvgPicture.asset(
+                    AppAssets.dailyFrame2,
+                    width: AppSizes.dailyFrame2Width,
+                    height: AppSizes.dailyFrame2Height,
+                  ),
+                ),
+                Positioned(
+                  bottom: -10,
+                  left: 120,
                   child: SvgPicture.asset(
                     AppAssets.dailyFrame3,
-                    width: s(64),
-                    height: s(58),
-                    fit: BoxFit.contain,
+                    width: AppSizes.dailyFrame3Width,
+                    height: AppSizes.dailyFrame3Height,
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: s(16)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSizes.dailyTextPaddingH,
+                  ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            AppStrings.dailyThoughtTitle,
-                            style: TextStyle(
-                              fontSize: s(18),
-                              fontFamily: AppFonts.helveticaBold,
-                              fontWeight: AppFonts.bold,
-                              color: AppColors.white,
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ShaderMask(
+                              shaderCallback: (rect) {
+                                return const LinearGradient(
+                                  colors: [
+                                    Colors.white,
+                                    Color(0x99FFFFFF),
+                                    Colors.white,
+                                  ],
+                                  stops: [0, 0.5, 1],
+                                  begin: Alignment(-1, -0.3),
+                                  end: Alignment(1, 0.3),
+                                  tileMode: TileMode.mirror,
+                                ).createShader(rect);
+                              },
+                              child: Text(
+                                'Daily Thought',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineMedium
+                                    ?.copyWith(
+                                  color: Colors.white,
+                                  fontFamily: AppFonts.AirbnbCerealBook,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: AppSizes.cardLetterSpacing,
+                                  fontSize: isSmallScreen ? 18 : 22,
+                                ),
+                              ),
                             ),
-                          ),
-                          SizedBox(height: s(5)),
-                          Text(
-                            AppStrings.dailyThoughtSub,
-                            style: TextStyle(
-                              fontSize: s(11),
-                              fontFamily: AppFonts.helveticaRegular,
-                              fontWeight: AppFonts.light,
-                              color: AppColors.white,
+                            const SizedBox(height: AppSizes.dailyTextGap),
+                            Text(
+                              'Tap play and energize your day with meditation',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Colors.white70,
+                                fontSize: isSmallScreen ? 9 : AppSizes.cardSubtitleFontSize,
+                                fontFamily: AppFonts.helveticaBold,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      Container(
-                        margin: EdgeInsets.only(right: s(30)),
-                        width: s(40),
-                        height: s(40),
-                        decoration: const BoxDecoration(
-                          color: AppColors.dailyIconBg,
-                          shape: BoxShape.circle,
+                          ],
                         ),
-                        child: Icon(
-                          Icons.play_arrow,
-                          size: s(24),
-                          color: AppColors.dailyIconColor,
+                      ),
+                      GestureDetector(
+                        onTap: widget.onPlay,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          width: AppSizes.dailyIconSize,
+                          height: AppSizes.dailyIconSize,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                offset: const Offset(4, 4),
+                                blurRadius: 8,
+                              ),
+                              BoxShadow(
+                                color: Colors.white.withOpacity(0.8),
+                                offset: const Offset(-4, -4),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.play_arrow,
+                              size: AppSizes.musicPlayIconBaseSize * 0.6,
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.9),
+                            ),
+                          ),
                         ),
                       ),
                     ],

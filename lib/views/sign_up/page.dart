@@ -1,91 +1,124 @@
+import 'package:first_flutter_app/views/home_page_7/home_Page_7.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 import '/constants/colors.dart';
 import '/constants/sizes.dart';
 import '/constants/strings.dart';
 import '/constants/fonts.dart';
 import '/constants/assets.dart';
-import '../sign_up/social_button.dart';
-import '../sign_up/custom_input_field.dart';
-import '/views/welcome_page/page.dart';
+import '../sign_in/social_button.dart';
+import '../sign_in/custom_input_field.dart';
+
+
 class SignUpPage extends StatefulWidget {
   const SignUpPage({Key? key}) : super(key: key);
+
   @override
   State<SignUpPage> createState() => _SignUpPageState();
 }
+
 class _SignUpPageState extends State<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _confirmEmailController =
-  TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
   bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
   bool _acceptedPolicy = false;
-  final FocusNode _emailFocusNode = FocusNode();
-  final FocusNode _confirmEmailFocusNode = FocusNode();
-  final FocusNode _passwordFocusNode = FocusNode();
+  bool _isLoading = false;
+
+  final _emailFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
+  final _confirmPasswordFocusNode = FocusNode();
+
   @override
   void initState() {
     super.initState();
     _emailFocusNode.addListener(_onFocusChange);
-    _confirmEmailFocusNode.addListener(_onFocusChange);
     _passwordFocusNode.addListener(_onFocusChange);
+    _confirmPasswordFocusNode.addListener(_onFocusChange);
   }
+
   void _onFocusChange() => setState(() {});
+
   @override
   void dispose() {
     _emailController.dispose();
-    _confirmEmailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     _emailFocusNode.dispose();
-    _confirmEmailFocusNode.dispose();
     _passwordFocusNode.dispose();
+    _confirmPasswordFocusNode.dispose();
     super.dispose();
   }
-  bool _isValidEmail(String email) {
-    final emailRegex = RegExp(
-      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-    );
-    return emailRegex.hasMatch(email);
-  }
-  void _submitForm() {
-    final form = _formKey.currentState;
-    if (form != null && form.validate()) {
-      if (!_acceptedPolicy) {
-        // Show an error if the checkbox wasn’t checked
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppStrings.validationAcceptPolicy),
-          ),
-        );
-        return;
-      }
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const WelcomePage()),
+
+  Future<void> _submitForm() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (!_acceptedPolicy) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppStrings.validationAcceptPolicy)),
       );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      if (credential.user != null && mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomePage7()),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      String message = AppStrings.signupErrorGeneric;
+      if (e.code == 'weak-password') {
+        message = AppStrings.weakPasswordError;
+      } else if (e.code == 'email-already-in-use') {
+        message = AppStrings.emailInUseError;
+      } else if (e.code == 'invalid-email') {
+        message = AppStrings.emailInvalidError;
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${AppStrings.signupErrorGeneric}\n${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
+
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
     final svgHeight = w * (AppSizes.svgOrigH / AppSizes.svgOrigW);
-    final double titleFontSize = (w * 0.06).clamp(18.0, 28.0);
-    final double buttonHeight = (w * 0.15).clamp(48.0, 72.0);
-    final double buttonFontSize = (w * 0.025).clamp(10.0, 14.0);
-    final double orFontSize = (w * 0.03).clamp(10.0, 14.0);
-    final double inputTextFontSize = (w * 0.04).clamp(12.0, 16.0);
-    final double policyFontSize = (w * 0.035).clamp(10.0, 14.0);
-    final double inputHeight = w < 320
-        ? 28
-        : w < 400
-        ? 34
-        : w < 600
-        ? 44
-        : 60;
-
-    final double loginButtonHeight = (w * 0.16).clamp(48.0, 63.0);
-    final double navIconSize =
+    final titleFontSize = (w * 0.06).clamp(18.0, 28.0);
+    final buttonHeight = (w * 0.15).clamp(48.0, 72.0);
+    final buttonFontSize = (w * 0.025).clamp(10.0, 14.0);
+    final orFontSize = (w * 0.03).clamp(10.0, 14.0);
+    final inputFontSize = (w * 0.04).clamp(12.0, 16.0);
+    final policyFontSize = (w * 0.035).clamp(10.0, 14.0);
+    final inputHeight =
+    w < 320 ? 28.0 : w < 400 ? 34.0 : w < 600 ? 44.0 : 60.0;
+    final loginBtnHeight = (w * 0.16).clamp(48.0, 63.0);
+    final navIconSize =
     w.clamp(AppSizes.navIconMinSize, AppSizes.navIconMaxSize);
 
     return Scaffold(
@@ -105,11 +138,11 @@ class _SignUpPageState extends State<SignUpPage> {
           ),
           SafeArea(
             child: Padding(
-              padding:
-              const EdgeInsets.symmetric(horizontal: AppSizes.horizontalPadding),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.horizontalPadding),
               child: SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: 20),
                 physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.only(bottom: 20),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -126,71 +159,84 @@ class _SignUpPageState extends State<SignUpPage> {
                               height: navIconSize,
                             ),
                           ),
-                          const Spacer(),
+                          Flexible(
+                            child: Center(
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 40.0),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    AppStrings.createAccountTitle,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: titleFontSize,
+                                      fontFamily: 'AirbnbCereal',
+                                      fontWeight: FontWeight.w700,
+                                      height: 1.35,
+                                      color: AppColors.textDark,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Opacity(
+                            opacity: 0,
+                            child: SvgPicture.asset(
+                              AppAssets.navigateLeftIcon,
+                              width: navIconSize,
+                              height: navIconSize,
+                            ),
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 20),
-                      Text(
-                        AppStrings.createAccountTitle,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: titleFontSize,
-                          fontFamily: AppFonts.helveticaBold,
-                          fontWeight: FontWeight.w700,
-                          height: 1.35,
-                          color: AppColors.textDark,
-                        ),
-                      ),
                       const SizedBox(height: 28),
-
                       SocialButton(
-                        iconPath: AppAssets.facebookIcon,
+                        assetPath: AppAssets.facebookIcon, // Changed from iconPath to assetPath
                         label: AppStrings.continueFacebook,
                         backgroundColor: AppColors.facebookBlue,
                         textColor: Colors.white,
                         height: buttonHeight,
                         fontSize: buttonFontSize,
                         outlined: false,
-                        onPressed: () {
-                          // TODO: Facebook login logic
-                        },
+                        onPressed: () {},
                       ),
                       const SizedBox(height: 15),
                       SocialButton(
-                        iconPath: AppAssets.googleIcon,
+                        assetPath: AppAssets.googleIcon, // Changed from iconPath to assetPath
                         label: AppStrings.continueGoogle,
                         backgroundColor: Colors.white,
                         textColor: Colors.black,
                         height: buttonHeight,
                         fontSize: buttonFontSize,
                         outlined: true,
-                        onPressed: () {
-                          // TODO: Google login logic
-                        },
+                        onPressed: () {},
                       ),
                       const SizedBox(height: 28),
                       Text(
                         AppStrings.orSignUpWithEmail,
                         style: TextStyle(
                           fontSize: orFontSize,
-                          fontFamily: AppFonts.helveticaBold,
+                          fontFamily: 'AirbnbCereal',
                           fontWeight: FontWeight.w700,
-                          letterSpacing: orFontSize * 0.05,
+                          letterSpacing: orFontSize * 0.10,
                           color: AppColors.textGray,
                         ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 28),
                       CustomInputField(
+                        label: AppStrings.emailLabel, // Added required label
                         hintText: AppStrings.hintEmail,
-                        fontSize: inputTextFontSize,
+                        fontSize: inputFontSize,
                         height: inputHeight,
                         controller: _emailController,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
+                        validator: (val) {
+                          if (val == null || val.trim().isEmpty) {
                             return AppStrings.validationEmailRequired;
                           }
-                          if (!_isValidEmail(value.trim())) {
+                          final regex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                          if (!regex.hasMatch(val.trim())) {
                             return AppStrings.validationEmailInvalid;
                           }
                           return null;
@@ -199,48 +245,55 @@ class _SignUpPageState extends State<SignUpPage> {
                       ),
                       const SizedBox(height: 20),
                       CustomInputField(
-                        hintText: AppStrings.hintConfirmEmail,
-                        fontSize: inputTextFontSize,
-                        height: inputHeight,
-                        controller: _confirmEmailController,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return AppStrings.validationConfirmEmailRequired;
-                          }
-                          if (value.trim() != _emailController.text.trim()) {
-                            return AppStrings.validationEmailsDontMatch;
-                          }
-                          return null;
-                        },
-                        focusNode: _confirmEmailFocusNode,
-                      ),
-                      const SizedBox(height: 20),
-                      CustomInputField(
+                        label: AppStrings.passwordLabel, // Added required label
                         hintText: AppStrings.hintPassword,
-                        fontSize: inputTextFontSize,
+                        fontSize: inputFontSize,
                         height: inputHeight,
                         obscureText: _obscurePassword,
                         controller: _passwordController,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
+                        validator: (val) {
+                          if (val == null || val.isEmpty) {
                             return AppStrings.validationPasswordRequired;
                           }
-                          if (value.length < 6) {
+                          if (val.length < 6) {
                             return AppStrings.validationPasswordTooShort;
                           }
                           return null;
                         },
                         suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                          ),
+                          icon: Icon(_obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility),
                           onPressed: () => setState(
-                                () => _obscurePassword = !_obscurePassword,
-                          ),
+                                  () => _obscurePassword = !_obscurePassword),
                         ),
                         focusNode: _passwordFocusNode,
+                      ),
+                      const SizedBox(height: 20),
+                      CustomInputField(
+                        label: AppStrings.confirmPasswordLabel, // Added required label
+                        hintText: AppStrings.confirmPasswordHint,
+                        fontSize: inputFontSize,
+                        height: inputHeight,
+                        obscureText: _obscureConfirmPassword,
+                        controller: _confirmPasswordController,
+                        validator: (val) {
+                          if (val == null || val.isEmpty) {
+                            return AppStrings.confirmPasswordRequired;
+                          }
+                          if (val != _passwordController.text) {
+                            return AppStrings.passwordsDoNotMatch;
+                          }
+                          return null;
+                        },
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscureConfirmPassword
+                              ? Icons.visibility_off
+                              : Icons.visibility),
+                          onPressed: () => setState(() =>
+                          _obscureConfirmPassword = !_obscureConfirmPassword),
+                        ),
+                        focusNode: _confirmPasswordFocusNode,
                       ),
                       const SizedBox(height: 10),
                       Row(
@@ -253,7 +306,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                     text: AppStrings.privacyPolicyPrefix,
                                     style: TextStyle(
                                       fontSize: policyFontSize,
-                                      fontFamily: AppFonts.helveticaRegular,
+                                      fontFamily: 'AirbnbCereal',
                                       letterSpacing: 1,
                                       color: AppColors.textGray,
                                     ),
@@ -262,7 +315,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                     text: AppStrings.privacyPolicyLink,
                                     style: TextStyle(
                                       fontSize: policyFontSize,
-                                      fontFamily: AppFonts.helveticaRegular,
+                                      fontFamily: 'AirbnbCereal',
                                       fontWeight: FontWeight.w600,
                                       letterSpacing: 1,
                                       color: AppColors.accent,
@@ -279,32 +332,32 @@ class _SignUpPageState extends State<SignUpPage> {
                             activeColor: AppColors.accent,
                             side: BorderSide(color: AppColors.textGray),
                             value: _acceptedPolicy,
-                            onChanged: (val) =>
-                                setState(() => _acceptedPolicy = val ?? false),
+                            onChanged: (v) =>
+                                setState(() => _acceptedPolicy = v ?? false),
                           ),
                         ],
                       ),
                       const SizedBox(height: 20),
                       SizedBox(
-                        height: loginButtonHeight,
+                        height: loginBtnHeight,
                         child: ElevatedButton(
-                          onPressed: _submitForm,
+                          onPressed: _isLoading ? null : _submitForm,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(
-                                AppSizes.borderRadiusHigh,
-                              ),
+                                  AppSizes.borderRadiusHigh),
                             ),
                           ),
-                          child: Text(
-                            AppStrings.getStarted,
+                          child: _isLoading
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              : Text(
+                            AppStrings.signUpButton,
                             style: TextStyle(
                               fontSize: buttonFontSize,
-                              color: Colors.white,
-                              fontFamily: AppFonts.helveticaRegular,
-                              letterSpacing: 1.5,
+                              fontFamily: 'AirbnbCereal',
                               fontWeight: FontWeight.w600,
+                              color: Colors.white,
                             ),
                           ),
                         ),
