@@ -210,7 +210,7 @@ class SleepLog with ChangeNotifier {
     durationMinutes = calculateDurationMinutes();
 
     final m = <String, dynamic>{
-      'date': Timestamp.fromDate(date), // Convert to Timestamp for storage
+      'date': Timestamp.fromDate(date),
       'bedtime': bedtime,
       'wake_time': wakeTime,
       'quality': quality,
@@ -229,10 +229,12 @@ class SleepLog with ChangeNotifier {
       'light_exposure': lightExposure,
       'temperature': temperature,
       'comfort_level': comfortLevel,
+
       // Dream properties
       'dream_journal': dreamJournal,
       'dream_elements': dreamElements,
     };
+
 
     if (userId != null && userId!.isNotEmpty) m['userId'] = userId!;
     if (latencyMinutes != null) m['latency_minutes'] = latencyMinutes!;

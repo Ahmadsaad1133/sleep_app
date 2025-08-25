@@ -4,6 +4,10 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../../../services/api/api_service.dart';
+import '../../../models/sleeplog_model_page.dart';
 
 // ============================================================================
 //  OverviewTab2050 — 2025 AI-Connected Design (UI-only refresh)
@@ -18,7 +22,6 @@ class OverviewTab2050 extends StatefulWidget {
   final int sleepDebt;
   final Map<String, double> sleepStages; // e.g., { "Deep": 18, "REM": 22, "Light": 55, "Awake": 5 }
   final List<String> aiHighlights;
-  final Future<Map<String, dynamic>> dailyComparisonFuture;
   final List<double> weeklyTrend; // e.g., [6.3, 7.1, 5.9, ...] hours
   final List<Map<String, dynamic>> lifestyleCorrelations; // [{"label":"Caffeine","value":-0.32}, ...]
   final List<String> recommendations;
@@ -35,7 +38,6 @@ class OverviewTab2050 extends StatefulWidget {
     required this.sleepDebt,
     required this.sleepStages,
     required this.aiHighlights,
-    required this.dailyComparisonFuture,
     required this.weeklyTrend,
     required this.lifestyleCorrelations,
     required this.recommendations,
@@ -63,6 +65,7 @@ const _neonC = Color(0xFF2EF8A0);
 class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProviderStateMixin {
   late final AnimationController _pulse;
   late final ScrollController _scrollController;
+  late Future<Map<String, dynamic>> _dailyComparisonFuture;
   bool _showConfetti = false;
 
   @override
@@ -85,6 +88,7 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
         if (mounted) setState(() => _showConfetti = false);
       });
     }
+    _dailyComparisonFuture = _getDailyComparisonNormalized();
   }
 
   @override
@@ -391,7 +395,7 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
     return _NeoCard(
       padding: EdgeInsets.all(16.r),
       child: FutureBuilder<Map<String, dynamic>>(
-        future: widget.dailyComparisonFuture,
+        future: _dailyComparisonFuture,
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
             return Row(
@@ -493,8 +497,107 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
   }
 
   // ---------------------------------------------------------------------------
-  // SMALL BUILDERS
+  // FIRESTORE + API HELPERS
   // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> _getDailyComparisonNormalized() async {
+    final raw = await _getDailyComparison();
+    return _normalizeDailyComparison(raw);
+  }
+
+  Future<Map?> _getDailyComparison() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return null;
+
+      final query = await FirebaseFirestore.instance
+          .collection('user_sleep_logs')
+          .doc(user.uid)
+          .collection('logs')
+          .orderBy('date', descending: true)
+          .limit(2)
+          .get();
+
+      if (query.docs.length < 2) return null;
+
+      final current = SleepLog.fromMap(query.docs[0].data(), query.docs[0].id);
+      final previous = SleepLog.fromMap(query.docs[1].data(), query.docs[1].id);
+
+      return await ApiService.compareSleepLogs(
+        currentLog: current.toMap(),
+        previousLog: previous.toMap(),
+      );
+    } catch (e) {
+      debugPrint('Daily comparison error: $e');
+      return null;
+    }
+  }
+
+  Map<String, dynamic> _normalizeDailyComparison(Map? raw) {
+    final Map<String, dynamic> map =
+    raw == null ? <String, dynamic>{} : _convertDynamicMap(raw as Map);
+    if (map.isEmpty) {
+      return {'better': '—', 'worse': '—', 'delta': 0};
+    }
+    if (map.containsKey('better') &&
+        map.containsKey('worse') &&
+        map.containsKey('delta')) {
+      return {
+        'better': map['better'],
+        'worse': map['worse'],
+        'delta': map['delta'],
+      };
+    }
+    final todayRaw = map['today'];
+    final yesterdayRaw = map['yesterday'];
+
+    double todayVal = 0.0;
+    double yesterdayVal = 0.0;
+    if (todayRaw is num) {
+      todayVal = todayRaw.toDouble();
+    } else {
+      todayVal = double.tryParse(todayRaw?.toString() ?? '') ?? 0.0;
+    }
+    if (yesterdayRaw is num) {
+      yesterdayVal = yesterdayRaw.toDouble();
+    } else {
+      yesterdayVal = double.tryParse(yesterdayRaw?.toString() ?? '') ?? 0.0;
+    }
+    final diff = todayVal - yesterdayVal;
+    if (diff >= 0) {
+      return {
+        'better': todayVal.toStringAsFixed(1),
+        'worse': yesterdayVal.toStringAsFixed(1),
+        'delta': diff.toStringAsFixed(1),
+      };
+    } else {
+      return {
+        'better': yesterdayVal.toStringAsFixed(1),
+        'worse': todayVal.toStringAsFixed(1),
+        'delta': diff.toStringAsFixed(1),
+      };
+    }
+  }
+
+  Map<String, dynamic> _convertDynamicMap(
+      Map<dynamic, dynamic> originalMap) {
+    return originalMap.map<String, dynamic>((key, value) {
+      final k = key.toString();
+      dynamic v = value;
+      if (value is Map<dynamic, dynamic>) {
+        v = _convertDynamicMap(value);
+      } else if (value is List) {
+        v = value.map((e) {
+          if (e is Map<dynamic, dynamic>) {
+            return _convertDynamicMap(e);
+          }
+          return e;
+        }).toList();
+      }
+      return MapEntry(k, v);
+    });
+  }
+
 
   Widget _chip(String label, IconData icon) {
     return Container(

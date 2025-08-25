@@ -2,10 +2,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as _httpClient;
 import '../../Sleep_lognInput_page/sleep_analysis/models/sleep_plan_model.dart';
@@ -72,8 +73,9 @@ class ApiService {
       }
 
       final snapshot = await FirebaseFirestore.instance
-          .collection('user_sleep_logs')
-          .where('userId', isEqualTo: user.uid)
+          .collection('anonymous_sleep_logs')
+          .doc(user.uid)
+          .collection('logs')
           .orderBy('date', descending: true)
           .limit(limit)
           .get();
@@ -119,7 +121,7 @@ class ApiService {
       debugPrint('📡 Fetching last $limit sleep logs for user=${user.uid}');
 
       final snapshot = await FirebaseFirestore.instance
-          .collection('user_sleep_logs')
+          .collection('anonymous_sleep_logs')
           .doc(user.uid)
           .collection('logs')
           .orderBy('date', descending: true)
@@ -826,7 +828,7 @@ Output only the JSON object without any additional text.
       final user = FirebaseAuth.instance.currentUser;
       Map<String, dynamic> userContext = {};
       if (user != null) {
-        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        final doc = await FirebaseFirestore.instance.collection('anonymous_sleep_logs').doc(user.uid).get();
         if (doc.exists) {
           final data = doc.data()!;
           userContext = {
@@ -865,7 +867,7 @@ Output only the JSON object without any additional text.
 
       final response = await http.post(
         _sleepAnalysisUri,
-        headers: {'Content-Type': 'application/json'},
+        headers: await _getHeaders(),
         body: body,
       ).timeout(apiTimeout);
 
