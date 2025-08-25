@@ -505,37 +505,43 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
     return _normalizeDailyComparison(raw);
   }
 
-  Future<Map?> _getDailyComparison() async {
+  Future<Map<String, dynamic>> _getDailyComparison() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return null;
+      if (user == null) return {};
 
-      final query = await FirebaseFirestore.instance
-          .collection('user_sleep_logs')
+      final logsCollection = FirebaseFirestore.instance
+          .collection('anonymous_sleep_logs')
           .doc(user.uid)
-          .collection('logs')
+          .collection('logs');
+
+      final query = await logsCollection
           .orderBy('date', descending: true)
           .limit(2)
           .get();
 
-      if (query.docs.length < 2) return null;
+      if (query.docs.length < 2) {
+        debugPrint('Not enough logs for comparison (found ${query.docs.length})');
+        return {};
+      }
 
       final current = SleepLog.fromMap(query.docs[0].data(), query.docs[0].id);
       final previous = SleepLog.fromMap(query.docs[1].data(), query.docs[1].id);
 
-      return await ApiService.compareSleepLogs(
+      final comparison = await ApiService.compareSleepLogs(
         currentLog: current.toMap(),
         previousLog: previous.toMap(),
       );
+
+      return comparison ?? {};
     } catch (e) {
       debugPrint('Daily comparison error: $e');
-      return null;
+      return {};
     }
   }
 
-  Map<String, dynamic> _normalizeDailyComparison(Map? raw) {
-    final Map<String, dynamic> map =
-    raw == null ? <String, dynamic>{} : _convertDynamicMap(raw as Map);
+  Map<String, dynamic> _normalizeDailyComparison(Map raw) {
+    final Map<String, dynamic> map = _convertDynamicMap(raw);
     if (map.isEmpty) {
       return {'better': '—', 'worse': '—', 'delta': 0};
     }
