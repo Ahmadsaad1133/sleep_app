@@ -1,6 +1,6 @@
 import 'dart:async';
 
-
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_analysis/result/widgets2/tabs/dream_tab.dart';
@@ -86,6 +86,7 @@ class _SleepAnalysisResultPageContentState
   late Future<Map<String, dynamic>> _analysisFuture;
   final ConfettiController _confettiController = ConfettiController();
   int _sleepScore = 0;
+  List<String> _aiHighlights = [];
   List<String> _recommendations = [];
   SleepLog? _lastSleepLog;
   bool _isAnalysisParsed = false;
@@ -213,6 +214,19 @@ class _SleepAnalysisResultPageContentState
     if (m == null) return <String, dynamic>{};
     if (m is Map<String, dynamic>) return m;
     if (m is Map) return Map<String, dynamic>.from(m);
+    if (m is String) {
+      final trimmed = m.trim();
+      if (trimmed.startsWith('{')) {
+        try {
+          final decoded = jsonDecode(trimmed);
+          if (decoded is Map) {
+            return Map<String, dynamic>.from(decoded);
+          }
+        } catch (_) {
+          // ignore JSON parse errors and fall through to empty map
+        }
+      }
+    }
     return <String, dynamic>{};
   }
 
@@ -252,10 +266,25 @@ class _SleepAnalysisResultPageContentState
         .toList();
   }
 
-  /// Normalize the dream/mood forecast response to match the keys expected by the UI.
-  ///
-  /// The API returns `dream_prediction`, `mood_forecast` and `cognitive_assessment` keys.
-  /// The UI expects `dream_vividness`, `mood_forecast`, and `cognitive_performance`.
+  List<String> _asRecommendationList(dynamic r) {
+    if (r == null) return <String>[];
+    if (r is List) {
+      return r
+          .map((e) {
+        if (e is Map) {
+          final map = e as Map;
+          final title = map['title']?.toString() ?? '';
+          final reason = map['reason']?.toString() ?? '';
+          return title.isNotEmpty ? title : reason;
+        }
+        return e?.toString() ?? '';
+      })
+          .where((s) => s.isNotEmpty)
+          .toList();
+    }
+    return [r.toString()];
+  }
+
   Map<String, dynamic> _normalizeForecastForInsights(
       Map<String, dynamic>? forecast) {
     final Map<String, dynamic> insights = {};
@@ -536,9 +565,19 @@ class _SleepAnalysisResultPageContentState
                 ?.toString() ??
                 '') ??
             _sleepScore;
-
-        _recommendations = _asStringList(
-            safeParsed['recommendations']);
+        _aiHighlights =
+            _asStringList(safeParsed['key_insights']);
+        final insightsRaw = safeParsed['sleep_insights'];
+        final insights = _asMap(insightsRaw);
+        final insightsData = _asMap(insights['data']);
+        _aiHighlights = _asStringList(
+            insightsData['key_insights'] ??
+                insights['key_insights'] ??
+                safeParsed['key_insights']);
+        _recommendations = _asRecommendationList(
+            insightsData['recommendations'] ??
+                insights['recommendations'] ??
+                safeParsed['recommendations']);
         _sleepMetrics =
             _asMap(
                 safeParsed['sleepMetrics']);
@@ -883,10 +922,7 @@ class _SleepAnalysisResultPageContentState
                                 _calculateSleepDebt(),
                                 sleepStages:
                                 _sleepStages,
-                                aiHighlights:
-                                _recommendations
-                                    .take(3)
-                                    .toList(),
+                                aiHighlights: _aiHighlights,
                                 // Provide a normalized daily comparison so the UI always receives the expected keys.
                                 weeklyTrend:
                                 _getWeeklyTrend(),
