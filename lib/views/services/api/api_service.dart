@@ -107,7 +107,12 @@ class ApiService {
 
       final body = json.decode(response.body);
       if (response.statusCode == 200 && body is Map<String, dynamic>) {
-        return body;
+        // Some backends wrap results in a `data` or `comparison` object.
+        final raw = body['comparison'] ?? body['data'] ?? body;
+        if (raw is Map<String, dynamic>) {
+          return raw;
+        }
+        throw SleepAnalysisException('Invalid compare response format');
       }
       final message =
       body is Map<String, dynamic> ? body['error'] ?? body.toString() : '$body';
@@ -116,6 +121,18 @@ class ApiService {
       debugPrint('Error comparing sleep logs: $e');
       throw SleepAnalysisException('Failed to compare logs: $e');
     }
+  }
+  /// Convenience helper: fetch the latest two logs for the current user and
+  /// return the comparison result from the backend API.
+  static Future<Map<String, dynamic>> compareLastTwoSleepLogs() async {
+    final logs = await getHistoricalSleepLogs(limit: 2);
+    if (logs.length < 2) {
+      throw SleepAnalysisException('Not enough logs for comparison');
+    }
+    return compareSleepLogs(
+      currentLog: logs[0].toMap(),
+      previousLog: logs[1].toMap(),
+    );
   }
   static Map<String, dynamic> _sanitizeForJson(Map<String, dynamic> source) {
     return source.map((key, value) {

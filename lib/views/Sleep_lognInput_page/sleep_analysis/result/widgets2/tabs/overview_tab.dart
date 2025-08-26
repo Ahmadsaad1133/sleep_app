@@ -4,11 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../../services/api/api_service.dart';
-import '../../../models/sleeplog_model_page.dart';
-
 // ============================================================================
 //  OverviewTab2050 — 2025 AI-Connected Design (UI-only refresh)
 //  NOTE: Public API is unchanged. No data models or field names were touched.
@@ -507,33 +503,10 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
   }
 
   Future<Map<String, dynamic>> _getDailyComparison() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      throw Exception('User not signed in');
-    }
+
     try {
-      final logsCollection = FirebaseFirestore.instance
-          .collection('user_sleep_logs')
-          .doc(user.uid)
-          .collection('logs');
 
-      final query = await logsCollection
-          .orderBy('date', descending: true)
-          .limit(2)
-          .get();
-
-      if (query.docs.length < 2) {
-        throw Exception('Not enough logs for comparison');
-      }
-
-      final current = SleepLog.fromMap(query.docs[0].data(), query.docs[0].id);
-      final previous = SleepLog.fromMap(query.docs[1].data(), query.docs[1].id);
-
-      return await ApiService.compareSleepLogs(
-        currentLog: current.toMap(),
-        previousLog: previous.toMap(),
-      );
-
+      return await ApiService.compareLastTwoSleepLogs();
     } catch (e) {
       debugPrint('Daily comparison error: $e');
       rethrow;
@@ -541,7 +514,10 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
   }
 
   Map<String, dynamic> _normalizeDailyComparison(Map raw) {
-    final Map<String, dynamic> map = _convertDynamicMap(raw);
+    // Convert dynamic maps to a String-keyed map and unwrap common wrappers.
+    Map<String, dynamic> map = _convertDynamicMap(raw);
+    if (map.containsKey('data')) map = _convertDynamicMap(map['data']);
+    if (map.containsKey('comparison')) map = _convertDynamicMap(map['comparison']);
     if (map.isEmpty) {
       return {'better': '—', 'worse': '—', 'delta': 0};
     }
