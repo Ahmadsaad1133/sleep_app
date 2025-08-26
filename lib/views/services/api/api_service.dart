@@ -1276,7 +1276,38 @@ RAW_INSIGHTS_FROM_BACKEND = ${rawJson}
     final score = (data['quality_score'] is num) ? (data['quality_score'] as num).toInt() : 0;
     return hasBullets && hasRecs && score > 40;
   }
+  /// Generates insights directly with the LLM if the backend endpoint is
+  /// unavailable (e.g., returns 404). This mirrors the expected JSON schema
+  /// from the backend so the rest of the pipeline can remain unchanged.
+  static Future<Map<String, dynamic>> _generateInsightsFallback(
+      Map<String, dynamic> sleepData) async {
+    final prompt = '''
+You are a concise sleep coach. Analyze the provided sleep log and return
+actionable insights in JSON using the following schema:
+{
+  "summary": string,
+  "quality_score": integer,
+  "key_insights": string[],
+  "anomalies": string[],
+  "risk_flags": string[],
+  "recommendations": [
+    {"title": string, "reason": string, "impact": integer, "how_to_apply": string}
+  ],
+  "forecast": {"mood": "positive|neutral|negative", "confidence": integer, "focus": integer},
+  "environment_impact": {"noise": integer, "light": integer, "temperature": integer, "comfort": integer, "overall": integer, "notes": string}
+}
+Return only JSON.
 
+SLEEP_LOG: ${jsonEncode(sleepData)}
+''';
+
+    final text = await generateResponse(prompt);
+    final match = RegExp(r'\{[\s\S]*\}').firstMatch(text);
+    if (match == null) {
+      throw const FormatException('No JSON found in fallback insights response');
+    }
+    return jsonDecode(match.group(0)!);
+  }
   Future<Map<String, dynamic>> getInsights(Map<String, dynamic> sleepData) async {
     try {
       final connectivity = await Connectivity().checkConnectivity();
@@ -1291,18 +1322,28 @@ RAW_INSIGHTS_FROM_BACKEND = ${rawJson}
         if (v is TimeOfDay) return MapEntry(k, '${v.hour}:${v.minute}');
         return MapEntry(k, v);
       });
-      final raw = await _retry(() async {
-        final headers = await _getHeaders();
-        final response = await http
-            .post(_insightsUri, headers: headers, body: jsonEncode(cleanedSleepData))
-            .timeout(apiTimeout);
-        if (response.statusCode != 200) {
-          throw ApiResponseException(response.statusCode, response.body);
+      Map<String, dynamic> raw;
+      try {
+        raw = await _retry(() async {
+          final headers = await _getHeaders();
+          final response = await http
+              .post(_insightsUri, headers: headers, body: jsonEncode(cleanedSleepData))
+              .timeout(apiTimeout);
+          if (response.statusCode != 200) {
+            throw ApiResponseException(response.statusCode, response.body);
+          }
+          final body = jsonDecode(response.body);
+          if (body is Map<String, dynamic>) return body;
+          throw const FormatException('Insights API did not return JSON object');
+        });
+      } on ApiResponseException catch (e) {
+        if (e.statusCode == 404) {
+          debugPrint('⚠️ Insights endpoint not found, using fallback generation');
+          raw = await _generateInsightsFallback(cleanedSleepData);
+        } else {
+          rethrow;
         }
-        final body = jsonDecode(response.body);
-        if (body is Map<String, dynamic>) return body;
-        throw const FormatException('Insights API did not return JSON object');
-      });
+      }
 
       // 2) 7-day baseline for grounding
       final recent = await getHistoricalSleepLogs(limit: 7);
