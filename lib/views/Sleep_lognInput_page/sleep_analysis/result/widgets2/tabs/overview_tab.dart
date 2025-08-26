@@ -410,7 +410,8 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
             );
           }
           if (snap.hasError) {
-            return Text('Error: ${snap.error}',
+            debugPrint('Daily comparison load error: ${snap.error}');
+            return Text('Failed to load comparison data.',
                 style: TextStyle(color: Colors.white60, fontSize: 13.sp));
           }
           if (!snap.hasData || (snap.data?.isEmpty ?? true)) {
@@ -506,10 +507,11 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
   }
 
   Future<Map<String, dynamic>> _getDailyComparison() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('User not signed in');
+    }
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return {};
-
       final logsCollection = FirebaseFirestore.instance
           .collection('user_sleep_logs')
           .doc(user.uid)
@@ -521,22 +523,20 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
           .get();
 
       if (query.docs.length < 2) {
-        debugPrint('Not enough logs for comparison (found ${query.docs.length})');
-        return {};
+        throw Exception('Not enough logs for comparison');
       }
 
       final current = SleepLog.fromMap(query.docs[0].data(), query.docs[0].id);
       final previous = SleepLog.fromMap(query.docs[1].data(), query.docs[1].id);
 
-      final comparison = await ApiService.compareSleepLogs(
+      return await ApiService.compareSleepLogs(
         currentLog: current.toMap(),
         previousLog: previous.toMap(),
       );
 
-      return comparison ?? {};
     } catch (e) {
       debugPrint('Daily comparison error: $e');
-      return {};
+      rethrow;
     }
   }
 

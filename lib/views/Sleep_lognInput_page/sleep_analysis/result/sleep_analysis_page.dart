@@ -349,16 +349,17 @@ class _SleepAnalysisResultPageContentState
   }
 
   Future<Map<String, dynamic>> _getDailyComparison() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('User not authenticated');
+    }
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return {}; // ✅ رجّع Map فاضي مش return بس
-
-      final logsCollection = FirebaseFirestore.instance
+      final logsQuery = FirebaseFirestore.instance
           .collection('user_sleep_logs')
           .doc(user.uid)
           .collection('logs'); // ✅ fixed path
 
-      final snapshot = await logsCollection
+      final snapshot = await logsQuery
           .orderBy('date', descending: true) // ✅ use 'date'
           .limit(7)
           .get();
@@ -366,8 +367,7 @@ class _SleepAnalysisResultPageContentState
       debugPrint("Fetched ${snapshot.docs.length} logs for ${user.uid}");
 
       if (snapshot.docs.length < 2) {
-        debugPrint('Not enough logs for comparison (found ${snapshot.docs.length})');
-        return {};
+        throw Exception('Not enough logs for comparison');
       }
 
       final currentLogData = snapshot.docs[0].data();
@@ -384,7 +384,11 @@ class _SleepAnalysisResultPageContentState
         previousLog: previousLog.toMap(),
       );
 
-      return (comparison ?? {});
+      if (comparison == null) {
+        throw Exception('Failed to compare logs');
+      }
+
+      return comparison;
     } catch (e, st) {
       debugPrint('Error in daily comparison: $e\n$st');
       return {};

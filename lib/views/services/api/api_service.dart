@@ -88,7 +88,7 @@ class ApiService {
     }
   }
 // Add this method to your ApiService class
-  static Future<Map<String, dynamic>?> compareSleepLogs({
+  static Future<Map<String, dynamic>> compareSleepLogs({
     required Map<String, dynamic> currentLog,
     required Map<String, dynamic> previousLog,
   }) async {
@@ -104,15 +104,17 @@ class ApiService {
       )
           .timeout(apiTimeout);
 
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      }
+
       final body = json.decode(response.body);
-      if (body is Map<String, dynamic>) return body;
-      throw SleepAnalysisException('Invalid compare logs response format');
+      if (response.statusCode == 200 && body is Map<String, dynamic>) {
+        return body;
+      }
+      final message =
+      body is Map<String, dynamic> ? body['error'] ?? body.toString() : '$body';
+      throw SleepAnalysisException('Compare logs failed: $message');
     } catch (e) {
       debugPrint('Error comparing sleep logs: $e');
-      return null;
+      throw SleepAnalysisException('Failed to compare logs: $e');
     }
   }
   static Map<String, dynamic> _sanitizeForJson(Map<String, dynamic> source) {
