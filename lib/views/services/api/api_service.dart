@@ -1284,11 +1284,17 @@ RAW_INSIGHTS_FROM_BACKEND = ${rawJson}
         throw NoNetworkException();
       }
 
-      // 1) Call backend as source-of-truth
+      // Convert non-serializable values for the API
+      final cleanedSleepData = sleepData.map((k, v) {
+        if (v is Timestamp) return MapEntry(k, v.toDate().toIso8601String());
+        if (v is DateTime) return MapEntry(k, v.toIso8601String());
+        if (v is TimeOfDay) return MapEntry(k, '${v.hour}:${v.minute}');
+        return MapEntry(k, v);
+      });
       final raw = await _retry(() async {
         final headers = await _getHeaders();
         final response = await http
-            .post(_insightsUri, headers: headers, body: jsonEncode(sleepData))
+            .post(_insightsUri, headers: headers, body: jsonEncode(cleanedSleepData))
             .timeout(apiTimeout);
         if (response.statusCode != 200) {
           throw ApiResponseException(response.statusCode, response.body);
@@ -1305,7 +1311,7 @@ RAW_INSIGHTS_FROM_BACKEND = ${rawJson}
       // 3) LLM refinement into strict JSON schema
       Future<Map<String, dynamic>> _refineOnce() async {
         final prompt = _buildInsightsRefinementPrompt(
-          sleepData: sleepData,
+          sleepData: cleanedSleepData,
           hist: hist,
           raw: raw,
         );

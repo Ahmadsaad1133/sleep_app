@@ -1,12 +1,9 @@
 import 'dart:async';
-
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_analysis/result/widgets2/tabs/dream_tab.dart';
 import 'package:flutter/material.dart';
-
-
 import 'package:confetti/confetti.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer_animation/shimmer_animation.dart';
@@ -23,7 +20,6 @@ import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_analysis/resu
 import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_analysis/result/widgets2/tabs/sleep_details_tab.dart';
 import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_analysis/result/widgets2/tabs/metrics_tab.dart';
 import '../../../../constants/colors.dart';
-
 import '../../../services/api/api_service.dart';
 import '../models/sleeplog_model_page.dart';
 import '../plan/sleep_ai_plan_page.dart';
@@ -539,7 +535,7 @@ class _SleepAnalysisResultPageContentState
       _dreamMoodForecast = _asMap(
           widget.analysisResult?['dream_mood_forecast']);
       _historicalAnalysisFuture = Future.value(
-          widget.analysisResult?['sleep_insights']?.toString() ??
+          widget.analysisResult?['historical_analysis']?.toString() ??
               '');
 
       // Normalize sleep stage values into percentages and trigger the API.
@@ -725,6 +721,21 @@ class _SleepAnalysisResultPageContentState
       final safeAnalysis = (analysis is Map)
           ? Map<String, dynamic>.from(analysis)
           : <String, dynamic>{};
+      try {
+        safeAnalysis['sleep_insights'] =
+        await ApiService().getInsights(log.toMap())
+            .timeout(const Duration(seconds: 20));
+        safeAnalysis['historical_analysis'] =
+        await ApiService.getHistoricalSleepAnalysis(limit: 10)
+            .timeout(const Duration(seconds: 15));
+      } on TimeoutException {
+        safeAnalysis['sleep_insights'] = {
+          'status': 'timeout',
+          'message': 'Insights timed out'
+        };
+        safeAnalysis['historical_analysis'] =
+        'Historical analysis timed out';
+      }
 
       _parseProfessionalAnalysis(safeAnalysis);
       _lastSleepLog = log;
@@ -996,7 +1007,7 @@ class _SleepAnalysisResultPageContentState
                                 _normalizeForecastForInsights(
                                     _dreamMoodForecast),
                                 historicalAnalysis: widget
-                                    .analysisResult?['sleep_insights']
+                                    .analysisResult?['historical_analysis']
                                     ?.toString() ??
                                     '',
                               ),

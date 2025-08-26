@@ -231,10 +231,18 @@ class _AILoadingAnalysisPageState extends State<AILoadingAnalysisPage>
       _updateStep(5, "Generating sleep insights...");
       try {
         _fullAnalysisData['sleep_insights'] =
+        await ApiService().getInsights(widget.sleepLog.toMap())
+            .timeout(const Duration(seconds: 20));
+        _fullAnalysisData['historical_analysis'] =
         await ApiService.getHistoricalSleepAnalysis(limit: 10)
             .timeout(const Duration(seconds: 15));
       } on TimeoutException {
-        _fullAnalysisData['sleep_insights'] = {"status": "timeout", "message": "Historical analysis timed out"};
+        _fullAnalysisData['sleep_insights'] = {
+          "status": "timeout",
+          "message": "Insights timed out"
+        };
+        _fullAnalysisData['historical_analysis'] =
+        "Historical analysis timed out";
       }
       _updateProgress(90);
       await Future.delayed(const Duration(seconds: 15));
