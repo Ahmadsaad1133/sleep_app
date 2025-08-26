@@ -73,7 +73,7 @@ class ApiService {
       }
 
       final snapshot = await FirebaseFirestore.instance
-          .collection('anonymous_sleep_logs')
+          .collection('user_sleep_logs')
           .doc(user.uid)
           .collection('logs')
           .orderBy('date', descending: true)
@@ -93,23 +93,46 @@ class ApiService {
     required Map<String, dynamic> previousLog,
   }) async {
     try {
-      final response = await _httpClient.post(
+      final response = await http
+          .post(
         Uri.parse('$baseUrl/compare-sleep-logs'),
         headers: await _getHeaders(),
         body: json.encode({
-          'current_log': currentLog,
-          'previous_log': previousLog,
+          'current_log': _sanitizeForJson(currentLog),
+          'previous_log': _sanitizeForJson(previousLog),
         }),
-      );
+      )
+          .timeout(apiTimeout);
 
       if (response.statusCode == 200) {
         return json.decode(response.body);
       }
-      return null;
+      final body = json.decode(response.body);
+      if (body is Map<String, dynamic>) return body;
+      throw SleepAnalysisException('Invalid compare logs response format');
     } catch (e) {
       debugPrint('Error comparing sleep logs: $e');
       return null;
     }
+  }
+  static Map<String, dynamic> _sanitizeForJson(Map<String, dynamic> source) {
+    return source.map((key, value) {
+      if (value is Timestamp) {
+        return MapEntry(key, value.toDate().toIso8601String());
+      } else if (value is DateTime) {
+        return MapEntry(key, value.toIso8601String());
+      } else if (value is Map<String, dynamic>) {
+        return MapEntry(key, _sanitizeForJson(value));
+      } else if (value is List) {
+        return MapEntry(key, value.map((e) {
+          if (e is Timestamp) return e.toDate().toIso8601String();
+          if (e is DateTime) return e.toIso8601String();
+          if (e is Map<String, dynamic>) return _sanitizeForJson(e);
+          return e;
+        }).toList());
+      }
+      return MapEntry(key, value);
+    });
   }
   static Future<String> getHistoricalSleepAnalysis({int limit = 10}) async {
     final user = FirebaseAuth.instance.currentUser;
@@ -121,7 +144,7 @@ class ApiService {
       debugPrint('📡 Fetching last $limit sleep logs for user=${user.uid}');
 
       final snapshot = await FirebaseFirestore.instance
-          .collection('anonymous_sleep_logs')
+          .collection('user_sleep_logs')
           .doc(user.uid)
           .collection('logs')
           .orderBy('date', descending: true)
@@ -828,7 +851,7 @@ Output only the JSON object without any additional text.
       final user = FirebaseAuth.instance.currentUser;
       Map<String, dynamic> userContext = {};
       if (user != null) {
-        final doc = await FirebaseFirestore.instance.collection('anonymous_sleep_logs').doc(user.uid).get();
+        final doc = await FirebaseFirestore.instance.collection('user_sleep_logs').doc(user.uid).get();
         if (doc.exists) {
           final data = doc.data()!;
           userContext = {

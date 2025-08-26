@@ -354,7 +354,7 @@ class _SleepAnalysisResultPageContentState
       if (user == null) return {}; // ✅ رجّع Map فاضي مش return بس
 
       final logsCollection = FirebaseFirestore.instance
-          .collection('anonymous_sleep_logs')
+          .collection('user_sleep_logs')
           .doc(user.uid)
           .collection('logs'); // ✅ fixed path
 
@@ -432,7 +432,7 @@ class _SleepAnalysisResultPageContentState
       if (user == null) return;
 
       final logsCollection = FirebaseFirestore.instance
-          .collection('anonymous_sleep_logs')
+          .collection('user_sleep_logs')
           .doc(user.uid)
           .collection('logs'); // ✅ fixed path
 

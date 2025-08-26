@@ -134,7 +134,7 @@ class _AILoadingAnalysisPageState extends State<AILoadingAnalysisPage>
       _updateStep(0, "Saving cosmic sleep log...");
       final uid = FirebaseAuth.instance.currentUser!.uid;
       await FirebaseFirestore.instance
-          .collection('anonymous_sleep_logs')
+          .collection('user_sleep_logs')
           .doc(uid)
           .collection('logs')
           .add(widget.sleepLog.toMap());

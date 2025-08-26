@@ -511,7 +511,7 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
       if (user == null) return {};
 
       final logsCollection = FirebaseFirestore.instance
-          .collection('anonymous_sleep_logs')
+          .collection('user_sleep_logs')
           .doc(user.uid)
           .collection('logs');
 
