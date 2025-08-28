@@ -2,10 +2,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
-
-
-
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -22,25 +18,20 @@ import '../../bedtime_page/story.dart' as bedtime_story;
 class SleepAnalysisException implements Exception {
   final String message;
   SleepAnalysisException(this.message);
-
   @override
   String toString() => 'SleepAnalysisException: $message';
 }
-
 class NoNetworkException extends SleepAnalysisException {
   NoNetworkException() : super('No internet connection available');
 }
-
 class ApiTimeoutException extends SleepAnalysisException {
   ApiTimeoutException() : super('Server response timed out');
 }
-
 class ApiResponseException extends SleepAnalysisException {
   final int statusCode;
   ApiResponseException(this.statusCode, String message)
       : super('API error $statusCode: $message');
 }
-
 class ApiService {
   static const String baseUrl = 'https://flutter2-backend.onrender.com';
   static final Uri _sleepAnalysisUri = Uri.parse('$baseUrl/sleep-analysis');
@@ -50,8 +41,6 @@ class ApiService {
   static final Uri _storyImageUri = Uri.parse('$baseUrl/generate-story-and-image');
   static final Uri _insightsUri = Uri.parse('$baseUrl/insights');
   static const Duration apiTimeout = Duration(seconds: 45);
-
-  /// 🔹 Add this method
   static Future<Map<String, String>> _getHeaders() async {
     final user = FirebaseAuth.instance.currentUser;
     String? token;
@@ -59,22 +48,18 @@ class ApiService {
     if (user != null) {
       token = await user.getIdToken();
     }
-
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
     };
   }
-
-  // New method to fetch historical sleep logs
   static Future<List<SleepLog>> getHistoricalSleepLogs({int limit = 7}) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         throw SleepAnalysisException('User not authenticated');
       }
-
       final snapshot = await FirebaseFirestore.instance
           .collection('anonymous_sleep_logs')
           .doc(user.uid)
@@ -82,7 +67,6 @@ class ApiService {
           .orderBy('date', descending: true)
           .limit(limit)
           .get();
-
       return snapshot.docs
           .map((doc) => SleepLog.fromMap(doc.data(), doc.id))
           .toList();
@@ -90,7 +74,6 @@ class ApiService {
       throw SleepAnalysisException('Failed to fetch historical logs: ${e.toString()}');
     }
   }
-// Add this method to your ApiService class
   static Future<Map<String, dynamic>> compareSleepLogs({
     required Map<String, dynamic> currentLog,
     required Map<String, dynamic> previousLog,
@@ -106,13 +89,11 @@ class ApiService {
         }),
       )
           .timeout(apiTimeout);
-
       if (response.statusCode != 200) {
         final bodyText =
         response.body.isNotEmpty ? response.body : 'HTTP ${response.statusCode}';
         throw SleepAnalysisException('Compare logs failed: $bodyText');
       }
-
       dynamic body;
       try {
         body = json.decode(response.body);
@@ -133,7 +114,6 @@ class ApiService {
           return raw;
         }
       }
-
       throw SleepAnalysisException('Invalid compare response format');
     } catch (e) {
       debugPrint('Error comparing sleep logs: $e');
@@ -141,8 +121,6 @@ class ApiService {
       throw SleepAnalysisException('Failed to compare logs: $e');
     }
   }
-  /// Convenience helper: fetch the latest two logs for the current user and
-  /// return the comparison result from the backend API.
   static Future<Map<String, dynamic>> compareLastTwoSleepLogs() async {
     final logs = await getHistoricalSleepLogs(limit: 2);
     if (logs.length < 2) {
@@ -177,7 +155,6 @@ class ApiService {
     if (user == null) {
       throw SleepAnalysisException('User not signed in');
     }
-
     try {
       debugPrint('📡 Fetching last $limit sleep logs for user=${user.uid}');
 
@@ -193,9 +170,7 @@ class ApiService {
           .orderBy('date', descending: true)
           .limit(limit)
           .get();
-
       debugPrint('✅ Retrieved ${snapshot.docs.length} docs');
-
       final sleepLogs = snapshot.docs.map((doc) {
         final data = doc.data();
         if (data['date'] is Timestamp) {
