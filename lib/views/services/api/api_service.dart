@@ -101,17 +101,23 @@ class ApiService {
         debugPrint('Invalid JSON response: ${response.body}');
         throw SleepAnalysisException('Invalid compare response format');
       }
-      try {
-        body = json.decode(response.body);
-      } on FormatException {
-        debugPrint('Invalid JSON response: ${response.body}');
-        throw SleepAnalysisException('Invalid compare response format');
-      }
-      if (response.statusCode == 200 && body is Map<String, dynamic>) {
+
+      // Accept common response structures.
+      if (response.statusCode == 200) {
+        dynamic raw = body;
         // Some backends wrap results in a `data` or `comparison` object.
-        final raw = body['comparison'] ?? body['data'] ?? body;
         if (raw is Map<String, dynamic>) {
-          return raw;
+          raw = raw['comparison'] ?? raw['data'] ?? raw;
+        }
+
+        // If the payload is a list, take the first map entry.
+        if (raw is List && raw.isNotEmpty) {
+          raw = raw.first;
+        }
+
+        if (raw is Map) {
+          // Ensure we return a string-keyed map.
+          return Map<String, dynamic>.from(raw as Map);
         }
       }
       throw SleepAnalysisException('Invalid compare response format');
