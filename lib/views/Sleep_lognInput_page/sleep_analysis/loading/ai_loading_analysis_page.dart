@@ -280,7 +280,13 @@ class _AILoadingAnalysisPageState extends State<AILoadingAnalysisPage>
         _fullAnalysisData.addAll(analysis);
         _fullAnalysisData['sleepStages'] = analysis['sleepStages'] ?? {};
         _fullAnalysisData['dailyComparison'] = analysis['dailyComparison'] ?? {};
-        _fullAnalysisData['lifestyleCorrelations'] = analysis['lifestyleCorrelations'] ?? [];
+        final _lc = analysis['lifestyleCorrelations']
+            ?? analysis['lifestyle_correlations']
+            ?? analysis['behavioral_correlations']
+            ?? analysis['correlations']
+            ?? analysis['lifestyleInsights']
+            ?? [];
+        _fullAnalysisData['lifestyleCorrelations'] = _lc is List ? _lc : [];
       }
 
       // Mark as complete

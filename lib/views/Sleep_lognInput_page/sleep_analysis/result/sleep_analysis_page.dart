@@ -352,27 +352,65 @@ class _SleepAnalysisResultPageContentState
   }
 
   Future<Map<String, dynamic>> _getDailyComparison() async {
-    // Leverage the ApiService helper which fetches the last two logs from
-    // the same collection used for saving sleep logs (user_sleep_logs). This
-    // avoids mismatches between anonymous and user collections and ensures
-    // there are enough entries for comparison. If the user isn't signed in
-    // or there aren't at least two logs, an empty map will be returned.
     try {
-      final comparison = await ApiService.compareLastTwoSleepLogs();
-      return _asMap(comparison);
-    } catch (e, st) {
-      debugPrint('Error in daily comparison: $e\n$st');
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return {};
+
+      final logsRef = FirebaseFirestore.instance
+          .collection('anonymous_sleep_logs')
+          .doc(user.uid)
+          .collection('logs');
+
+      final snap = await logsRef.orderBy('date', descending: true).limit(2).get();
+      if (snap.docs.length < 2) return {};
+
+      Map<String, dynamic> _normalize(Map<String, dynamic> raw) {
+        final m = Map<String, dynamic>.from(raw);
+
+        int asInt(dynamic v) => v is int ? v : (v is double ? v.round() : int.tryParse('$v') ?? 0);
+        double asDouble(dynamic v) => v is double ? v : (v is int ? v.toDouble() : double.tryParse('$v') ?? 0.0);
+
+        final duration = asInt(m['durationMinutes'] ?? m['totalSleepMinutes'] ?? 0);
+        m['totalSleepMinutes'] = duration;
+        m['deepSleepMinutes'] = asInt(m['deepSleepMinutes'] ?? 0);
+        m['remSleepMinutes'] = asInt(m['remSleepMinutes'] ?? 0);
+        m['lightSleepMinutes'] = asInt(m['lightSleepMinutes'] ?? 0);
+        m['efficiencyScore'] = asDouble(m['efficiencyScore'] ?? m['sleepEfficiency'] ?? 0.0);
+
+        if (m['date'] == null && m['timestamp'] != null) m['date'] = m['timestamp'];
+        return m;
+      }
+
+      final currentLog = _normalize(Map<String, dynamic>.from(snap.docs[0].data()));
+      final previousLog = _normalize(Map<String, dynamic>.from(snap.docs[1].data()));
+
+      final res = await ApiService.compareSleepLogs(
+        currentLog: currentLog,
+        previousLog: previousLog,
+      );
+
+      if (res == null) return {};
+      if (res is Map<String, dynamic>) return res;
+      if (res is Map) return res.map((k, v) => MapEntry(k.toString(), v));
       return {};
+    } catch (e, st) {
+      debugPrint('Error in _getDailyComparison(): $e\n$st');
+      return {'error': e.toString()};
     }
   }
 
 
+
   List<Map<String, dynamic>>
   _getLifestyleCorrelations() {
-    // Use API data if available, otherwise fall back to calculated values.
-    final apiCorrelations = _asListOfMaps(
-        widget.analysisResult?['lifestyleCorrelations']);
-
+    // Use API data if available (supporting multiple possible keys), otherwise empty.
+    final Map<String, dynamic> ar = _asMap(widget.analysisResult);
+    final dynamic raw = ar['lifestyleCorrelations'] ??
+        ar['lifestyle_correlations'] ??
+        ar['behavioral_correlations'] ??
+        ar['correlations'] ??
+        ar['lifestyleInsights'];
+    final apiCorrelations = _asListOfMaps(raw);
     return apiCorrelations;
   }
 
@@ -896,7 +934,7 @@ class _SleepAnalysisResultPageContentState
                             _wrapTabWithSliverWidget(
                               tabContext,
                               'Overview',
-                              OverviewTab2050(
+                              OverviewTab2050New(
                                 sleepScore:
                                 _sleepScore,
                                 totalSleepDuration:

@@ -1,16 +1,21 @@
 
 import 'dart:math';
 import 'dart:ui';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import '../../../../../services/api/api_service.dart';
-// ============================================================================
+import '../../../models/sleeplog_model_page.dart';
+
+
 //  OverviewTab2050 — 2025 AI-Connected Design (UI-only refresh)
 //  NOTE: Public API is unchanged. No data models or field names were touched.
 // ============================================================================
 
-class OverviewTab2050 extends StatefulWidget {
+class OverviewTab2050New extends StatefulWidget {
   // ------------------------ PUBLIC FIELDS (UNCHANGED) ------------------------
   final int sleepScore;
   final String totalSleepDuration;
@@ -27,7 +32,7 @@ class OverviewTab2050 extends StatefulWidget {
   final ConfettiController confettiController;
   final Map<String, dynamic>? dailyComparison;
 
-  const OverviewTab2050({
+  const OverviewTab2050New({
     super.key,
     required this.sleepScore,
     required this.totalSleepDuration,
@@ -46,7 +51,7 @@ class OverviewTab2050 extends StatefulWidget {
   });
 
   @override
-  State<OverviewTab2050> createState() => _OverviewTab2050State();
+  State<OverviewTab2050New> createState() => _OverviewTab2050NewState();
 }
 
 // -----------------------------------------------------------------------------
@@ -60,7 +65,7 @@ const _neonA = Color(0xFF7AE1FF);
 const _neonB = Color(0xFF8F7BFF);
 const _neonC = Color(0xFF2EF8A0);
 
-class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProviderStateMixin {
+class _OverviewTab2050NewState extends State<OverviewTab2050New> with SingleTickerProviderStateMixin {
   late final AnimationController _pulse;
   late final ScrollController _scrollController;
   late Future<Map<String, dynamic>> _dailyComparisonFuture;
@@ -85,6 +90,7 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
       Future.delayed(const Duration(seconds: 3), () {
         if (mounted) setState(() => _showConfetti = false);
       });
+      _dailyComparisonFuture = _getDailyComparisonNormalized();
     }
     if (widget.dailyComparison != null && widget.dailyComparison!.isNotEmpty) {
       _dailyComparisonFuture =
@@ -534,9 +540,100 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // FIRESTORE + API HELPERS
-  // --------------------------------------------------------------------------
+  Future<Map<String, dynamic>> _getDailyComparison() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        debugPrint('No signed-in user for daily comparison.');
+        return {};
+      }
+
+      // Adjust collection path if you store logs under a different root.
+      final logsRef = FirebaseFirestore.instance
+          .collection('anonymous_sleep_logs')
+          .doc(user.uid)
+          .collection('logs');
+
+      final snap = await logsRef
+          .orderBy('date', descending: true)
+          .limit(2)
+          .get();
+
+      if (snap.docs.length < 2) {
+        debugPrint('Not enough logs for comparison: ${snap.docs.length} found.');
+        return {};
+      }
+
+      Map<String, dynamic> _normalize(Map<String, dynamic> raw) {
+        // Defensive normalization to match API expectations.
+        final m = Map<String, dynamic>.from(raw);
+
+        int asInt(dynamic v) {
+          if (v is int) return v;
+          if (v is double) return v.round();
+          if (v is String) {
+            final parsed = int.tryParse(v);
+            if (parsed != null) return parsed;
+          }
+          return 0;
+        }
+
+        double asDouble(dynamic v) {
+          if (v is double) return v;
+          if (v is int) return v.toDouble();
+          if (v is String) {
+            final parsed = double.tryParse(v);
+            if (parsed != null) return parsed;
+          }
+          return 0.0;
+        }
+
+        // Common fields
+        final duration =
+        asInt(m['durationMinutes'] ?? m['totalSleepMinutes'] ?? 0);
+        final deep = asInt(m['deepSleepMinutes'] ?? 0);
+        final rem = asInt(m['remSleepMinutes'] ?? 0);
+        final light = asInt(m['lightSleepMinutes'] ?? 0);
+        final eff =
+        asDouble(m['efficiencyScore'] ?? m['sleepEfficiency'] ?? 0.0);
+
+        // Ensure standardized keys for the API
+        m['totalSleepMinutes'] = duration;
+        m['deepSleepMinutes'] = deep;
+        m['remSleepMinutes'] = rem;
+        m['lightSleepMinutes'] = light;
+        m['efficiencyScore'] = eff;
+
+        // Pass through date/time if available
+        if (m['date'] == null && m['timestamp'] != null) {
+          m['date'] = m['timestamp'];
+        }
+
+        return m;
+      }
+
+      final currentRaw = Map<String, dynamic>.from(snap.docs[0].data());
+      final previousRaw = Map<String, dynamic>.from(snap.docs[1].data());
+
+      final currentLog = _normalize(currentRaw);
+      final previousLog = _normalize(previousRaw);
+
+      final res = await ApiService.compareSleepLogs(
+        currentLog: currentLog,
+        previousLog: previousLog,
+      );
+
+      if (res == null) return {};
+      if (res is Map<String, dynamic>) return res;
+      if (res is Map) return res.map((k, v) => MapEntry(k.toString(), v));
+
+      return {};
+    } catch (e, st) {
+      debugPrint('Error in _getDailyComparison(): $e\n$st');
+      return {'error': e.toString()};
+    }
+  }
+
   Future<Map<String, dynamic>> _getDailyComparisonNormalized() async {
     try {
       final raw = await _getDailyComparison();
@@ -547,22 +644,9 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
     }
   }
 
-  Future<Map<String, dynamic>> _getDailyComparison() async {
-
-    try {
-
-      return await ApiService.compareLastTwoSleepLogs();
-    } catch (e) {
-      debugPrint('Daily comparison error: $e');
-      return {'error': e.toString()};
-    }
-  }
-
-  Map<String, dynamic> _normalizeDailyComparison(Map raw) {
-    // Convert dynamic maps to a String-keyed map and unwrap common wrappers.
-    Map<String, dynamic> map = _convertDynamicMap(raw);
-    if (map.containsKey('data')) map = _convertDynamicMap(map['data']);
-    if (map.containsKey('comparison')) map = _convertDynamicMap(map['comparison']);
+  Map<String, dynamic> _normalizeDailyComparison(Map? raw) {
+    final Map<String, dynamic> map =
+    raw == null ? <String, dynamic>{} : _convertDynamicMap(raw as Map);
     if (map.isEmpty) {
       return {'better': '—', 'worse': '—', 'delta': 0};
     }
@@ -606,8 +690,7 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
     }
   }
 
-  Map<String, dynamic> _convertDynamicMap(
-      Map<dynamic, dynamic> originalMap) {
+  Map<String, dynamic> _convertDynamicMap(Map<dynamic, dynamic> originalMap) {
     return originalMap.map<String, dynamic>((key, value) {
       final k = key.toString();
       dynamic v = value;
@@ -622,11 +705,11 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
         }).toList();
       }
       return MapEntry(k, v);
-    });
-  }
+     });
+   }
+}
 
-
-  Widget _chip(String label, IconData icon) {
+Widget _chip(String label, IconData icon) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
       decoration: BoxDecoration(
@@ -885,16 +968,20 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
   // ---------------------------------------------------------------------------
   // VISUALS
   // ---------------------------------------------------------------------------
-  Widget _glowOrb(double size, Color c) => Container(
+Widget _glowOrb(double size, Color c) => Container(
     width: size,
     height: size,
     decoration: BoxDecoration(
-      shape: BoxShape.circle,
-      boxShadow: [BoxShadow(color: c, blurRadius: size * .5, spreadRadius: size * .12)],
-    ),
-  );
-}
-
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: c,
+            blurRadius: size * .5,
+            spreadRadius: size * .12,
+          )
+        ],
+        ),
+);
 // ============================================================================
 //  WIDGETS (Private)
 // ============================================================================

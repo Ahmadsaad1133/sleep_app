@@ -74,69 +74,171 @@ class ApiService {
       throw SleepAnalysisException('Failed to fetch historical logs: ${e.toString()}');
     }
   }
-  static Future<Map<String, dynamic>> compareSleepLogs({
+  static Future<Map<String, dynamic>?> compareSleepLogs({
     required Map<String, dynamic> currentLog,
     required Map<String, dynamic> previousLog,
   }) async {
     try {
-      final response = await http
-          .post(
-        Uri.parse('$baseUrl/compare-sleep-logs'),
+      final sanitizedCurrent = _sanitizeForJson(currentLog);
+      final sanitizedPrevious = _sanitizeForJson(previousLog);
+
+      final url = Uri.parse('$baseUrl/compare-sleep-logs');
+      debugPrint('compareSleepLogs → POST $url');
+
+      final response = await _httpClient.post(
+        url,
         headers: await _getHeaders(),
         body: json.encode({
-          'current_log': _sanitizeForJson(currentLog),
-          'previous_log': _sanitizeForJson(previousLog),
+          'current_log': sanitizedCurrent,
+          'previous_log': sanitizedPrevious,
         }),
-      )
-          .timeout(apiTimeout);
-      if (response.statusCode != 200) {
-        final bodyText =
-        response.body.isNotEmpty ? response.body : 'HTTP ${response.statusCode}';
-        throw SleepAnalysisException('Compare logs failed: $bodyText');
-      }
-      dynamic body;
-      try {
-        body = json.decode(response.body);
-      } on FormatException {
-        debugPrint('Invalid JSON response: ${response.body}');
-        throw SleepAnalysisException('Invalid compare response format');
-      }
+      );
 
-      // Accept common response structures.
       if (response.statusCode == 200) {
-        dynamic raw = body;
-        // Some backends wrap results in a `data` or `comparison` object.
-        if (raw is Map<String, dynamic>) {
-          raw = raw['comparison'] ?? raw['data'] ?? raw;
-        }
+        return json.decode(response.body) as Map<String, dynamic>;
+      }
 
-        // If the payload is a list, take the first map entry.
-        if (raw is List && raw.isNotEmpty) {
-          raw = raw.first;
-        }
+      // If the server doesn’t have this route (404) or any non-200 → local fallback
+      debugPrint('compareSleepLogs HTTP ${response.statusCode}: ${response.body}');
+      return _localDailyCompare(sanitizedCurrent, sanitizedPrevious);
+    } catch (e, st) {
+      debugPrint('compareSleepLogs exception: $e\n$st');
+      // Last-resort local fallback
+      return _localDailyCompare(currentLog, previousLog);
+    }
+  }
 
-        if (raw is Map) {
-          // Ensure we return a string-keyed map.
-          return Map<String, dynamic>.from(raw as Map);
+// Prefer sleepScore; otherwise use duration or total minutes.
+// Returns a map that your Overview tab already knows how to normalize.
+  static Map<String, dynamic> _localDailyCompare(
+      Map<String, dynamic> today,
+      Map<String, dynamic> yesterday,
+      ) {
+    // --- helpers ---
+    double _numOr0(dynamic v) {
+      if (v is num) return v.toDouble();
+      if (v is String) return double.tryParse(v) ?? 0.0;
+      return 0.0;
+    }
+
+    String? _asIso(dynamic v) {
+      if (v == null) return null;
+      if (v is Timestamp) return v.toDate().toIso8601String();
+      if (v is DateTime) return v.toIso8601String();
+      return v.toString();
+    }
+
+    int _minutesBetween(String? startIso, String? endIso) {
+      try {
+        if (startIso == null || endIso == null) return 0;
+        final s = DateTime.parse(startIso);
+        var e = DateTime.parse(endIso);
+        if (e.isBefore(s)) e = e.add(const Duration(days: 1)); // cross-midnight
+        return e.difference(s).inMinutes;
+      } catch (_) {
+        return 0;
+      }
+    }
+
+    // Read value by trying many aliases and nested paths
+    double _getFirstNumeric(Map<String, dynamic> m, List<dynamic> keys) {
+      for (final path in keys) {
+        if (path is String) {
+          final v = m[path];
+          final n = _numOr0(v);
+          if (n > 0) return n;
+        } else if (path is List) {
+          // nested path: e.g. ['metrics','sleepScore']
+          dynamic cur = m;
+          bool ok = true;
+          for (final seg in path) {
+            if (cur is Map && cur.containsKey(seg)) {
+              cur = cur[seg];
+            } else {
+              ok = false;
+              break;
+            }
+          }
+          if (ok) {
+            final n = _numOr0(cur);
+            if (n > 0) return n;
+          }
         }
       }
-      throw SleepAnalysisException('Invalid compare response format');
-    } catch (e) {
-      debugPrint('Error comparing sleep logs: $e');
-      if (e is SleepAnalysisException) rethrow;
-      throw SleepAnalysisException('Failed to compare logs: $e');
+      return 0.0;
     }
-  }
-  static Future<Map<String, dynamic>> compareLastTwoSleepLogs() async {
-    final logs = await getHistoricalSleepLogs(limit: 2);
-    if (logs.length < 2) {
-      throw SleepAnalysisException('Not enough logs for comparison');
+
+    // compute a single comparison metric from a log
+    double _pickMetric(Map<String, dynamic> m) {
+      // 0) Normalize time fields for duration computation
+      final bedIso = _asIso(m['bedTime'] ?? m['bed_time'] ?? m['sleepStart'] ?? m['sleep_start']);
+      final wakeIso = _asIso(m['wakeTime'] ?? m['wake_time'] ?? m['sleepEnd'] ?? m['sleep_end']);
+
+      // 1) Prefer explicit scores (many aliases + nested)
+      final score = _getFirstNumeric(m, [
+        'sleepScore', 'sleep_score', 'score',
+        'readinessScore', 'readiness_score',
+        'efficiencyScore', 'sleepEfficiency',
+        ['metrics','sleepScore'], ['metrics','score'],
+        ['summary','sleepScore'], ['summary','score'],
+      ]);
+      if (score > 0) return score;
+
+      // 2) Total minutes / duration
+      var duration = _getFirstNumeric(m, [
+        'durationMinutes', 'totalSleepMinutes', 'total_minutes', 'duration',
+        ['metrics','durationMinutes'], ['metrics','totalSleepMinutes'],
+        ['summary','durationMinutes']
+      ]);
+      if (duration <= 0) {
+        // try compute from bed/wake
+        duration = _minutesBetween(bedIso, wakeIso).toDouble();
+      }
+      if (duration > 0) return duration;
+
+      // 3) Stage minutes sum (fallback)
+      final deepM  = _getFirstNumeric(m, ['deepSleepMinutes', ['stages','deepMinutes']]);
+      final remM   = _getFirstNumeric(m, ['remSleepMinutes',  ['stages','remMinutes']]);
+      final lightM = _getFirstNumeric(m, ['lightSleepMinutes',['stages','lightMinutes']]);
+      final stagesTotal = deepM + remM + lightM;
+      if (stagesTotal > 0) return stagesTotal;
+
+      // 4) Recover from stage PERCENTAGES if we have any minute hint
+      final deepP  = _getFirstNumeric(m, ['deepPct','deep', ['stages','deepPct']]);
+      final remP   = _getFirstNumeric(m, ['remPct','rem',   ['stages','remPct']]);
+      final lightP = _getFirstNumeric(m, ['lightPct','light',['stages','lightPct']]);
+      final pctSum = deepP + remP + lightP;
+      if (pctSum >= 95 && pctSum <= 105) {
+        final hint = _getFirstNumeric(m, [
+          'estimatedTotalMinutes','durationMinutes','totalSleepMinutes','duration'
+        ]);
+        if (hint > 0) return hint; // treat hint as metric
+      }
+
+      // 5) As a last ditch, combine quality * duration if present
+      final quality = _getFirstNumeric(m, ['sleepQuality', ['metrics','sleepQuality']]);
+      if (quality > 0 && duration > 0) return quality * duration;
+
+      return 0.0;
     }
-    return compareSleepLogs(
-      currentLog: logs[0].toMap(),
-      previousLog: logs[1].toMap(),
-    );
+
+    final t = _pickMetric(today);
+    final y = _pickMetric(yesterday);
+    final diff = t - y;
+
+    return {
+      // both shapes, to satisfy any UI normalizer
+      'today': t,
+      'yesterday': y,
+      'delta': double.parse(diff.toStringAsFixed(1)),
+      'better': diff >= 0 ? t.toStringAsFixed(1) : y.toStringAsFixed(1),
+      'worse':  diff >= 0 ? y.toStringAsFixed(1) : t.toStringAsFixed(1),
+    };
   }
+
+
+
+
   static Map<String, dynamic> _sanitizeForJson(Map<String, dynamic> source) {
     return source.map((key, value) {
       if (value is Timestamp) {
@@ -906,7 +1008,8 @@ Output only the JSON object without any additional text.
           'behavioral_impact',
           'circadian_analysis',
           'intervention_suggestions',
-          'environment_analysis'
+          'environment_analysis',
+          'lifestyle_correlations'
         ],
         'user_context': userContext,
         'environment_data': env,
