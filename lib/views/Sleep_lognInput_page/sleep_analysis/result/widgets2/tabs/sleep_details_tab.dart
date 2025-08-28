@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_analysis/result/widgets/sleep_environment_analysis.dart';
 import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_analysis/result/widgets/sleep_quality_breakdown.dart';
 import '../../../../../../constants/colors.dart';
+import '../neo_design.dart';
 import '../../../models/sleeplog_model_page.dart';
 
 class SleepDetailsTab extends StatelessWidget {
@@ -45,13 +46,16 @@ class SleepDetailsTab extends StatelessWidget {
     return SliverToBoxAdapter(
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionHeader(icon, title),
-            SizedBox(height: 8.h),
-            content,
-          ],
+        child: NeoCard(
+          padding: EdgeInsets.all(16.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionHeader(icon, title),
+              SizedBox(height: 8.h),
+              content,
+            ],
+          ),
         ),
       ),
     );

@@ -5,6 +5,7 @@ import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_analysis/resu
 import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_analysis/result/widgets/sleep_cycles.dart';
 import '../../../../../../constants/colors.dart';
 import '../../../models/sleeplog_model_page.dart';
+import '../neo_design.dart';
 
 class MetricsTab extends StatelessWidget {
   final Map<String, dynamic> sleepMetrics;
@@ -47,13 +48,16 @@ class MetricsTab extends StatelessWidget {
     return SliverToBoxAdapter(
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionHeader(icon, title),
-            SizedBox(height: 8.h),
-            content,
-          ],
+        child: NeoCard(
+          padding: EdgeInsets.all(16.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionHeader(icon, title),
+              SizedBox(height: 8.h),
+              content,
+            ],
+          ),
         ),
       ),
     );

@@ -7,6 +7,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../services/api/api_service.dart';
 import '../../../models/sleeplog_model_page.dart';
+import '../neo_design.dart';
 
 class InsightsTab extends StatefulWidget {
   final SleepLog sleeplog;
@@ -210,28 +211,9 @@ class _InsightsTabState extends State<InsightsTab>
 
   /// Builds a glass‑like cosmic card with unified styling.
   Widget _buildCosmicCard({required Widget child}) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24.r),
-        border: Border.all(color: Colors.white12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.35),
-            blurRadius: 20,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24.r),
-        child: BackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Padding(
-            padding: EdgeInsets.all(20.w),
-            child: child,
-          ),
-        ),
-      ),
+    return NeoCard(
+      padding: EdgeInsets.all(20.w),
+      child: child,
     );
   }
 

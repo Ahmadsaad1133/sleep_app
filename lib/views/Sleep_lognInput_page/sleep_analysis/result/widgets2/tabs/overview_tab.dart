@@ -6,7 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
+import '../neo_design.dart';
 import '../../../../../services/api/api_service.dart';
 import '../../../models/sleeplog_model_page.dart';
 
@@ -54,16 +54,6 @@ class OverviewTab2050New extends StatefulWidget {
   State<OverviewTab2050New> createState() => _OverviewTab2050NewState();
 }
 
-// -----------------------------------------------------------------------------
-// THEME
-// -----------------------------------------------------------------------------
-const _bgStart = Color(0xFF060D1F);
-const _bgEnd   = Color(0xFF0E1C3A);
-const _cardStart = Color(0x0FFFFFFF);
-const _cardEnd   = Color(0x11FFFFFF);
-const _neonA = Color(0xFF7AE1FF);
-const _neonB = Color(0xFF8F7BFF);
-const _neonC = Color(0xFF2EF8A0);
 
 class _OverviewTab2050NewState extends State<OverviewTab2050New> with SingleTickerProviderStateMixin {
   late final AnimationController _pulse;
@@ -114,30 +104,10 @@ class _OverviewTab2050NewState extends State<OverviewTab2050New> with SingleTick
     final hours = _parseHours(widget.totalSleepDuration);
     final debtH = widget.sleepDebt.toDouble();
 
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [_bgStart, _bgEnd],
-        ),
-      ),
+    return NeoBackground(
       child: Stack(
         children: [
           // Neural mesh in the background
-          const Positioned.fill(child: _NeuralMesh()),
-          // Glow Orbs
-          Positioned(
-            top: -120,
-            right: -80,
-            child: _glowOrb(220, _neonB.withOpacity(0.16)),
-          ),
-          Positioned(
-            bottom: -160,
-            left: -120,
-            child: _glowOrb(280, _neonC.withOpacity(0.12)),
-          ),
-          // Content
           SafeArea(
             child: Padding(
                 padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 0),
@@ -196,7 +166,7 @@ class _OverviewTab2050NewState extends State<OverviewTab2050New> with SingleTick
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          child: _NeoCard(
+          child: NeoCard(
             padding: EdgeInsets.all(16.r),
             child: Row(
               children: [
@@ -213,7 +183,7 @@ class _OverviewTab2050NewState extends State<OverviewTab2050New> with SingleTick
                         sweep: 240,
                         trackColor: Colors.white12,
                         gradient: const SweepGradient(
-                          colors: [_neonA, _neonB, _neonC],
+                          colors: [neonA, neonB, neonC],
                           stops: [0.0, 0.55, 1.0],
                         ),
                       ),
@@ -267,7 +237,7 @@ class _OverviewTab2050NewState extends State<OverviewTab2050New> with SingleTick
     return Row(
       children: [
         Expanded(
-          child: _NeoCard(
+          child: NeoCard(
             child: _KPI(
               title: 'Duration',
               value: widget.totalSleepDuration,
@@ -278,7 +248,7 @@ class _OverviewTab2050NewState extends State<OverviewTab2050New> with SingleTick
         ),
         SizedBox(width: 12.w),
         Expanded(
-          child: _NeoCard(
+          child: NeoCard(
             child: _KPI(
               title: 'Efficiency',
               value: '$eff%',
@@ -292,7 +262,7 @@ class _OverviewTab2050NewState extends State<OverviewTab2050New> with SingleTick
   }
 
   Widget _buildWeeklyTrend() {
-    return _NeoCard(
+    return NeoCard(
       padding: EdgeInsets.all(16.r),
       child: widget.weeklyTrend.isEmpty
           ? Text('Failed to load weekly trend.',
@@ -331,7 +301,7 @@ class _OverviewTab2050NewState extends State<OverviewTab2050New> with SingleTick
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          child: _NeoCard(
+          child: NeoCard(
             padding: EdgeInsets.all(16.r),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -345,7 +315,7 @@ class _OverviewTab2050NewState extends State<OverviewTab2050New> with SingleTick
         ),
         SizedBox(width: 12.w),
         Expanded(
-          child: _NeoCard(
+          child: NeoCard(
             padding: EdgeInsets.all(16.r),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -389,7 +359,7 @@ class _OverviewTab2050NewState extends State<OverviewTab2050New> with SingleTick
       chips.add(_stateTile('Readiness', '${widget.morningReadiness}%', Icons.rocket_launch));
     }
 
-    return _NeoCard(
+    return NeoCard(
       padding: EdgeInsets.all(16.r),
       child: Wrap(
         spacing: 12.w,
@@ -401,7 +371,7 @@ class _OverviewTab2050NewState extends State<OverviewTab2050New> with SingleTick
 
 
   Widget _buildDailyCompare() {
-    return _NeoCard(
+    return NeoCard(
       padding: EdgeInsets.all(16.r),
       child: FutureBuilder<Map<String, dynamic>>(
         future: _dailyComparisonFuture,
@@ -489,7 +459,7 @@ class _OverviewTab2050NewState extends State<OverviewTab2050New> with SingleTick
 
   Widget _buildLifestyleCorrelations() {
     final list = widget.lifestyleCorrelations;
-    return _NeoCard(
+    return NeoCard(
       padding: EdgeInsets.all(16.r),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -515,7 +485,7 @@ class _OverviewTab2050NewState extends State<OverviewTab2050New> with SingleTick
   }
 
   Widget _buildRecommendations() {
-    return _NeoCard(
+    return NeoCard(
       padding: EdgeInsets.all(16.r),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -738,10 +708,10 @@ Widget _chip(String label, IconData icon) {
             height: 44.w,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: const LinearGradient(colors: [_neonA, _neonB]),
+              gradient: const LinearGradient(colors: [neonA, neonB]),
               boxShadow: [
                 BoxShadow(
-                  color: _neonB.withOpacity(0.28),
+                  color: neonB.withOpacity(0.28),
                   blurRadius: 18,
                   spreadRadius: 2,
                 )
@@ -797,9 +767,9 @@ Widget _chip(String label, IconData icon) {
                         height: 10.h,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12.r),
-                          gradient: const LinearGradient(colors: [_neonA, _neonC]),
+                          gradient: const LinearGradient(colors: [neonA, neonC]),
                           boxShadow: [
-                            BoxShadow(color: _neonC.withOpacity(0.25), blurRadius: 10, spreadRadius: 0.5),
+                            BoxShadow(color: neonC.withOpacity(0.25), blurRadius: 10, spreadRadius: 0.5),
                           ],
                         ),
                       ),
@@ -833,7 +803,7 @@ Widget _chip(String label, IconData icon) {
       padding: EdgeInsets.all(14.r),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16.r),
-        gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [_cardStart, _cardEnd]),
+        gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [cardStart, cardEnd]),
         border: Border.all(color: Colors.white10),
       ),
       child: Row(
@@ -884,7 +854,7 @@ Widget _chip(String label, IconData icon) {
 
   Widget _correlationPill(String label, double value) {
     final sign = value == 0 ? '' : value > 0 ? '+' : '';
-    final col = value == 0 ? Colors.white70 : value > 0 ? _neonC : Colors.redAccent;
+    final col = value == 0 ? Colors.white70 : value > 0 ? neonC : Colors.redAccent;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
       decoration: BoxDecoration(
@@ -965,53 +935,7 @@ Widget _chip(String label, IconData icon) {
     return 0.0;
   }
 
-  // ---------------------------------------------------------------------------
-  // VISUALS
-  // ---------------------------------------------------------------------------
-Widget _glowOrb(double size, Color c) => Container(
-    width: size,
-    height: size,
-    decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: c,
-            blurRadius: size * .5,
-            spreadRadius: size * .12,
-          )
-        ],
-        ),
-);
-// ============================================================================
-//  WIDGETS (Private)
-// ============================================================================
 
-class _NeoCard extends StatelessWidget {
-  final Widget child;
-  final EdgeInsets? padding;
-  const _NeoCard({required this.child, this.padding});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.zero,
-      padding: padding ?? EdgeInsets.zero,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18.r),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [_cardStart, _cardEnd],
-        ),
-        border: Border.all(color: Colors.white10, width: 1),
-        boxShadow: const [
-          BoxShadow(color: Color(0x33000000), blurRadius: 24, offset: Offset(0, 8)),
-        ],
-      ),
-      child: child,
-    );
-  }
-}
 
 class _Sparkline extends StatelessWidget {
   final List<double> points;
@@ -1063,14 +987,15 @@ class _SparklinePainter extends CustomPainter {
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.5
-      ..shader = const LinearGradient(colors: [_neonA, _neonB, _neonC]).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+      ..shader = const LinearGradient(colors: [neonA, neonB, neonC])
+          .createShader(Rect.fromLTWH(0, 0, size.width, size.height));
     canvas.drawPath(path, paint);
 
     // glow
     final glow = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 12
-      ..color = _neonB.withOpacity(0.08);
+      ..color = neonB.withOpacity(0.08);
     canvas.drawPath(path, glow);
   }
 
@@ -1157,69 +1082,3 @@ class _CircularArcGauge extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
-// Animated neural mesh background
-class _NeuralMesh extends StatefulWidget {
-  const _NeuralMesh();
-
-  @override
-  State<_NeuralMesh> createState() => _NeuralMeshState();
-}
-
-class _NeuralMeshState extends State<_NeuralMesh> with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(seconds: 12))..repeat();
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _ctrl,
-      builder: (_, __) => CustomPaint(
-        painter: _NeuralMeshPainter(progress: _ctrl.value),
-        child: const SizedBox.expand(),
-      ),
-    );
-  }
-}
-
-class _NeuralMeshPainter extends CustomPainter {
-  final double progress;
-  _NeuralMeshPainter({required this.progress});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1
-      ..color = Colors.white.withOpacity(0.05);
-
-    // dynamic curved lines
-    for (int i = 0; i < 7; i++) {
-      final path = Path();
-      final amp = 20 + 12 * sin(progress * 2 * pi + i);
-      final phase = progress * 2 * pi + i * 0.7;
-      for (double x = -20; x <= size.width + 20; x += 16) {
-        final y = size.height * (i + 1) / 8 + sin((x / 90) + phase) * amp;
-        if (x == -20) {
-          path.moveTo(x, y);
-        } else {
-          path.lineTo(x, y);
-        }
-      }
-      canvas.drawPath(path, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}

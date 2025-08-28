@@ -22,6 +22,7 @@ import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_analysis/resu
 import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_analysis/result/widgets2/tabs/sleep_details_tab.dart';
 import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_analysis/result/widgets2/tabs/metrics_tab.dart';
 import '../../../../constants/colors.dart';
+import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_analysis/result/widgets2/neo_design.dart';
 import '../../../services/api/api_service.dart';
 import '../models/sleeplog_model_page.dart';
 import '../plan/sleep_ai_plan_page.dart';
@@ -1163,18 +1164,20 @@ class _SleepAnalysisResultPageContentState
       String keyName,
       List<Widget> slivers,
       ) {
-    return CustomScrollView(
-      key: PageStorageKey<String>('sleep_analysis_tab_$keyName'),
-      slivers: [
-        SliverOverlapInjector(
-          handle:
-          NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-        ),
-        ...slivers,
-        const SliverToBoxAdapter(
-          child: SizedBox(height: 60),
-        ),
-      ],
+    return NeoBackground(
+      child: CustomScrollView(
+        key: PageStorageKey<String>('sleep_analysis_tab_$keyName'),
+        slivers: [
+          SliverOverlapInjector(
+            handle:
+            NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+          ),
+          ...slivers,
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 60),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1185,18 +1188,20 @@ class _SleepAnalysisResultPageContentState
       String keyName,
       Widget tabContent,
       ) {
-    return CustomScrollView(
-      key: PageStorageKey<String>('sleep_analysis_tab_$keyName'),
-      slivers: [
-        SliverOverlapInjector(
-          handle:
-          NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-        ),
-        SliverToBoxAdapter(child: tabContent),
-        const SliverToBoxAdapter(
-          child: SizedBox(height: 60),
-        ),
-      ],
+    return NeoBackground(
+      child: CustomScrollView(
+        key: PageStorageKey<String>('sleep_analysis_tab_$keyName'),
+        slivers: [
+          SliverOverlapInjector(
+            handle:
+            NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+          ),
+          SliverToBoxAdapter(child: tabContent),
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 60),
+          ),
+        ],
+      ),
     );
   }
 }
