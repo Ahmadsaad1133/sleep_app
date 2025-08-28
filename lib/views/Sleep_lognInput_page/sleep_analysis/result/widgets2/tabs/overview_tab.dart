@@ -25,6 +25,7 @@ class OverviewTab2050 extends StatefulWidget {
   final String? dreamPrediction;
   final int? morningReadiness; // 0–100
   final ConfettiController confettiController;
+  final Map<String, dynamic>? dailyComparison;
 
   const OverviewTab2050({
     super.key,
@@ -41,6 +42,7 @@ class OverviewTab2050 extends StatefulWidget {
     this.moodSummary,
     this.dreamPrediction,
     this.morningReadiness,
+    this.dailyComparison,
   });
 
   @override
@@ -84,7 +86,12 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
         if (mounted) setState(() => _showConfetti = false);
       });
     }
-    _dailyComparisonFuture = _getDailyComparisonNormalized();
+    if (widget.dailyComparison != null && widget.dailyComparison!.isNotEmpty) {
+      _dailyComparisonFuture =
+          Future.value(_normalizeDailyComparison(widget.dailyComparison!));
+    } else {
+      _dailyComparisonFuture = _getDailyComparisonNormalized();
+    }
   }
 
   @override

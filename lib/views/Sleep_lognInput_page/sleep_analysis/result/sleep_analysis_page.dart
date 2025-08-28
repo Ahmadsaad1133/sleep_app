@@ -94,6 +94,7 @@ class _SleepAnalysisResultPageContentState
   Map<String, double> _sleepStages = {};
   Map<String, dynamic> _sleepTrends = {};
   String _detailedReport = '';
+  Map<String, dynamic> _dailyComparison = {};
   late AnimationController _scoreAnimationController;
   Map<String, dynamic> _sleepPatterns = {};
   List<String> _predictiveWarnings = [];
@@ -595,7 +596,8 @@ class _SleepAnalysisResultPageContentState
         _sleepTrends =
             _asMap(
                 safeParsed['sleepTrends']);
-
+        _dailyComparison =
+            _asMap(safeParsed['dailyComparison']);
         _isAnalysisParsed = true;
       });
     } catch (e) {
@@ -923,7 +925,9 @@ class _SleepAnalysisResultPageContentState
                                 'dream_prediction']?['prediction']
                                     ?.toString(),
                                 morningReadiness: _getMorningReadiness(),
+                                dailyComparison: _dailyComparison,
                               ),
+
                             ),
                       ),
 
