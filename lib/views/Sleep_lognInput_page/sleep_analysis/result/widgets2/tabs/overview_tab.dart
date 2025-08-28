@@ -393,28 +393,62 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
       child: FutureBuilder<Map<String, dynamic>>(
         future: _dailyComparisonFuture,
         builder: (context, snap) {
+          final textStyle =
+          TextStyle(color: Colors.white60, fontSize: 13.sp);
           if (snap.connectionState == ConnectionState.waiting) {
-            return Row(
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const _PulseDot(),
-                SizedBox(width: 10.w),
-                Expanded(
-                  child: Text('Analyzing today vs yesterday…',
-                      style: TextStyle(color: Colors.white70, fontSize: 14.sp)),
+                _sectionTitle('Daily Compare', Icons.compare),
+                SizedBox(height: 10.h),
+                Row(
+                  children: [
+                    const _PulseDot(),
+                    SizedBox(width: 10.w),
+                    Expanded(
+                      child: Text('Analyzing today vs yesterday…',
+                          style:
+                          TextStyle(color: Colors.white70, fontSize: 14.sp)),
+                    ),
+                  ],
                 ),
               ],
             );
           }
           if (snap.hasError) {
-            debugPrint('Daily comparison load error: ${snap.error}');
-            return Text('Failed to load comparison data.',
-                style: TextStyle(color: Colors.white60, fontSize: 13.sp));
+            final msg = snap.error.toString();
+            debugPrint('Daily comparison load error: $msg');
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _sectionTitle('Daily Compare', Icons.compare),
+                SizedBox(height: 10.h),
+                Text(msg, style: textStyle),
+              ],
+            );
           }
           if (!snap.hasData || (snap.data?.isEmpty ?? true)) {
-            return Text('Failed to load comparison data.',
-                style: TextStyle(color: Colors.white60, fontSize: 13.sp));
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _sectionTitle('Daily Compare', Icons.compare),
+                SizedBox(height: 10.h),
+                Text('No comparison data available.', style: textStyle),
+              ],
+            );
           }
           final data = snap.data!;
+          if (data.containsKey('error')) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _sectionTitle('Daily Compare', Icons.compare),
+                SizedBox(height: 10.h),
+                Text(data['error'].toString(), style: textStyle),
+              ],
+            );
+          }
           final better = data['better'].toString();
           final worse  = data['worse'].toString();
           final delta  = data['delta'].toString();
@@ -495,11 +529,15 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
 
   // ---------------------------------------------------------------------------
   // FIRESTORE + API HELPERS
-  // ---------------------------------------------------------------------------
-
+  // --------------------------------------------------------------------------
   Future<Map<String, dynamic>> _getDailyComparisonNormalized() async {
-    final raw = await _getDailyComparison();
-    return _normalizeDailyComparison(raw);
+    try {
+      final raw = await _getDailyComparison();
+      if (raw.containsKey('error')) return raw;
+      return _normalizeDailyComparison(raw);
+    } catch (e) {
+      return {'error': e.toString()};
+    }
   }
 
   Future<Map<String, dynamic>> _getDailyComparison() async {
@@ -509,7 +547,7 @@ class _OverviewTab2050State extends State<OverviewTab2050> with SingleTickerProv
       return await ApiService.compareLastTwoSleepLogs();
     } catch (e) {
       debugPrint('Daily comparison error: $e');
-      rethrow;
+      return {'error': e.toString()};
     }
   }
 
