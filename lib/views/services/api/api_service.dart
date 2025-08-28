@@ -3,6 +3,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+
+
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -73,7 +76,7 @@ class ApiService {
       }
 
       final snapshot = await FirebaseFirestore.instance
-          .collection('user_sleep_logs')
+          .collection('anonymous_sleep_logs')
           .doc(user.uid)
           .collection('logs')
           .orderBy('date', descending: true)
@@ -162,8 +165,13 @@ class ApiService {
     try {
       debugPrint('📡 Fetching last $limit sleep logs for user=${user.uid}');
 
+      // Use the same collection where sleep logs are stored. Previously, this
+      // function queried 'anonymous_sleep_logs', which caused a "No sleep logs
+      // available" error even when logs existed under 'user_sleep_logs'. To
+      // keep consistency with `getHistoricalSleepLogs` and other parts of the
+      // app, we read from 'user_sleep_logs'.
       final snapshot = await FirebaseFirestore.instance
-          .collection('user_sleep_logs')
+          .collection('anonymous_sleep_logs')
           .doc(user.uid)
           .collection('logs')
           .orderBy('date', descending: true)

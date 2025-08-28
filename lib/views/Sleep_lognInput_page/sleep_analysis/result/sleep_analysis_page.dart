@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_analysis/result/widgets2/tabs/dream_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
@@ -349,46 +351,14 @@ class _SleepAnalysisResultPageContentState
   }
 
   Future<Map<String, dynamic>> _getDailyComparison() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      throw Exception('User not authenticated');
-    }
+    // Leverage the ApiService helper which fetches the last two logs from
+    // the same collection used for saving sleep logs (user_sleep_logs). This
+    // avoids mismatches between anonymous and user collections and ensures
+    // there are enough entries for comparison. If the user isn't signed in
+    // or there aren't at least two logs, an empty map will be returned.
     try {
-      final logsQuery = FirebaseFirestore.instance
-          .collection('user_sleep_logs')
-          .doc(user.uid)
-          .collection('logs'); // ✅ fixed path
-
-      final snapshot = await logsQuery
-          .orderBy('date', descending: true) // ✅ use 'date'
-          .limit(7)
-          .get();
-
-      debugPrint("Fetched ${snapshot.docs.length} logs for ${user.uid}");
-
-      if (snapshot.docs.length < 2) {
-        throw Exception('Not enough logs for comparison');
-      }
-
-      final currentLogData = snapshot.docs[0].data();
-      final previousLogData = snapshot.docs[1].data();
-
-      debugPrint("Current log: $currentLogData");
-      debugPrint("Previous log: $previousLogData");
-
-      final currentLog = SleepLog.fromMap(currentLogData, snapshot.docs[0].id);
-      final previousLog = SleepLog.fromMap(previousLogData, snapshot.docs[1].id);
-
-      final comparison = await ApiService.compareSleepLogs(
-        currentLog: currentLog.toMap(),
-        previousLog: previousLog.toMap(),
-      );
-
-      if (comparison == null) {
-        throw Exception('Failed to compare logs');
-      }
-
-      return comparison;
+      final comparison = await ApiService.compareLastTwoSleepLogs();
+      return _asMap(comparison);
     } catch (e, st) {
       debugPrint('Error in daily comparison: $e\n$st');
       return {};
@@ -436,7 +406,7 @@ class _SleepAnalysisResultPageContentState
       if (user == null) return;
 
       final logsCollection = FirebaseFirestore.instance
-          .collection('user_sleep_logs')
+          .collection('anonymous_sleep_logs')
           .doc(user.uid)
           .collection('logs'); // ✅ fixed path
 
@@ -696,7 +666,7 @@ class _SleepAnalysisResultPageContentState
       }
 
       final query = await FirebaseFirestore.instance
-          .collection('user_sleep_logs')
+          .collection('anonymous_sleep_logs')
           .doc(user.uid)
           .collection('logs')
           .orderBy('date', descending: true)

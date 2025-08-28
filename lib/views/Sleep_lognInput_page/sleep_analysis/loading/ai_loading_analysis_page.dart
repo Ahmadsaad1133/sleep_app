@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -134,7 +135,7 @@ class _AILoadingAnalysisPageState extends State<AILoadingAnalysisPage>
       _updateStep(0, "Saving cosmic sleep log...");
       final uid = FirebaseAuth.instance.currentUser!.uid;
       await FirebaseFirestore.instance
-          .collection('user_sleep_logs')
+          .collection('anonymous_sleep_logs')
           .doc(uid)
           .collection('logs')
           .add(widget.sleepLog.toMap());
@@ -237,12 +238,23 @@ class _AILoadingAnalysisPageState extends State<AILoadingAnalysisPage>
         await ApiService.getHistoricalSleepAnalysis(limit: 10)
             .timeout(const Duration(seconds: 15));
       } on TimeoutException {
+        // If either insights or historical analysis times out, provide fallback values.
         _fullAnalysisData['sleep_insights'] = {
           "status": "timeout",
           "message": "Insights timed out"
         };
         _fullAnalysisData['historical_analysis'] =
         "Historical analysis timed out";
+      } on SleepAnalysisException catch (e) {
+        // Handle cases where historical analysis fails due to missing logs or other
+        // SleepAnalysisException errors. Provide a concise message instead of
+        // throwing and interrupting the entire analysis pipeline.
+        _fullAnalysisData['sleep_insights'] = {
+          "status": "error",
+          "message": e.message
+        };
+        _fullAnalysisData['historical_analysis'] =
+            e.message;
       }
       _updateProgress(90);
       await Future.delayed(const Duration(seconds: 15));
