@@ -108,7 +108,13 @@ class ApiService {
           .timeout(apiTimeout);
 
 
-      final body = json.decode(response.body);
+      dynamic body;
+      try {
+        body = json.decode(response.body);
+      } on FormatException {
+        debugPrint('Invalid JSON response: ${response.body}');
+        throw SleepAnalysisException('Invalid compare response format');
+      }
       if (response.statusCode == 200 && body is Map<String, dynamic>) {
         // Some backends wrap results in a `data` or `comparison` object.
         final raw = body['comparison'] ?? body['data'] ?? body;
@@ -118,10 +124,11 @@ class ApiService {
         throw SleepAnalysisException('Invalid compare response format');
       }
       final message =
-      body is Map<String, dynamic> ? body['error'] ?? body.toString() : '$body';
+      body is Map<String, dynamic> ? body['error'] ?? body.toString() : response.body;
       throw SleepAnalysisException('Compare logs failed: $message');
     } catch (e) {
       debugPrint('Error comparing sleep logs: $e');
+      if (e is SleepAnalysisException) rethrow;
       throw SleepAnalysisException('Failed to compare logs: $e');
     }
   }
