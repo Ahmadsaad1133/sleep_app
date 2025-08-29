@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
+import 'package:first_flutter_app/views/services/api/api_service.dart';
 class AnalysisSection extends StatefulWidget {
   final String detailedReport;
   final VoidCallback? onExpand;
@@ -25,17 +25,17 @@ class _AnalysisSectionState extends State<AnalysisSection> {
     try {
       final decoded = jsonDecode(text);
       if (decoded is Map || decoded is List) {
-        return "";
+        return ApiService.ensurePlainReportText(text);
       }
     } catch (_) {
       // Not valid JSON -> continue checks
     }
     // Hide common Map.toString() format like {key: value}
-    final looksLikeMapToString = text.startsWith('{') && text.contains(':') && !text.contains('\"');
+    final looksLikeMapToString = text.startsWith('{') && text.contains(':') && !text.contains('"');
     if (looksLikeMapToString) {
-      return "";
+      return ApiService.ensurePlainReportText(text);
     }
-    return input;
+    return text;
   }
 
   @override

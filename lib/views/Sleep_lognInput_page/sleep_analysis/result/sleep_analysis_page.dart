@@ -597,10 +597,18 @@ class _SleepAnalysisResultPageContentState
 
         // Fallback: derive sleep stage percentages from the last sleep log when
 
-        _detailedReport =
-            safeParsed['detailedReport']
-                ?.toString() ??
-                'No detailed report available.';
+        final summary =
+        (insightsData['summary'] ?? insights['summary'] ?? safeParsed['summary'])
+            ?.toString()
+            .trim();
+
+        // Choose the best available detailed report text
+        final detailed = safeParsed['detailedReport']?.toString().trim();
+        _detailedReport = (detailed != null && detailed.isNotEmpty)
+            ? detailed
+            : (summary != null && summary.isNotEmpty)
+            ? summary
+            : 'No detailed report available.';
 
         _sleepPatterns =
             _asMap(safeParsed['sleepPatterns']);
