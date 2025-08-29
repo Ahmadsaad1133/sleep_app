@@ -13,6 +13,9 @@ import '../../Sleep_lognInput_page/sleep_analysis/models/sleeplog_model_page.dar
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
+
+
+
 import '../../bedtime_page/story.dart' as bedtime_story;
 
 class SleepAnalysisException implements Exception {
@@ -33,6 +36,88 @@ class ApiResponseException extends SleepAnalysisException {
       : super('API error $statusCode: $message');
 }
 class ApiService {
+  /// ---- Helpers to ensure Sleep Report shows plain, human‑readable text (no raw JSON) ----
+  static String ensurePlainReportText(String resp) => _ensurePlainReportText(resp);
+
+  static String _ensurePlainReportText(String resp) {
+    try {
+      String working = resp.trim();
+      // Strip common code fences
+      working = working
+          .replaceAll(RegExp(r'^```(?:json|md|markdown)?', multiLine: true), '')
+          .replaceAll('```', '')
+          .trim();
+
+      // If response already reads like prose, return as is.
+      if (!(working.startsWith('{') || working.startsWith('['))) {
+        // But still try to see if a JSON block is embedded somewhere
+        final objMatch = RegExp(r'\{[\s\S]*\}').firstMatch(working);
+        final arrMatch = RegExp(r'\[[\s\S]*\]').firstMatch(working);
+        if (objMatch == null && arrMatch == null) return working;
+        final jsonBlock = (objMatch ?? arrMatch)!.group(0)!;
+        final formatted = _formatJsonAsMarkdown(jsonBlock);
+        // Keep any prose that was before/after, but prioritize formatted block.
+        final before = working.split(jsonBlock);
+        if (before.isNotEmpty && before[0].trim().isNotEmpty) {
+          return (before[0].trim() + "\n\n" + formatted).trim();
+        }
+        return formatted;
+      }
+
+      // At this point, it's likely pure JSON – format it nicely.
+      return _formatJsonAsMarkdown(working);
+    } catch (_) {
+      // If anything goes wrong, just return the original response.
+      return resp;
+    }
+  }
+
+  static String _formatJsonAsMarkdown(dynamic input, {int indent = 0}) {
+    dynamic data = input;
+    if (input is String) {
+      try {
+        data = jsonDecode(input);
+      } catch (_) {
+        return input;
+      }
+    }
+    final sb = StringBuffer();
+    final pad = '  ' * indent;
+
+    if (data is Map) {
+      data.forEach((key, value) {
+        final keyStr = _toTitleCaseSafe(key.toString());
+        if (value is Map || value is List) {
+          sb.writeln('$pad• $keyStr:');
+          sb.write(_formatJsonAsMarkdown(value, indent: indent + 1));
+        } else {
+          sb.writeln('$pad• $keyStr: ${value ?? ""}');
+        }
+      });
+    } else if (data is List) {
+      for (final item in data) {
+        if (item is Map || item is List) {
+          sb.writeln('$pad-');
+          sb.write(_formatJsonAsMarkdown(item, indent: indent + 1));
+        } else {
+          sb.writeln('$pad- ${item ?? ""}');
+        }
+      }
+    } else {
+      sb.writeln('$pad${data ?? ""}');
+    }
+    return sb.toString().trim();
+  }
+
+  static String _toTitleCaseSafe(String input) {
+    if (input.isEmpty) return input;
+    return input
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map((w) => w.isEmpty ? w : (w[0].toUpperCase() + (w.length > 1 ? w.substring(1) : '')))
+        .join(' ');
+  }
+
   static const String baseUrl = 'https://flutter2-backend.onrender.com';
   static final Uri _sleepAnalysisUri = Uri.parse('$baseUrl/sleep-analysis');
   static final Uri _sleepPlanUri = Uri.parse('$baseUrl/generate-sleep-plan');
@@ -309,7 +394,9 @@ Your response should be a comprehensive analysis in markdown format, with sectio
       debugPrint('🌐 Generating historical sleep analysis (AI)');
       final response = await generateResponse(prompt);
       debugPrint('📥 AI Response length: ${response.length}');
-      return response;
+      // Ensure we never show raw JSON blocks in the UI.
+      final plain = _ensurePlainReportText(response);
+      return plain;
     } on FirebaseException catch (e) {
       debugPrint('🔥 Firestore exception: ${e.message}');
       final message = e.message ?? e.toString();

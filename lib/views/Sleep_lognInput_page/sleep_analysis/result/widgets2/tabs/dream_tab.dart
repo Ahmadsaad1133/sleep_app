@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../neo_design.dart';
 import '../../../../../../constants/colors.dart';
+import 'neo_section.dart';
 import '../../widgets/dream_mood_forecast/dream_mood_forecast.dart';
 
 class DreamTab extends StatelessWidget {
@@ -53,22 +54,12 @@ class DreamTab extends StatelessWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: NeoCard(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Row(
-            children: [
-            const Icon(Icons.info_outline, size: 20),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            'No dream data available for this session',
-            style: Theme.of(context).textTheme.bodyMedium,
-              ),
-        ),
-            ],
-        ),
+    return NeoSection(
+      icon: Icons.info_outline,
+      title: 'Dream Data',
+      child: Text(
+        'No dream data available for this session',
+        style: Theme.of(context).textTheme.bodyMedium,
       ),
     );
   }

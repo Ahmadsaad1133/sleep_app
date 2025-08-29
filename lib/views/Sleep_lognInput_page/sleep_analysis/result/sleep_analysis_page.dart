@@ -600,7 +600,7 @@ class _SleepAnalysisResultPageContentState
         _detailedReport =
             safeParsed['detailedReport']
                 ?.toString() ??
-                'No report available. Analysis data: ${safeParsed.toString()}';
+                'No detailed report available.';
 
         _sleepPatterns =
             _asMap(safeParsed['sleepPatterns']);
@@ -1246,7 +1246,7 @@ class _CreativeHeaderDelegate
       ),
     );
   }
-
+//
   @override
   bool shouldRebuild(
       covariant SliverPersistentHeaderDelegate oldDelegate) =>

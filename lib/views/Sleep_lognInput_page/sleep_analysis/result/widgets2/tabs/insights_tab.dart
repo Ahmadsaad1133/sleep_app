@@ -1,13 +1,8 @@
-// insights_tab.dart
-import 'dart:math';
-import 'dart:ui' as ui;
+// insights_tab.dart (refactored clean + raw widgets only)
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../../services/api/api_service.dart';
 import '../../../models/sleeplog_model_page.dart';
-import '../neo_design.dart';
 
 class InsightsTab extends StatefulWidget {
   final SleepLog sleeplog;
@@ -27,13 +22,9 @@ class InsightsTab extends StatefulWidget {
 
 class _InsightsTabState extends State<InsightsTab>
     with AutomaticKeepAliveClientMixin<InsightsTab>, TickerProviderStateMixin {
+  late final AnimationController _pulseController;
+  late double _pulseOpacity;
   late String _aiTip;
-  final _random = Random();
-  late AnimationController _pulseController;
-  double _pulseOpacity = 0.4;
-
-  @override
-  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -45,12 +36,12 @@ class _InsightsTabState extends State<InsightsTab>
       duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
 
+    _pulseOpacity = 0.3;
     _pulseController.addListener(() {
-      if (mounted) {
-        setState(() {
-          _pulseOpacity = 0.2 + (_pulseController.value * 0.4);
-        });
-      }
+      if (!mounted) return;
+      setState(() {
+        _pulseOpacity = 0.2 + (_pulseController.value * 0.4);
+      });
     });
   }
 
@@ -60,17 +51,8 @@ class _InsightsTabState extends State<InsightsTab>
     super.dispose();
   }
 
-  String _generateDailyTip() {
-    const tips = [
-      'Maintain consistent sleep schedule for better rest',
-      'Avoid caffeine 6 hours before bedtime',
-      'Keep your bedroom cool and dark',
-      'Limit screen time before bed to improve sleep quality',
-      'Try meditation before sleep to reduce stress',
-      'Ensure your mattress and pillows provide proper support',
-    ];
-    return tips[_random.nextInt(tips.length)];
-  }
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {
@@ -81,368 +63,65 @@ class _InsightsTabState extends State<InsightsTab>
 
     final dreamData = insightsData['dream_vividness'] ?? {
       'level': 'N/A',
-      'prediction': 'No data'
+      'prediction': 'No data',
     };
     final moodData = insightsData['mood_forecast'] ?? {
       'mood': 'Unknown',
-      'confidence': 0
+      'confidence': 0,
     };
     final cognitiveData = insightsData['cognitive_performance'] ?? {
       'focus': 0,
       'memory': 0,
-      'problem_solving': 0
+      'problem_solving': 0,
     };
 
-    return Container(
-      decoration: const BoxDecoration(
-      ),
-      child: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildCosmicCard(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildSectionHeader(
-                      icon: Icons.nightlight_round,
-                      title: "Dream Analysis",
-                      color: Colors.deepPurple,
-                    ),
-                    SizedBox(height: 10.h),
-                    _buildDreamVividness(dreamData),
-                  ]),
-            ),
-            SizedBox(height: 16.h),
-            _buildCosmicCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildSectionHeader(
-                    icon: Icons.mood,
-                    title: "Mood Forecast",
-                    color: Colors.amber,
-                  ),
-                  SizedBox(height: 16.h),
-                  _buildMoodForecast(moodData),
-                ],
-              ),
-            ),
-            SizedBox(height: 16.h),
-            _buildCosmicCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildSectionHeader(
-                    icon: Icons.lightbulb_outline,
-                    title: "Cognitive Performance",
-                    color: Colors.teal,
-                  ),
-                  SizedBox(height: 16.h),
-                  _buildCognitivePerformance(cognitiveData),
-                ],
-              ),
-            ),
-            SizedBox(height: 16.h),
-            _buildCosmicCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildSectionHeader(
-                    icon: Icons.tips_and_updates,
-                    title: "AI Tip of the Day",
-                    color: Colors.lightBlue,
-                  ),
-                  SizedBox(height: 16.h),
-                  _buildAITip(),
-                ],
-              ),
-            ),
-            SizedBox(height: 16.h),
-            _buildCosmicCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildSectionHeader(
-                    icon: Icons.history,
-                    title: "Historical Sleep Analysis",
-                    color: Colors.blue,
-                  ),
-                  SizedBox(height: 16.h),
-                  _buildHistoricalSection(historicalAnalysis),
-                ],
-              ),
-            ),
-            SizedBox(height: 24.h),
-          ],
-        ),
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16.r),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildDreamVividness(dreamData),
+          SizedBox(height: 16.h),
+          _buildMoodForecast(moodData),
+          SizedBox(height: 16.h),
+          _buildCognitivePerformance(cognitiveData),
+          SizedBox(height: 16.h),
+          _buildAITip(),
+          SizedBox(height: 16.h),
+          _buildHistoricalSection(historicalAnalysis),
+          SizedBox(height: 24.h),
+        ],
       ),
     );
   }
 
-  Widget _buildSectionHeader({
-    required IconData icon,
-    required String title,
-    required Color color,
-  }) {
-    return Row(
-      children: [
-        Container(
-          padding: EdgeInsets.all(8.w),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: color, size: 24.sp),
-        ),
-        SizedBox(width: 12.w),
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Builds a glass‑like cosmic card with unified styling.
-  Widget _buildCosmicCard({required Widget child}) {
-    return NeoCard(
-      padding: EdgeInsets.all(20.w),
-      child: child,
-    );
-  }
+  // -------------------- Sections --------------------
 
   Widget _buildDreamVividness(Map<String, dynamic> dreamData) {
-    final vividness = dreamData['level'] ?? 'N/A';
-    final prediction = dreamData['prediction'] ?? 'No prediction';
+    final String vividness = (dreamData['level'] ?? 'N/A').toString();
+    final String prediction = (dreamData['prediction'] ?? 'No prediction').toString();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                vividness.toString(),
-                style: TextStyle(
-                  fontSize: 32.sp,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.deepPurpleAccent,
-                  height: 1.2,
-                ),
-              ),
-            ),
-            Container(
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.deepPurple.shade700,
-                    Colors.deepPurple.shade400,
-                  ],
-                ),
-              ),
-              child: Icon(
-                vividness.toString().contains('High') ? Icons.nightlight_round : Icons.cloud,
-                size: 24.sp,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 12.h),
-        Text(
-          prediction,
-          style: TextStyle(
-            fontSize: 14.sp,
-            color: Colors.white70,
-            height: 1.5,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMoodForecast(Map<String, dynamic> moodData) {
-    final mood = moodData['mood'] ?? 'N/A';
-    final confidenceRaw = moodData['confidence'] ?? 0;
-    final confidence = (confidenceRaw is num) ? confidenceRaw.toDouble() : double.tryParse(confidenceRaw.toString()) ?? 0.0;
-    final progressValue = (confidence.clamp(0.0, 100.0)) / 100.0;
-    final moodColor = _getMoodColor(mood.toString());
-
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              mood.toString().toUpperCase(),
-              style: TextStyle(
-                fontSize: 24.sp,
-                fontWeight: FontWeight.bold,
-                color: moodColor,
-                letterSpacing: 1.2,
-              ),
-            ),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
-              decoration: BoxDecoration(
-                color: moodColor.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(20.r),
-              ),
-              child: Text(
-                "${confidence.toInt()}%",
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.bold,
-                  color: moodColor,
-                ),
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 16.h),
-        LinearProgressIndicator(
-          value: progressValue,
-          minHeight: 14.h,
-          borderRadius: BorderRadius.circular(10.r),
-          backgroundColor: Colors.grey.shade800,
-          color: moodColor,
-          valueColor: AlwaysStoppedAnimation<Color>(moodColor),
-        ),
-        SizedBox(height: 8.h),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              "Confidence Level",
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: Colors.white70,
-              ),
-            ),
-            Text(
-              "${confidence.toInt()}%",
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCognitivePerformance(Map<String, dynamic> cognitiveData) {
-    final focus = cognitiveData['focus'] ?? 0;
-    final memory = cognitiveData['memory'] ?? 0;
-    final problemSolving = cognitiveData['problem_solving'] ?? 0;
-
-    return Column(
-      children: [
-        _buildCognitiveMetric("Focus", focus, Colors.blueAccent),
-        SizedBox(height: 16.h),
-        _buildCognitiveMetric("Memory", memory, Colors.greenAccent),
-        SizedBox(height: 16.h),
-        _buildCognitiveMetric("Problem Solving", problemSolving, Colors.orange),
-      ],
-    );
-  }
-
-  Widget _buildCognitiveMetric(String label, dynamic value, Color color) {
-    final val = (value is num) ? value.toDouble().clamp(0.0, 100.0) : double.tryParse(value.toString()) ?? 0.0;
-    final percentage = val.toInt();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-            ),
-            Text(
-              "$percentage%",
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 8.h),
-        Container(
-          height: 14.h,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10.r),
-            color: Colors.grey.shade800,
-          ),
-          child: Stack(
-            children: [
-              AnimatedContainer(
-                duration: Duration(milliseconds: 800),
-                curve: Curves.easeOut,
-                width: MediaQuery.of(context).size.width * (percentage / 100) * 0.6,
-                height: 14.h,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10.r),
-                  gradient: LinearGradient(
-                    colors: [
-                      color,
-                      color.withOpacity(0.7),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAITip() {
     return Container(
       padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.lightBlue.shade900.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(
-          color: Colors.lightBlue.shade400,
-          width: 1,
-        ),
-      ),
+      decoration: _glassTile(),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.auto_awesome,
-            color: Colors.amber,
-            size: 32.sp,
-          ),
-          SizedBox(height: 12.h),
           Text(
-            _aiTip,
-            textAlign: TextAlign.center,
+            "Vividness: $vividness",
             style: TextStyle(
               fontSize: 16.sp,
-              fontStyle: FontStyle.italic,
-              color: Colors.amber.shade200,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: 10.h),
+          Text(
+            prediction,
+            style: TextStyle(
+              fontSize: 13.5.sp,
               height: 1.4,
+              color: Colors.white70,
             ),
           ),
         ],
@@ -450,48 +129,218 @@ class _InsightsTabState extends State<InsightsTab>
     );
   }
 
-  Widget _buildHistoricalSection(String historicalAnalysis) {
-    return MarkdownBody(
-      data: historicalAnalysis,
-      styleSheet: MarkdownStyleSheet(
-        p: TextStyle(
-          color: Colors.white70,
-          fontSize: 14.sp,
-          height: 1.5,
-        ),
-        h1: TextStyle(
-          color: Colors.blue.shade300,
-          fontWeight: FontWeight.bold,
-          fontSize: 18.sp,
-        ),
-        h2: TextStyle(
-          color: Colors.green.shade300,
-          fontWeight: FontWeight.bold,
-          fontSize: 16.sp,
-        ),
-        h3: TextStyle(
-          color: Colors.purple.shade300,
-          fontWeight: FontWeight.bold,
-          fontSize: 14.sp,
-        ),
-        listBullet: TextStyle(
-          color: Colors.white70,
-          fontSize: 14.sp,
+  Widget _buildMoodForecast(Map<String, dynamic> moodData) {
+    final String mood = (moodData['mood'] ?? 'Unknown').toString();
+    final int confidence = (moodData['confidence'] is num)
+        ? (moodData['confidence'] as num).clamp(0, 100).toInt()
+        : 0;
+
+    final Color moodColor = _colorForMood(mood);
+    final double progressValue = confidence / 100.0;
+
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: _glassTile(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.emoji_emotions, color: moodColor),
+              SizedBox(width: 8.w),
+              Text(
+                "Predicted mood: $mood",
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12.r),
+            child: LinearProgressIndicator(
+              value: progressValue,
+              minHeight: 12.h,
+              backgroundColor: Colors.white12,
+              valueColor: AlwaysStoppedAnimation<Color>(moodColor),
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Confidence Level",
+                style: TextStyle(fontSize: 12.sp, color: Colors.white70),
+              ),
+              Text(
+                "$confidence%",
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w800,
+                  color: moodColor,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCognitivePerformance(Map<String, dynamic> cognitiveData) {
+    final int focus = (cognitiveData['focus'] ?? 0) is num ? (cognitiveData['focus'] as num).toInt() : 0;
+    final int memory = (cognitiveData['memory'] ?? 0) is num ? (cognitiveData['memory'] as num).toInt() : 0;
+    final int problemSolving = (cognitiveData['problem_solving'] ?? 0) is num
+        ? (cognitiveData['problem_solving'] as num).toInt()
+        : 0;
+
+    return Column(
+      children: [
+        _buildCognitiveMetric("Focus", focus, Colors.blueAccent),
+        SizedBox(height: 14.h),
+        _buildCognitiveMetric("Memory", memory, Colors.greenAccent),
+        SizedBox(height: 14.h),
+        _buildCognitiveMetric("Problem Solving", problemSolving, Colors.orangeAccent),
+      ],
+    );
+  }
+
+  Widget _buildCognitiveMetric(String label, int percentage, Color color) {
+    final double v = (percentage.clamp(0, 100)) / 100.0;
+
+    return Container(
+      padding: EdgeInsets.all(14.w),
+      decoration: _glassTile(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 15.sp,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                "$percentage%",
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w800,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8.h),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10.r),
+            child: LinearProgressIndicator(
+              value: v,
+              minHeight: 10.h,
+              backgroundColor: Colors.white12,
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAITip() {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: _glassTile(),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Opacity(
+            opacity: _pulseOpacity,
+            child: Icon(Icons.auto_awesome, color: Colors.amber, size: 28.sp),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Text(
+              _aiTip,
+              style: TextStyle(
+                fontSize: 14.5.sp,
+                fontStyle: FontStyle.italic,
+                height: 1.4,
+                color: Colors.amber.shade200,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHistoricalSection(String markdown) {
+    final text = (markdown.isEmpty) ? "_No historical analysis available yet._" : markdown;
+    return Container(
+      padding: EdgeInsets.all(12.w),
+      decoration: _glassTile(),
+      child: MarkdownBody(
+        data: text,
+        styleSheet: MarkdownStyleSheet(
+          p: TextStyle(color: Colors.white70, fontSize: 13.5.sp, height: 1.4),
+          h2: TextStyle(color: Colors.white, fontSize: 16.5.sp, fontWeight: FontWeight.w800),
+          h3: TextStyle(color: Colors.white, fontSize: 15.sp, fontWeight: FontWeight.w700),
+          blockquote: TextStyle(color: Colors.white60, fontStyle: FontStyle.italic),
         ),
       ),
     );
   }
 
-  Color _getMoodColor(String mood) {
+  // -------------------- Helpers --------------------
+
+  String _generateDailyTip() {
+    const tips = [
+      "Aim for consistent bed and wake times for better circadian rhythm.",
+      "Limit caffeine after mid-afternoon to improve sleep onset latency.",
+      "Dim screens 60–90 minutes before bed to reduce blue-light impact.",
+      "A brief evening stretch can promote deeper, more restorative sleep.",
+      "Keep your bedroom cool, dark, and quiet for optimal sleep quality.",
+    ];
+    final index = DateTime.now().day % tips.length;
+    return tips[index];
+  }
+
+  Color _colorForMood(String mood) {
     switch (mood.toLowerCase()) {
+      case 'happy':
       case 'positive':
         return Colors.greenAccent;
       case 'neutral':
-        return Colors.amber;
+        return Colors.cyanAccent;
+      case 'sad':
       case 'negative':
-        return Colors.redAccent;
+        return Colors.orangeAccent;
+      case 'stressed':
+        return Colors.pinkAccent;
       default:
-        return Colors.white;
+        return Colors.blueAccent;
     }
   }
+}
+
+// Glass tile styling
+BoxDecoration _glassTile() {
+  return BoxDecoration(
+    borderRadius: BorderRadius.circular(16.r),
+    border: Border.all(color: Colors.white12),
+    gradient: const LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [Colors.white54, Colors.white12],
+      stops: [0.0, 1.0],
+    ).scale(0.11),
+  );
 }

@@ -5,6 +5,7 @@ import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_analysis/resu
 import '../../../../../../constants/colors.dart';
 import '../neo_design.dart';
 import '../../../models/sleeplog_model_page.dart';
+import 'neo_section.dart';
 
 class SleepDetailsTab extends StatelessWidget {
   final Widget environmentAnalysis;
@@ -22,15 +23,9 @@ class SleepDetailsTab extends StatelessWidget {
 
   List<Widget> get slivers {
     return [
-      _buildSectionSliver(
-        icon: Icons.bedroom_parent,
-        title: "Sleep Environment",
-        content: environmentAnalysis,
-      ),
-      _buildSectionSliver(
-        icon: Icons.stacked_bar_chart,
-        title: "Quality Breakdown",
-        content: SleepQualityBreakdown(
+      SliverToBoxAdapter(child: environmentAnalysis),
+      SliverToBoxAdapter(
+        child: SleepQualityBreakdown(
           preloadedData: preloadedQualityData ?? {},
         ),
       ),
@@ -38,59 +33,11 @@ class SleepDetailsTab extends StatelessWidget {
     ];
   }
 
-  Widget _buildSectionSliver({
-    required IconData icon,
-    required String title,
-    required Widget content,
-  }) {
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        child: NeoCard(
-          padding: EdgeInsets.all(16.r),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSectionHeader(icon, title),
-              SizedBox(height: 8.h),
-              content,
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(IconData icon, String title) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 12.h),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(6.w),
-            decoration: BoxDecoration(
-              color: AppColors.primaryPurple.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 20.w, color: AppColors.primaryPurple),
-          ),
-          SizedBox(width: 12.w),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 18.sp,
-              fontWeight: FontWeight.w700,
-              fontFamily: 'NunitoSansBold',
-              color: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
-    throw UnimplementedError('Use `slivers` getter with a CustomScrollView.');
+    return CustomScrollView(
+      slivers: slivers,
+    );
   }
 }
