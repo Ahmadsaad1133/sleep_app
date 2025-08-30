@@ -231,14 +231,22 @@ class _SleepAnalysisResultPageContentState
   }
 
   List<Map<String, dynamic>> _asListOfMaps(dynamic l) {
+    // Normalize a dynamic value into a list of maps. Returns an empty list
+    // if the input is null or not a list. Non-map entries are converted
+    // into empty maps to preserve the original list length.
     if (l == null) return <Map<String, dynamic>>[];
     if (l is List<Map<String, dynamic>>) return l;
-    final list = l as List;
-    return list.map((e) {
-      if (e is Map<String, dynamic>) return e;
-      if (e is Map) return Map<String, dynamic>.from(e);
-      return <String, dynamic>{};
-    }).toList();
+    if (l is List) {
+      return l.map((e) {
+        if (e is Map<String, dynamic>) return e;
+        if (e is Map) return Map<String, dynamic>.from(e);
+        // For unsupported types, return an empty map so downstream code
+        // can still iterate without null checks.
+        return <String, dynamic>{};
+      }).toList();
+    }
+    // Not a list → return empty.
+    return <Map<String, dynamic>>[];
   }
 
   Map<String, double> _asMapDouble(dynamic m) {
@@ -603,7 +611,9 @@ class _SleepAnalysisResultPageContentState
             .trim();
 
         // Choose the best available detailed report text
-        final detailed = safeParsed['detailedReport']?.toString().trim();
+        final detailedRaw =
+            safeParsed['detailedReport'] ?? safeParsed['detailed_report'];
+        final detailed = detailedRaw?.toString().trim();
         _detailedReport = (detailed != null && detailed.isNotEmpty)
             ? detailed
             : (summary != null && summary.isNotEmpty)
@@ -1041,17 +1051,177 @@ class _SleepAnalysisResultPageContentState
 
                       // 4: Report
                       Builder(
+
                         builder:
                             (tabContext) =>
                             _wrapTabWithSliverWidget(
+
                               tabContext,
                               'Report',
-                              ReportTab(
-                                detailedReport:
-                                _detailedReport,
-                              ),
+
+                              // Build the Report tab using values from both the root analysis result
+                              // and any nested `analysis` map that may contain extended insights.
+                              (() {
+                                final Map<String, dynamic> rootResult = _asMap(widget.analysisResult);
+                                final Map<String, dynamic> nestedAnalysis = _asMap(rootResult['analysis']);
+                                // Extract what‑if scenarios from various possible locations
+                                final dynamic whatIfRaw =
+                                    _asMap(rootResult['what_if'])['scenarios'] ??
+                                        rootResult['what_if_scenarios'] ??
+                                        _asMap(nestedAnalysis['what_if'])['scenarios'] ??
+                                        nestedAnalysis['what_if_scenarios'];
+                                final List<Map<String, dynamic>> whatIfScenarios = _asListOfMaps(whatIfRaw);
+                                // Smart wake windows
+                                final dynamic wakeWindows =
+                                    _asMap(rootResult['smart_wake'])['windows'] ??
+                                        rootResult['wake_windows'] ??
+                                        _asMap(nestedAnalysis['smart_wake'])['windows'] ??
+                                        nestedAnalysis['wake_windows'];
+                                // Risk assessment
+                                final Map<String, dynamic> riskAssessment =
+                                _asMap(rootResult['risk_assessment'] ?? nestedAnalysis['risk_assessment']);
+                                // Energy plan
+                                final Map<String, dynamic> energyPlan =
+                                _asMap(rootResult['energy_plan'] ?? nestedAnalysis['energy_plan']);
+                                // Drivers
+                                final Map<String, dynamic> drivers =
+                                _asMap(rootResult['drivers'] ?? nestedAnalysis['drivers']);
+                                // Achievements
+                                final List<Map<String, dynamic>> achievements =
+                                _asListOfMaps(rootResult['achievements'] ?? nestedAnalysis['achievements']);
+                                // HRV summary
+                                final Map<String, dynamic> hrvSummary =
+                                _asMap(rootResult['hrv_summary'] ?? nestedAnalysis['hrv_summary']);
+                                // Respiratory events
+                                final Map<String, dynamic> respiratory =
+                                _asMap(rootResult['respiratory_events'] ??
+                                    rootResult['respiratory'] ??
+                                    nestedAnalysis['respiratory_events'] ??
+                                    nestedAnalysis['respiratory']);
+                                // Glucose correlation
+                                final Map<String, dynamic> glucoseCorrelation =
+                                _asMap(rootResult['glucose_correlation'] ??
+                                    rootResult['glucose'] ??
+                                    nestedAnalysis['glucose_correlation'] ??
+                                    nestedAnalysis['glucose']);
+                                // Action items
+                                final List<String> actionItems = _asStringList(
+                                    rootResult['action_items'] ??
+                                        rootResult['tonight_todos'] ??
+                                        rootResult['actionItems'] ??
+                                        rootResult['todos'] ??
+                                        nestedAnalysis['action_items'] ??
+                                        nestedAnalysis['tonight_todos'] ??
+                                        nestedAnalysis['actionItems'] ??
+                                        nestedAnalysis['todos']);
+                                // Causal graph
+                                final Map<String, dynamic> causalGraph =
+                                _asMap(rootResult['causal_graph'] ??
+                                    rootResult['causalGraph'] ??
+                                    nestedAnalysis['causal_graph'] ??
+                                    nestedAnalysis['causalGraph']);
+                                // Energy timeline
+                                final Map<String, dynamic> energyTimeline = _asMap(
+                                    rootResult['next_day_forecast'] ??
+                                        rootResult['energy_timeline'] ??
+                                        rootResult['nextDayForecast'] ??
+                                        rootResult['energyTimeline'] ??
+                                        nestedAnalysis['next_day_forecast'] ??
+                                        nestedAnalysis['energy_timeline'] ??
+                                        nestedAnalysis['nextDayForecast'] ??
+                                        nestedAnalysis['energyTimeline']);
+                                // Cognitive windows
+                                final dynamic cogRaw =
+                                    rootResult['cognitive_windows'] ??
+                                        rootResult['cognitiveWindows'] ??
+                                        nestedAnalysis['cognitive_windows'] ??
+                                        nestedAnalysis['cognitiveWindows'];
+                                // Normalize cognitive windows into a list. If the value is
+                                // already a list, keep it. If it is a single string or map,
+                                // wrap it in a list. Otherwise, return an empty list.
+                                List<dynamic> cognitiveWindowsValue;
+                                if (cogRaw == null) {
+                                  cognitiveWindowsValue = <dynamic>[];
+                                } else if (cogRaw is List) {
+                                  cognitiveWindowsValue = List<dynamic>.from(cogRaw);
+                                } else {
+                                  cognitiveWindowsValue = [cogRaw];
+                                }
+                                // Micro arousals
+                                final Map<String, dynamic> microArousals =
+                                _asMap(rootResult['micro_arousals'] ??
+                                    rootResult['microArousals'] ??
+                                    nestedAnalysis['micro_arousals'] ??
+                                    nestedAnalysis['microArousals']);
+                                // Architecture notes
+                                final List<Map<String, dynamic>> architectureNotes =
+                                _asListOfMaps(rootResult['architecture_notes'] ??
+                                    rootResult['architectureNotes'] ??
+                                    nestedAnalysis['architecture_notes'] ??
+                                    nestedAnalysis['architectureNotes']);
+                                // Recovery plan
+                                final Map<String, dynamic> recoveryPlan =
+                                _asMap(rootResult['recovery_plan'] ??
+                                    rootResult['recoveryPlan'] ??
+                                    nestedAnalysis['recovery_plan'] ??
+                                    nestedAnalysis['recoveryPlan']);
+                                // Nutrition correlation
+                                final Map<String, dynamic> nutrition = _asMap(
+                                    rootResult['nutrition'] ??
+                                        rootResult['nutrition_correlation'] ??
+                                        rootResult['nutritionCorrelation'] ??
+                                        nestedAnalysis['nutrition'] ??
+                                        nestedAnalysis['nutrition_correlation'] ??
+                                        nestedAnalysis['nutritionCorrelation']);
+                                // Streaks
+                                final List<Map<String, dynamic>> streaks =
+                                _asListOfMaps(rootResult['streaks'] ?? nestedAnalysis['streaks']);
+                                return _wrapTabWithSliverWidget(
+                                  tabContext,
+                                  'Report',
+                                  ReportTab(
+                                    totalSleepHours: (_lastSleepLog?.durationMinutes ?? 0) / 60.0,
+                                    efficiency: (_lastSleepLog?.efficiencyScore ?? 0).toDouble(),
+                                    deepPct: _sleepStages['Deep'] ?? _sleepStages['deep'],
+                                    remPct: _sleepStages['REM'] ?? _sleepStages['rem'],
+                                    lightPct: _sleepStages['Light'] ?? _sleepStages['light'],
+                                    last7DaysHours: _getWeeklyTrend(),
+                                    sleepScore: _sleepScore,
+                                    dailyComparison: _dailyComparison,
+                                    lifestyleCorrelations: _getLifestyleCorrelations(),
+                                    environmentAnalysis: _sleepEnvironmentAnalysis,
+                                    dreamMoodForecast: _dreamMoodForecast,
+                                    aiHighlights: _aiHighlights,
+                                    recommendations: _recommendations,
+                                    chronotype: _chronotype,
+                                    sleepMidpoint: _sleepMidpoint,
+                                    morningReadiness: _getMorningReadiness(),
+                                    whatIfScenarios: whatIfScenarios,
+                                    wakeWindows: wakeWindows,
+                                    riskAssessment: riskAssessment,
+                                    energyPlan: energyPlan,
+                                    drivers: drivers,
+                                    achievements: achievements,
+                                    hrvSummary: hrvSummary,
+                                    respiratory: respiratory,
+                                    glucoseCorrelation: glucoseCorrelation,
+                                    actionItems: actionItems,
+                                    causalGraph: causalGraph,
+                                    energyTimeline: energyTimeline,
+                                    cognitiveWindows: cognitiveWindowsValue,
+                                    microArousals: microArousals,
+                                    architectureNotes: architectureNotes,
+                                    recoveryPlan: recoveryPlan,
+                                    nutrition: nutrition,
+                                    streaks: streaks,
+                                    debugShow: true,
+                                    debugDump: _asMap(widget.analysisResult),
+                                  ),
+                                );
+                              })(),
                             ),
                       ),
+
 
                       // 5: Dream
                       Builder(
@@ -1088,17 +1258,9 @@ class _SleepAnalysisResultPageContentState
                                 NestedScrollView.sliverOverlapAbsorberHandleFor(innerContext),
                               ),
                               ...dreamTab.buildSlivers(
-                                context:
-                                innerContext,
-                                dreamMoodForecast:
-                                _dreamMoodForecast,
-                                bottomPadding:
-                                fabHeight +
-                                    24.0,
-                                backgroundHeight:
-                                0.0,
-                                dreamLabMinHeight:
-                                1000.0,
+                                context: innerContext,
+                                dreamMoodForecast: _dreamMoodForecast,
+                                bottomPadding: fabHeight + 24.0,
                               ),
                             ],
                           );
@@ -1138,7 +1300,6 @@ class _SleepAnalysisResultPageContentState
       ),
     );
   }
-
   Future<void>
   _createSleepPlan() async {
     try {

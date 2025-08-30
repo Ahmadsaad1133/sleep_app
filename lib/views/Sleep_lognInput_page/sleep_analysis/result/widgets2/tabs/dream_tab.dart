@@ -11,7 +11,6 @@ class DreamTab extends StatelessWidget {
   final Map<String, dynamic>? enhancedDreamAnalysis;
   final VoidCallback? onRetry;
   final bool isLoading;
-  final double dreamLabHeight;
   final Map<String, dynamic> sleepData;
   final bool autoPlaySections;
 
@@ -22,36 +21,37 @@ class DreamTab extends StatelessWidget {
     this.onRetry,
     required this.isLoading,
     required this.sleepData,
-    this.dreamLabHeight = 4000,
     this.autoPlaySections = true,
   });
-
   @override
   Widget build(BuildContext context) {
     final hasData = dreamMoodForecast != null && dreamMoodForecast!.isNotEmpty;
 
     return Material(
       color: Colors.transparent,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SizedBox(
-            height: dreamLabHeight,
-            child: DreamLabScreen(
-              forecast: dreamMoodForecast ?? {},
-              onRetry: onRetry ?? () {},
-              enhancedDreamAnalysis: enhancedDreamAnalysis ?? {},
-              sleepData: sleepData,
-              autoPlaySections: autoPlaySections,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10), // 👈 10px padding
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: DreamLabScreen(
+                forecast: dreamMoodForecast ?? {},
+                onRetry: onRetry ?? () {},
+                enhancedDreamAnalysis: enhancedDreamAnalysis ?? {},
+                sleepData: sleepData,
+                autoPlaySections: autoPlaySections,
+              ),
             ),
-          ),
 
-          if (!hasData && !isLoading)
-            _buildEmptyState(context),
-        ],
+            if (!hasData && !isLoading)
+              _buildEmptyState(context),
+          ],
+        ),
       ),
     );
   }
+
 
   Widget _buildEmptyState(BuildContext context) {
     return NeoSection(
@@ -68,23 +68,22 @@ class DreamTab extends StatelessWidget {
     required BuildContext context,
     required Map<String, dynamic>? dreamMoodForecast,
     required double bottomPadding,
-    required double backgroundHeight,
-    required double dreamLabMinHeight,
   }) {
     return [
-      SliverToBoxAdapter(
-        child: SizedBox(
-          height: dreamLabMinHeight,
-          child: DreamLabScreen(
-            forecast: dreamMoodForecast ?? {},
-            onRetry: onRetry ?? () {},
-            enhancedDreamAnalysis: enhancedDreamAnalysis ?? {},
-            sleepData: sleepData,
-            autoPlaySections: autoPlaySections,
-          ),
+    SliverToBoxAdapter(
+      child: Padding(
+        padding: EdgeInsets.only(bottom: bottomPadding),
+        child: DreamLabScreen(
+          forecast: dreamMoodForecast ?? {},
+          onRetry: onRetry ?? () {},
+          enhancedDreamAnalysis: enhancedDreamAnalysis ?? {},
+          sleepData: sleepData,
+          autoPlaySections: autoPlaySections,
+          sliverMode: true,
         ),
       ),
-      SliverPadding(padding: EdgeInsets.only(bottom: bottomPadding)),
+    ),
+    const SliverToBoxAdapter(child: SizedBox(height: 60)),
     ];
   }
 }
@@ -124,33 +123,37 @@ class _DreamsJsonBackgroundState extends State<_DreamsJsonBackground> {
   Widget build(BuildContext context) {
     if (dreamsData.isEmpty) return const SizedBox.shrink();
 
-    return Stack(
-      children: dreamsData.map((dream) {
-        final x = (dream['x'] ?? 0).toDouble();
-        final y = (dream['y'] ?? 0).toDouble();
-        final size = (dream['size'] ?? 20).toDouble();
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10), // 👈 keep circles inside safe zone
+      child: Stack(
+        children: dreamsData.map((dream) {
+          final x = (dream['x'] ?? 0).toDouble();
+          final y = (dream['y'] ?? 0).toDouble();
+          final size = (dream['size'] ?? 20).toDouble();
 
-        Color color;
-        try {
-          final colorRaw = dream['color'] ?? '0xFFFFFFFF';
-          color = Color(int.parse(colorRaw.toString()));
-        } catch (_) {
-          color = Colors.white;
-        }
+          Color color;
+          try {
+            final colorRaw = dream['color'] ?? '0xFFFFFFFF';
+            color = Color(int.parse(colorRaw.toString()));
+          } catch (_) {
+            color = Colors.white;
+          }
 
-        return Positioned(
-          left: x,
-          top: y,
-          child: Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: color.withOpacity(0.5),
+          return Positioned(
+            left: x,
+            top: y,
+            child: Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color.withOpacity(0.5),
+              ),
             ),
-          ),
-        );
-      }).toList(),
+          );
+        }).toList(),
+      ),
     );
   }
+
 }
