@@ -1115,7 +1115,9 @@ Output only the JSON object without any additional text.
           'architecture_notes',
           'recovery_plan',
           'nutrition',
-          'streaks'
+          'streaks',
+          'smart_goals'
+
         ],
         'user_context': userContext,
         'environment_data': env,

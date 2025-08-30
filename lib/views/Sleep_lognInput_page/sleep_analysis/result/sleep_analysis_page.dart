@@ -1185,6 +1185,11 @@ class _SleepAnalysisResultPageContentState
     final List<Map<String, dynamic>> streaks =
     _asListOfMaps(rootResult['streaks'] ??
     nestedAnalysis['streaks']);
+                        final List<String> smartGoals = _asStringList(
+                            rootResult['smart_goals'] ??
+                                rootResult['smartGoals'] ??
+                                nestedAnalysis['smart_goals'] ??
+                                nestedAnalysis['smartGoals']);
     return _wrapTabWithSliverWidget(
     tabContext,
     'Report',
@@ -1229,7 +1234,7 @@ class _SleepAnalysisResultPageContentState
     recoveryPlan: recoveryPlan,
     nutrition: nutrition,
     streaks: streaks,
-
+        smartGoals: smartGoals
                             ),
     );
                       },

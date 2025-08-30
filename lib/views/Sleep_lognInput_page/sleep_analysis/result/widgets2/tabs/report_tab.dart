@@ -69,6 +69,7 @@ class ReportTab extends StatefulWidget {
   final Map<String, dynamic>? recoveryPlan; // {'score':..,'steps':[]}
   final Map<String, dynamic>? nutrition; // {'corr':..,'advice':[]}
   final List<dynamic>? streaks; // [{'name':..,'days':..}]
+  final List<String>? smartGoals; // SMART goals from API
 
   const ReportTab({
     super.key,
@@ -110,6 +111,7 @@ class ReportTab extends StatefulWidget {
     this.recoveryPlan,
     this.nutrition,
     this.streaks,
+    this.smartGoals,
   });
 
   @override
@@ -206,6 +208,10 @@ class _ReportTabState extends State<ReportTab>
                   SizedBox(height: 12),
                 ],
                 // Action items
+                if ((widget.smartGoals ?? const []).isNotEmpty) ...[
+                  _smartGoalsCard(context),
+                  SizedBox(height: 12),
+                ],
                 if ((widget.actionItems ?? const []).isNotEmpty) ...[
                   _actionItemsCard(context),
                   SizedBox(height: 12),
@@ -1157,6 +1163,23 @@ class _ReportTabState extends State<ReportTab>
             ),
           ]),
         ]),
+      ),
+    );
+  }
+  Widget _smartGoalsCard(BuildContext context) {
+    final goals = widget.smartGoals ?? const [];
+    if (goals.isEmpty) return SizedBox.shrink();
+    return _GlassCard(
+      child: Padding(
+        padding: EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _cardHeader('SMART goals'),
+            SizedBox(height: 6),
+            for (final g in goals.take(6)) _bullet('• $g'),
+          ],
+        ),
       ),
     );
   }
