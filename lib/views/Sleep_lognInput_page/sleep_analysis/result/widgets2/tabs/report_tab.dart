@@ -180,24 +180,6 @@ class _ReportTabState extends State<ReportTab>
                 SizedBox(height: 12),
                 _cardsPager(context, total, deep, rem, light, history),
                 SizedBox(height: 12),
-                if (widget.sleepScore != null || widget.morningReadiness != null || widget.chronotype != null)
-                  _scoreAndChrono(context),
-                SizedBox(height: 12),
-                // Lifestyle correlations (correlation chips)
-                if ((widget.lifestyleCorrelations ?? const []).isNotEmpty) ...[
-                  _lifestyleCorrelationsCard(context),
-                  SizedBox(height: 12),
-                ],
-                // Environment analysis
-                if ((widget.environmentAnalysis ?? const {}).isNotEmpty) ...[
-                  _environmentCard(context),
-                  SizedBox(height: 12),
-                ],
-                // Dream & mood forecast
-                if ((widget.dreamMoodForecast ?? const {}).isNotEmpty) ...[
-                  _dreamMoodCard(context),
-                  SizedBox(height: 12),
-                ],
                 // Likely drivers
                 if ((widget.drivers ?? const {}).isNotEmpty) ...[
                   _driversFromApi(context),
@@ -347,16 +329,35 @@ class _ReportTabState extends State<ReportTab>
     );
   }
 
-  Widget _cardsPager(BuildContext context, double? total, double? deep, double? rem, double? light, List<double> history) {
+  Widget _cardsPager(BuildContext context, double? total, double? deep, double? rem,
+      double? light, List<double> history) {
     final pages = <Widget>[];
 
-    pages.add(_tldrCard(context));
+    if ((widget.tldrBullets ?? const []).isNotEmpty) {
+      pages.add(_tldrCard(context));
+    }
     if (deep != null && rem != null && light != null) {
       pages.add(_compositionCard(context, deep, rem, light));
     }
-    if (history.isNotEmpty) {
+    if (history.isNotEmpty) {//
       pages.add(_trendsCard(context, history));
     }
+    if (widget.sleepScore != null ||
+        widget.morningReadiness != null ||
+        widget.chronotype != null) {
+      pages.add(_scoreAndChrono(context));
+    }
+    if ((widget.lifestyleCorrelations ?? const []).isNotEmpty) {
+      pages.add(_lifestyleCorrelationsCard(context));
+    }
+    if ((widget.environmentAnalysis ?? const {}).isNotEmpty) {
+      pages.add(_environmentCard(context));
+    }
+    if ((widget.dreamMoodForecast ?? const {}).isNotEmpty) {
+      pages.add(_dreamMoodCard(context));
+    }
+
+    if (pages.isEmpty) return SizedBox.shrink();
 
     return SizedBox(
       height: 220,
