@@ -98,6 +98,7 @@ class _SleepAnalysisResultPageContentState
   Map<String, dynamic> _dailyComparison = {};
   late AnimationController _scoreAnimationController;
   Map<String, dynamic> _sleepPatterns = {};
+  Map<String, dynamic> _analysisResult = {};
   List<String> _predictiveWarnings = [];
   Map<String, dynamic> _behavioralFactors = {};
   String _chronotype = '';
@@ -413,7 +414,7 @@ class _SleepAnalysisResultPageContentState
   List<Map<String, dynamic>>
   _getLifestyleCorrelations() {
     // Use API data if available (supporting multiple possible keys), otherwise empty.
-    final Map<String, dynamic> ar = _asMap(widget.analysisResult);
+    final Map<String, dynamic> ar = _analysisResult;
     final dynamic raw = ar['lifestyleCorrelations'] ??
         ar['lifestyle_correlations'] ??
         ar['behavioral_correlations'] ??
@@ -536,10 +537,9 @@ class _SleepAnalysisResultPageContentState
     if (widget.analysisResult != null &&
         widget.sleepLog != null) {
       _lastSleepLog = widget.sleepLog;
-      _parseProfessionalAnalysis(
-          widget.analysisResult!);
-      _sleepScore =
-          _calculateSleepScore(_lastSleepLog!);
+      _analysisResult = _asMap(widget.analysisResult);
+      _parseProfessionalAnalysis(_analysisResult);
+      _sleepScore = _calculateSleepScore(_lastSleepLog!);
       _calculateSleepFactors();
       _isAnalysisParsed = true;
       _scoreAnimationController.forward();
@@ -550,9 +550,9 @@ class _SleepAnalysisResultPageContentState
         'log': _lastSleepLog,
         'score': _sleepScore,
       });
-
+      _analysisFuture = Future.value(_analysisResult);
       // Use preloaded data directly
-      final Map<String, dynamic> ar = _asMap(widget.analysisResult);
+      final Map<String, dynamic> ar = _analysisResult;
       final Map<String, dynamic> nested = _asMap(ar['analysis']);
       _sleepEnvironmentAnalysis = _asMap(
           ar['environment_analysis'] ??
@@ -760,11 +760,32 @@ class _SleepAnalysisResultPageContentState
       final logs = [log.toMap()];
 
       final analysis =
-      await ApiService.fetchSleepAnalysis(
-          logs);
+      await ApiService.fetchSleepAnalysis(logs);
       final safeAnalysis = (analysis is Map)
           ? Map<String, dynamic>.from(analysis)
           : <String, dynamic>{};
+      _analysisResult = safeAnalysis;
+      // Extract sections used across tabs.
+      final Map<String, dynamic> nested = _asMap(safeAnalysis['analysis']);
+      _sleepEnvironmentAnalysis = _asMap(
+        safeAnalysis['environment_analysis'] ??
+            safeAnalysis['environmentAnalysis'] ??
+            nested['environment_analysis'] ??
+            nested['environmentAnalysis'],
+      );
+      _dreamMoodForecast = _asMap(
+        safeAnalysis['dream_mood_forecast'] ??
+            safeAnalysis['dreamMoodForecast'] ??
+            nested['dream_mood_forecast'] ??
+            nested['dreamMoodForecast'],
+      );
+      _historicalAnalysisFuture = Future.value(
+        safeAnalysis['historical_analysis']?.toString() ??
+            safeAnalysis['historicalAnalysis']?.toString() ??
+            nested['historical_analysis']?.toString() ??
+            nested['historicalAnalysis']?.toString() ??
+            '',
+      );
       try {
         safeAnalysis['sleep_insights'] =
         await ApiService().getInsights(log.toMap())
@@ -794,10 +815,7 @@ class _SleepAnalysisResultPageContentState
       // Normalize sleep stage values into percentages and trigger the API.
       await _computeSleepStagesAnalysis();
 
-      return {
-        'log': log.toMap(),
-        'score': _sleepScore
-      };
+      return safeAnalysis;
     } catch (e) {
       return {'error': e.toString()};
     }
@@ -952,10 +970,9 @@ class _SleepAnalysisResultPageContentState
                   if (!_isAnalysisParsed) {
                     return const LoadingState();
                   }
-
+                  final analysisData = _asMap(snapshot.data);
                   return TabBarView(
-                    controller:
-                    _tabController,
+                    controller: _tabController,
                     children: [
                       // 0: Overview
                       Builder(
@@ -1007,15 +1024,10 @@ class _SleepAnalysisResultPageContentState
                               tabContext,
                               'Details',
                               SleepDetailsTab(
-                                environmentAnalysis:
-                                _buildEnvironmentAnalysis(),
-                                lastSleepLog:
-                                _lastSleepLog,
-                                preloadedQualityData:
-                                _asMap(widget.analysisResult?[
-                                'quality_breakdown']),
-                                dreamMoodForecast:
-                                _dreamMoodForecast,
+                                environmentAnalysis: _buildEnvironmentAnalysis(),
+                                lastSleepLog: _lastSleepLog,
+                                preloadedQualityData: _asMap(analysisData['quality_breakdown']),
+                                dreamMoodForecast: _dreamMoodForecast,
                               ).slivers,
                             ),
                       ),
@@ -1046,16 +1058,10 @@ class _SleepAnalysisResultPageContentState
                               tabContext,
                               'Insights',
                               InsightsTab(
-                                sleeplog:
-                                _lastSleepLog!,
+                                sleeplog: _lastSleepLog!,
                                 // Normalize the dream/mood forecast into a UI-friendly map
-                                insightsData:
-                                _normalizeForecastForInsights(
-                                    _dreamMoodForecast),
-                                historicalAnalysis: widget
-                                    .analysisResult?['historical_analysis']
-                                    ?.toString() ??
-                                    '',
+                                insightsData: _normalizeForecastForInsights(_dreamMoodForecast),
+                                historicalAnalysis: analysisData['historical_analysis']?.toString() ?? '',
                               ),
                             ),
                       ),
@@ -1063,8 +1069,7 @@ class _SleepAnalysisResultPageContentState
                       // 4: Report
                       Builder(
                       builder: (tabContext) {
-    final Map<String, dynamic> rootResult =
-    _asMap(widget.analysisResult);
+                        final Map<String, dynamic> rootResult = analysisData;
     final Map<String, dynamic> nestedAnalysis =
     _asMap(rootResult['analysis']);
     final dynamic whatIfRaw =
@@ -1225,7 +1230,8 @@ class _SleepAnalysisResultPageContentState
     nutrition: nutrition,
     streaks: streaks,
     debugShow: true,
-    debugDump: _asMap(widget.analysisResult),
+      debugDump: analysisData,
+
                             ),
     );
                       },

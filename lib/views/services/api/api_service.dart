@@ -1092,11 +1092,30 @@ Output only the JSON object without any additional text.
         'capabilities': [
           'pattern_recognition',
           'health_predictions',
-          'behavioral_impact',
+          'behavioral_impact',//
           'circadian_analysis',
           'intervention_suggestions',
           'environment_analysis',
-          'lifestyle_correlations'
+          'lifestyle_correlations',
+          // Additional report sections
+          'what_if',
+          'smart_wake',
+          'risk_assessment',
+          'energy_plan',
+          'drivers',
+          'achievements',
+          'hrv_summary',
+          'respiratory_events',
+          'glucose_correlation',
+          'action_items',
+          'causal_graph',
+          'next_day_forecast',
+          'cognitive_windows',
+          'micro_arousals',
+          'architecture_notes',
+          'recovery_plan',
+          'nutrition',
+          'streaks'
         ],
         'user_context': userContext,
         'environment_data': env,
