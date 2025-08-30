@@ -1092,17 +1092,16 @@ Output only the JSON object without any additional text.
         'capabilities': [
           'pattern_recognition',
           'health_predictions',
-          'behavioral_impact',//
+          'behavioral_impact',
           'circadian_analysis',
           'intervention_suggestions',
           'environment_analysis',
           'lifestyle_correlations',
-          // Additional report sections
           'what_if_scenarios',
           'wake_windows',
           'risk_assessment',
           'daily_energy_plan',
-          'executive_summary'
+          'executive_summary',
           'drivers',
           'achievements',
           'hrv_summary',
