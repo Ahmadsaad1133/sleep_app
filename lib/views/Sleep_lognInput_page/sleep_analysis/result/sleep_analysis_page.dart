@@ -1084,21 +1084,34 @@ class _SleepAnalysisResultPageContentState
                           final List<Map<String, dynamic>> whatIfScenarios =
                           _asListOfMaps(whatIfRaw);
                           final dynamic wakeWindows =
-                              _asMap(rootResult['smart_wake'])['windows'] ??
-                                  rootResult['wake_windows'] ??
-                                  _asMap(rootResult['smartWake'])['windows'] ??
+                              rootResult['wake_windows'] ??
+                                  _asMap(rootResult['smart_wake'])['windows'] ??
                                   rootResult['wakeWindows'] ??
-                                  _asMap(nestedAnalysis['smart_wake'])['windows'] ??
+                                  _asMap(rootResult['smartWake'])['windows'] ??
                                   nestedAnalysis['wake_windows'] ??
-                                  _asMap(nestedAnalysis['smartWake'])['windows'] ??
-                                  nestedAnalysis['wakeWindows'];
+                                  _asMap(nestedAnalysis['smart_wake'])['windows'] ??
+                                  nestedAnalysis['wakeWindows'] ??
+                                  _asMap(nestedAnalysis['smartWake'])['windows'];
                           final Map<String, dynamic> riskAssessment =  _asMap(rootResult['risk_assessment'] ??
                               rootResult['riskAssessment'] ??
                               nestedAnalysis['risk_assessment'] ??
                               nestedAnalysis['riskAssessment']);
                           final Map<String, dynamic> energyPlan =
-                          _asMap(rootResult['energy_plan'] ??
+                          _asMap(rootResult['daily_energy_plan'] ??
+                              rootResult['energy_plan'] ??
+                              nestedAnalysis['daily_energy_plan'] ??
                               nestedAnalysis['energy_plan']);
+                          final dynamic executiveSummary =
+                              rootResult['executive_summary'] ??
+                                  nestedAnalysis['executive_summary'] ??
+                                  rootResult['summary'] ??
+                                  nestedAnalysis['summary'] ??
+                                  rootResult['overview'] ??
+                                  nestedAnalysis['overview'];
+                          final Map<String, dynamic>? initialReportData =
+                          executiveSummary != null
+                              ? {'executive_summary': executiveSummary}
+                              : null;
                           final Map<String, dynamic> drivers =
                           _asMap(rootResult['drivers'] ??
                               nestedAnalysis['drivers']);
@@ -1194,6 +1207,7 @@ class _SleepAnalysisResultPageContentState
                             tabContext,
                             'Report',
                             ReportTab(
+                                initialReportData: initialReportData,
                                 totalSleepHours:
                                 (_lastSleepLog?.durationMinutes ?? 0) / 60.0,
                                 efficiency: (_lastSleepLog?.efficiencyScore ?? 0)

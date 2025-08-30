@@ -1098,10 +1098,11 @@ Output only the JSON object without any additional text.
           'environment_analysis',
           'lifestyle_correlations',
           // Additional report sections
-          'what_if',
-          'smart_wake',
+          'what_if_scenarios',
+          'wake_windows',
           'risk_assessment',
-          'energy_plan',
+          'daily_energy_plan',
+          'executive_summary'
           'drivers',
           'achievements',
           'hrv_summary',
