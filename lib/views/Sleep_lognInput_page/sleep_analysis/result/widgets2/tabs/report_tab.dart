@@ -974,8 +974,11 @@ class _ReportTabState extends State<ReportTab>
   Widget _riskAssessmentCard(BuildContext context) {
     final r = widget.riskAssessment ?? const {};
     if (r.isEmpty) return SizedBox.shrink();
-    final score = r['risk_score'];
-    final alerts = (r['alerts'] is List) ? (r['alerts'] as List).cast<String>() : <String>[];
+    final score = r['risk_score'] ?? r['riskScore'];
+    final alertsSrc = r['alerts'] ?? r['warnings'];
+    final alerts = (alertsSrc is List)
+        ? alertsSrc.cast<String>()
+        : <String>[];
     return _GlassCard(
       child: Padding(
         padding: EdgeInsets.all(14),
@@ -999,9 +1002,13 @@ class _ReportTabState extends State<ReportTab>
     final e = widget.energyPlan ?? const {};
     if (e.isEmpty) return SizedBox.shrink();
     final light = e['light']?.toString();
-    final cutoff = e['caffeine_cutoff']?.toString();
-    final nap = e['nap_window']?.toString();
-    final notes = (e['notes'] is List) ? (e['notes'] as List).cast<String>() : <String>[];
+    final cutoff =
+    (e['caffeine_cutoff'] ?? e['caffeineCutoff'])?.toString();
+    final nap = (e['nap_window'] ?? e['napWindow'])?.toString();
+    final notesSrc = e['notes'] ?? e['note'];
+    final notes = (notesSrc is List)
+        ? notesSrc.cast<String>()
+        : <String>[];
 
     return _GlassCard(
       child: Padding(
@@ -1067,7 +1074,10 @@ class _ReportTabState extends State<ReportTab>
   Widget _hrvCard(BuildContext context) {
     final h = widget.hrvSummary ?? const {};
     if (h.isEmpty) return SizedBox.shrink();
-    final rmssd = h['rmssd']; final sdnn = h['sdnn']; final balance = h['balance']; final rec = h['recovery_index'];
+    final rmssd = h['rmssd'];
+    final sdnn = h['sdnn'];
+    final balance = h['balance'] ?? h['balanceScore'];
+    final rec = h['recovery_index'] ?? h['recoveryIndex'];
     return _GlassCard(
       child: Padding(
         padding: EdgeInsets.all(14),
@@ -1088,7 +1098,9 @@ class _ReportTabState extends State<ReportTab>
   Widget _respiratoryCard(BuildContext context) {
     final r = widget.respiratory ?? const {};
     if (r.isEmpty) return SizedBox.shrink();
-    final ahi = r['ahi']; final events = r['events']; final snore = r['snore_index'];
+    final ahi = r['ahi'];
+    final events = r['events'] ?? r['eventCount'];
+    final snore = r['snore_index'] ?? r['snoreIndex'];
     return _GlassCard(
       child: Padding(
         padding: EdgeInsets.all(14),
@@ -1108,7 +1120,11 @@ class _ReportTabState extends State<ReportTab>
   Widget _glucoseCard(BuildContext context) {
     final g = widget.glucoseCorrelation ?? const {};
     if (g.isEmpty) return SizedBox.shrink();
-    final corr = g['corr']; final notes = (g['notes'] is List) ? (g['notes'] as List).cast<String>() : <String>[];
+    final corr = g['corr'] ?? g['correlation'];
+    final notesSrc = g['notes'] ?? g['note'];
+    final notes = (notesSrc is List)
+        ? notesSrc.cast<String>()
+        : <String>[];
     return _GlassCard(
       child: Padding(
         padding: EdgeInsets.all(14),
