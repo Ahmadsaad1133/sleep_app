@@ -61,8 +61,6 @@ class ReportTab extends StatefulWidget {
   final Map<String, dynamic>? respiratory; // {'ahi':..,'events':..,'snore_index':..}
   final Map<String, dynamic>? glucoseCorrelation; // {'corr':..,'notes':..}
   final List<String>? actionItems; // actionable to-dos from API
-  final bool? debugShow; // show data presence debug card
-  final Map<String, dynamic>? debugDump; // optional full analysisResult for debug
   final Map<String, dynamic>? causalGraph; // {'nodes':[{id,label,score}], 'edges':[{from,to,weight}]}
   final Map<String, dynamic>? energyTimeline; // {'segments':[{'start':'09:00','end':'11:00','label':'focus','intensity':0.8}]}
   final List<dynamic>? cognitiveWindows; // ['09:00–11:00', ...] or [{'from':'','to':'','label':''}]
@@ -112,8 +110,6 @@ class ReportTab extends StatefulWidget {
     this.recoveryPlan,
     this.nutrition,
     this.streaks,
-    this.debugShow,
-    this.debugDump,
   });
 
   @override
@@ -183,7 +179,6 @@ class _ReportTabState extends State<ReportTab>
                   _kpiRow(context, total, eff, deep, rem, awaken),
                 SizedBox(height: 12),
                 _cardsPager(context, total, deep, rem, light, history),
-                if (widget.debugShow == true) _debugPresenceCard(context),
                 SizedBox(height: 12),
                 if (widget.sleepScore != null || widget.morningReadiness != null || widget.chronotype != null)
                   _scoreAndChrono(context),
@@ -1682,61 +1677,11 @@ class _ReportTabState extends State<ReportTab>
       ),
     );
   }
-
-
-  Widget _debugPresenceCard(BuildContext context) {
-    final entries = <MapEntry<String, bool>>[
-      MapEntry('whatIfScenarios', (widget.whatIfScenarios ?? const []).isNotEmpty),
-      MapEntry('wakeWindows', (widget.wakeWindows ?? const []).isNotEmpty),
-      MapEntry('riskAssessment', (widget.riskAssessment ?? const {}).isNotEmpty),
-      MapEntry('energyPlan', (widget.energyPlan ?? const {}).isNotEmpty),
-      MapEntry('drivers', (widget.drivers ?? const {}).isNotEmpty),
-      MapEntry('achievements', (widget.achievements ?? const []).isNotEmpty),
-      MapEntry('hrvSummary', (widget.hrvSummary ?? const {}).isNotEmpty),
-      MapEntry('respiratory', (widget.respiratory ?? const {}).isNotEmpty),
-      MapEntry('glucoseCorrelation', (widget.glucoseCorrelation ?? const {}).isNotEmpty),
-      MapEntry('actionItems', (widget.actionItems ?? const []).isNotEmpty),
-      MapEntry('causalGraph', (widget.causalGraph ?? const {}).isNotEmpty),
-      MapEntry('energyTimeline', (widget.energyTimeline ?? const {}).isNotEmpty),
-      MapEntry('cognitiveWindows', (widget.cognitiveWindows ?? const []).isNotEmpty),
-      MapEntry('microArousals', (widget.microArousals ?? const {}).isNotEmpty),
-      MapEntry('architectureNotes', (widget.architectureNotes ?? const []).isNotEmpty),
-      MapEntry('recoveryPlan', (widget.recoveryPlan ?? const {}).isNotEmpty),
-      MapEntry('nutrition', (widget.nutrition ?? const {}).isNotEmpty),
-      MapEntry('streaks', (widget.streaks ?? const []).isNotEmpty),
-    ];
-    return _GlassCard(
-      child: Padding(
-        padding: EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _cardHeader('Data presence (debug)'),
-            SizedBox(height: 6),
-            Wrap(spacing: 8, runSpacing: 8, children: [
-              for (final e in entries)
-                _pill(e.key, e.value ? '✓' : '—'),
-            ]),
-            SizedBox(height: 10),
-            if (widget.debugDump != null) ...[
-              Text('analysisResult keys', style: TextStyle(color: Colors.white70)),
-              SizedBox(height: 6),
-              Wrap(spacing: 8, runSpacing: 8, children: [
-                for (final k in widget.debugDump!.keys.take(24))
-                  _pill(k.toString(), ''),
-              ]),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
 }
 
 class _KpiChip extends StatelessWidget {
   final String label;
-  final String value;
+  final String value;//
   final IconData icon;
   final double? delta;
   const _KpiChip({required this.label, required this.value, required this.icon, this.delta});

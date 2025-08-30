@@ -1229,8 +1229,6 @@ class _SleepAnalysisResultPageContentState
     recoveryPlan: recoveryPlan,
     nutrition: nutrition,
     streaks: streaks,
-    debugShow: true,
-      debugDump: analysisData,
 
                             ),
     );
