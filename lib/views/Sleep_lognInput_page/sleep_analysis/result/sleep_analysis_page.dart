@@ -249,7 +249,22 @@ class _SleepAnalysisResultPageContentState
     // Not a list → return empty.
     return <Map<String, dynamic>>[];
   }
+// Add this helper method to convert dynamic maps to string-keyed maps
+  static Map<String, dynamic> _convertToStringKeyedMap(dynamic input) {
+    if (input is! Map) return {};
 
+    return input.map((key, value) {
+      if (value is Map) {
+        return MapEntry(key.toString(), _convertToStringKeyedMap(value));
+      } else if (value is List) {
+        return MapEntry(key.toString(), value.map((item) {
+          if (item is Map) return _convertToStringKeyedMap(item);
+          return item;
+        }).toList());
+      }
+      return MapEntry(key.toString(), value);
+    });
+  }//
   Map<String, double> _asMapDouble(dynamic m) {
     if (m == null) return <String, double>{};
     final raw = _asMap(m);
@@ -1081,9 +1096,30 @@ class _SleepAnalysisResultPageContentState
                                   nestedAnalysis['what_if_scenarios'] ??
                                   _asMap(nestedAnalysis['whatIf'])['scenarios'] ??
                                   nestedAnalysis['whatIfScenarios'];
-                          final List<Map<String, dynamic>> whatIfScenarios =
-                          _asListOfMaps(whatIfRaw);
-                          final dynamic wakeWindows =
+                          // Normalize what‑if scenarios into a list of maps. Strings become {"title": <string>}.
+                          List<Map<String, dynamic>> whatIfScenarios;
+                          final rawList = _asListOfMaps(whatIfRaw);
+                          if (rawList.isNotEmpty) {
+                            whatIfScenarios = rawList.map((e) => Map<String, dynamic>.from(e)).toList();
+                          } else if (whatIfRaw is List) {
+                            whatIfScenarios = (whatIfRaw as List).map<Map<String, dynamic>>((item) {
+                              if (item is Map<String, dynamic>) return Map<String, dynamic>.from(item);
+                              if (item is Map) return Map<String, dynamic>.from(item);
+                              return {'title': item.toString()};
+                            }).toList();
+                          } else if (whatIfRaw is Map) {
+                            whatIfScenarios = [Map<String, dynamic>.from(whatIfRaw as Map)];
+                          } else if (whatIfRaw != null) {
+                            whatIfScenarios = [
+                              {'title': whatIfRaw.toString()},
+                            ];
+                          } else {
+                            whatIfScenarios = <Map<String, dynamic>>[];
+                          }
+
+                          // Normalize wake windows into a list. If a single string or non‑list is provided, wrap it.
+                          List<dynamic> wakeWindows;
+                          final rawWake =
                               rootResult['wake_windows'] ??
                                   _asMap(rootResult['smart_wake'])['windows'] ??
                                   rootResult['wakeWindows'] ??
@@ -1092,26 +1128,91 @@ class _SleepAnalysisResultPageContentState
                                   _asMap(nestedAnalysis['smart_wake'])['windows'] ??
                                   nestedAnalysis['wakeWindows'] ??
                                   _asMap(nestedAnalysis['smartWake'])['windows'];
-                          final Map<String, dynamic> riskAssessment =  _asMap(rootResult['risk_assessment'] ??
+                          if (rawWake == null) {
+                            wakeWindows = <dynamic>[];
+                          } else if (rawWake is List) {
+                            wakeWindows = List<dynamic>.from(rawWake);
+                          } else if (rawWake is String) {
+                            // Attempt to parse JSON list encoded as string
+                            final trimmed = rawWake.trim();
+                            if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+                              try {
+                                final decoded = jsonDecode(trimmed);
+                                if (decoded is List) {
+                                  wakeWindows = List<dynamic>.from(decoded);
+                                } else {
+                                  wakeWindows = [trimmed];
+                                }
+                              } catch (_) {
+                                wakeWindows = [trimmed];
+                              }
+                            } else {
+                              wakeWindows = [rawWake];
+                            }
+                          } else {
+                            wakeWindows = [rawWake];
+                          }
+
+                          // Normalize risk assessment. Expect a map with a `risks` list; if list/string provided, convert accordingly.
+                          final rawRisk = rootResult['risk_assessment'] ??
                               rootResult['riskAssessment'] ??
                               nestedAnalysis['risk_assessment'] ??
-                              nestedAnalysis['riskAssessment']);
-                          final Map<String, dynamic> energyPlan =
-                          _asMap(rootResult['daily_energy_plan'] ??
-                              rootResult['energy_plan'] ??
-                              nestedAnalysis['daily_energy_plan'] ??
-                              nestedAnalysis['energy_plan']);
+                              nestedAnalysis['riskAssessment'];
+                          Map<String, dynamic> riskAssessment;
+                          if (rawRisk is Map<String, dynamic>) {
+                            riskAssessment = Map<String, dynamic>.from(rawRisk);
+                          } else if (rawRisk is Map) {
+                            riskAssessment = Map<String, dynamic>.from(rawRisk);
+                          } else if (rawRisk is List) {
+                            riskAssessment = {'risks': List<dynamic>.from(rawRisk)};
+                          } else if (rawRisk is String) {
+                            riskAssessment = {'risks': [rawRisk]};
+                          } else if (rawRisk != null) {
+                            riskAssessment = {'risks': [rawRisk.toString()]};
+                          } else {
+                            riskAssessment = <String, dynamic>{};
+                          }
+
+                          // Normalize energy plan. Expect a map with optional `steps` list and `title`. If list/string provided, convert accordingly.
+                          final rawPlan =
+                              rootResult['daily_energy_plan'] ??
+                                  rootResult['energy_plan'] ??
+                                  nestedAnalysis['daily_energy_plan'] ??
+                                  nestedAnalysis['energy_plan'];
+                          Map<String, dynamic> energyPlan;
+                          if (rawPlan is Map<String, dynamic>) {
+                            energyPlan = Map<String, dynamic>.from(rawPlan);
+                          } else if (rawPlan is Map) {
+                            energyPlan = Map<String, dynamic>.from(rawPlan);
+                          } else if (rawPlan is List) {
+                            energyPlan = {'steps': List<dynamic>.from(rawPlan)};
+                          } else if (rawPlan is String) {
+                            energyPlan = {'title': rawPlan};
+                          } else if (rawPlan != null) {
+                            energyPlan = {'title': rawPlan.toString()};
+                          } else {
+                            energyPlan = <String, dynamic>{};
+                          }
                           final dynamic executiveSummary =
                               rootResult['executive_summary'] ??
+                                  rootResult['executiveSummary'] ??
                                   nestedAnalysis['executive_summary'] ??
+                                  nestedAnalysis['executiveSummary'] ??
                                   rootResult['summary'] ??
                                   nestedAnalysis['summary'] ??
                                   rootResult['overview'] ??
                                   nestedAnalysis['overview'];
-                          final Map<String, dynamic>? initialReportData =
-                          executiveSummary != null
-                              ? {'executive_summary': executiveSummary}
-                              : null;
+                          final Map<String, dynamic> initialReportData = {
+                            ..._asMap(rootResult),
+                            'analysis': _asMap(nestedAnalysis),
+                            // Always store a plain text executive summary for UI consumption
+                            'executive_summary': ApiService.ensurePlainReportText((executiveSummary ?? '').toString()),
+                            // Normalized lists and maps for report sections
+                            'what_if_scenarios': whatIfScenarios,
+                            'wake_windows': wakeWindows,
+                            'risk_assessment': riskAssessment,
+                            'energy_plan': energyPlan,
+                          };
                           final Map<String, dynamic> drivers =
                           _asMap(rootResult['drivers'] ??
                               nestedAnalysis['drivers']);
@@ -1203,54 +1304,84 @@ class _SleepAnalysisResultPageContentState
                                   rootResult['smartGoals'] ??
                                   nestedAnalysis['smart_goals'] ??
                                   nestedAnalysis['smartGoals']);
+
                           return _wrapTabWithSliverWidget(
                             tabContext,
                             'Report',
                             ReportTab(
-                                initialReportData: initialReportData,
-                                totalSleepHours:
-                                (_lastSleepLog?.durationMinutes ?? 0) / 60.0,
-                                efficiency: (_lastSleepLog?.efficiencyScore ?? 0)
-                                    .toDouble(),
-                                deepPct:
-                                _sleepStages['Deep'] ?? _sleepStages['deep'],
-                                remPct:
-                                _sleepStages['REM'] ?? _sleepStages['rem'],
-                                lightPct: _sleepStages['Light'] ??
-                                    _sleepStages['light'],
+                                initialReportData: initialReportData is Map
+                                    ? _convertToStringKeyedMap(initialReportData)
+                                    : null,
+                                totalSleepHours: (_lastSleepLog?.durationMinutes ?? 0) / 60.0,
+                                efficiency: (_lastSleepLog?.efficiencyScore ?? 0).toDouble(),
+                                deepPct: _sleepStages['Deep'] ?? _sleepStages['deep'],
+                                remPct: _sleepStages['REM'] ?? _sleepStages['rem'],
+                                lightPct: _sleepStages['Light'] ?? _sleepStages['light'],
                                 last7DaysHours: _getWeeklyTrend(),
                                 sleepScore: _sleepScore,
-                                dailyComparison: _dailyComparison,
-                                lifestyleCorrelations:
-                                _getLifestyleCorrelations(),
-                                environmentAnalysis: _sleepEnvironmentAnalysis,
-                                dreamMoodForecast: _dreamMoodForecast,
+                                dailyComparison: _dailyComparison is Map<dynamic, dynamic>
+                                    ? _convertToStringKeyedMap(_dailyComparison as Map<dynamic, dynamic>)
+                                    : _dailyComparison as Map<String, dynamic>,
+                                lifestyleCorrelations: _getLifestyleCorrelations(),
+                                environmentAnalysis: _sleepEnvironmentAnalysis is Map<dynamic, dynamic>
+                                    ? _convertToStringKeyedMap(_sleepEnvironmentAnalysis as Map<dynamic, dynamic>)
+                                    : _sleepEnvironmentAnalysis as Map<String, dynamic>,
+                                dreamMoodForecast: _dreamMoodForecast is Map<dynamic, dynamic>
+                                    ? _convertToStringKeyedMap(_dreamMoodForecast as Map<dynamic, dynamic>)
+                                    : _dreamMoodForecast as Map<String, dynamic>?,
                                 aiHighlights: _aiHighlights,
                                 recommendations: _recommendations,
                                 chronotype: _chronotype,
                                 sleepMidpoint: _sleepMidpoint,
                                 morningReadiness: _getMorningReadiness(),
-                                whatIfScenarios: whatIfScenarios,
-                                wakeWindows: wakeWindows,
-                                riskAssessment: riskAssessment,
-                                energyPlan: energyPlan,
-                                drivers: drivers,
+
+                                // Fix type mismatches by ensuring proper data types
+                                executiveSummary: executiveSummary is String ? executiveSummary : executiveSummary?.toString(),
+                                whatIfScenarios: whatIfScenarios is List ? whatIfScenarios : [],
+                                wakeWindows: wakeWindows is List ? wakeWindows : [],
+                                riskAssessment: riskAssessment is Map<dynamic, dynamic>
+                                    ? _convertToStringKeyedMap(riskAssessment as Map<dynamic, dynamic>)
+                                    : riskAssessment is Map<String, dynamic> ? riskAssessment : {'risks': []},
+                                energyPlan: energyPlan is Map<dynamic, dynamic>
+                                    ? _convertToStringKeyedMap(energyPlan as Map<dynamic, dynamic>)
+                                    : energyPlan is Map<String, dynamic> ? energyPlan : {'title': 'Daily Energy Plan', 'steps': []},
+
+                                drivers: drivers is Map<dynamic, dynamic>
+                                    ? _convertToStringKeyedMap(drivers as Map<dynamic, dynamic>)
+                                    : drivers as Map<String, dynamic>?,
                                 achievements: achievements,
-                                hrvSummary: hrvSummary,
-                                respiratory: respiratory,
-                                glucoseCorrelation: glucoseCorrelation,
+                                hrvSummary: hrvSummary is Map<dynamic, dynamic>
+                                    ? _convertToStringKeyedMap(hrvSummary as Map<dynamic, dynamic>)
+                                    : hrvSummary as Map<String, dynamic>?,
+                                respiratory: respiratory is Map<dynamic, dynamic>
+                                    ? _convertToStringKeyedMap(respiratory as Map<dynamic, dynamic>)
+                                    : respiratory as Map<String, dynamic>?,
+                                glucoseCorrelation: glucoseCorrelation is Map<dynamic, dynamic>
+                                    ? _convertToStringKeyedMap(glucoseCorrelation as Map<dynamic, dynamic>)
+                                    : glucoseCorrelation as Map<String, dynamic>?,
                                 actionItems: actionItems,
-                                causalGraph: causalGraph,
-                                energyTimeline: energyTimeline,
+                                causalGraph: causalGraph is Map<dynamic, dynamic>
+                                    ? _convertToStringKeyedMap(causalGraph as Map<dynamic, dynamic>)
+                                    : causalGraph as Map<String, dynamic>?,
+                                energyTimeline: energyTimeline is Map<dynamic, dynamic>
+                                    ? _convertToStringKeyedMap(energyTimeline as Map<dynamic, dynamic>)
+                                    : energyTimeline as Map<String, dynamic>?,
                                 cognitiveWindows: cognitiveWindowsValue,
-                                microArousals: microArousals,
+                                microArousals: microArousals is Map<dynamic, dynamic>
+                                    ? _convertToStringKeyedMap(microArousals as Map<dynamic, dynamic>)
+                                    : microArousals as Map<String, dynamic>?,
                                 architectureNotes: architectureNotes,
-                                recoveryPlan: recoveryPlan,
-                                nutrition: nutrition,
+                                recoveryPlan: recoveryPlan is Map<dynamic, dynamic>
+                                    ? _convertToStringKeyedMap(recoveryPlan as Map<dynamic, dynamic>)
+                                    : recoveryPlan as Map<String, dynamic>?,
+                                nutrition: nutrition is Map<dynamic, dynamic>
+                                    ? _convertToStringKeyedMap(nutrition as Map<dynamic, dynamic>)
+                                    : nutrition as Map<String, dynamic>?,
                                 streaks: streaks,
                                 smartGoals: smartGoals
                             ),
                           );
+
                         },
                       ),
 

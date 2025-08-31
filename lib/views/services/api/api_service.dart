@@ -126,6 +126,43 @@ class ApiService {
   static final Uri _storyImageUri = Uri.parse('$baseUrl/generate-story-and-image');
   static final Uri _insightsUri = Uri.parse('$baseUrl/insights');
   static const Duration apiTimeout = Duration(seconds: 45);
+
+  /// Recursively decode JSON strings embedded within API responses.
+  ///
+  /// Some endpoints may return values that are themselves JSON-encoded strings
+  /// (e.g. a field like `"wake_windows": "[\"07:30-08:00\", \"08:15-08:45\"]"`).
+  /// This helper will attempt to parse any string that looks like JSON into
+  /// its corresponding Dart representation. Maps and lists are processed
+  /// recursively, while non‑string primitives are returned unchanged.
+  static dynamic _deepJsonParse(dynamic input) {
+    // If it's a string, attempt to decode JSON. If decoding fails, return
+    // the original trimmed string. Otherwise, recursively parse the decoded
+    // value to handle nested JSON.
+    if (input is String) {
+      final trimmed = input.trim();
+      final startsWithBrace = trimmed.startsWith('{') && trimmed.endsWith('}');
+      final startsWithBracket = trimmed.startsWith('[') && trimmed.endsWith(']');
+      if (startsWithBrace || startsWithBracket) {
+        try {
+          final decoded = jsonDecode(trimmed);
+          return _deepJsonParse(decoded);
+        } catch (_) {
+          // Not valid JSON; fall through
+        }
+      }
+      return trimmed;
+    }
+    // If it's a map, recurse into each value
+    if (input is Map) {
+      return input.map((k, v) => MapEntry(k, _deepJsonParse(v)));
+    }
+    // If it's a list, recurse into each element
+    if (input is List) {
+      return input.map((e) => _deepJsonParse(e)).toList();
+    }
+    // Otherwise, return as is
+    return input;
+  }
   static Future<Map<String, String>> _getHeaders() async {
     final user = FirebaseAuth.instance.currentUser;
     String? token;
@@ -830,7 +867,7 @@ Sleep Data:
 
   static String _formatSleepLogsForPrompt(List<SleepLog> logs) {
     final buffer = StringBuffer();
-    final dateFormat = DateFormat('MMM dd, yyyy');
+    final dateFormat = DateFormat('MMM dd, yyyy');//
 
     logs.sort((a, b) => a.date.compareTo(b.date));
 
@@ -1041,8 +1078,23 @@ Output only the JSON object without any additional text.
       throw SleepAnalysisException('Failed to get analysis: ${e.toString()}');
     }
   }
-
+  static Map<String, dynamic> _convertToStringKeyedMap(Map<dynamic, dynamic> dynamicMap) {
+    return dynamicMap.map((key, value) {
+      if (value is Map<dynamic, dynamic>) {
+        return MapEntry(key.toString(), _convertToStringKeyedMap(value));
+      } else if (value is List) {
+        return MapEntry(key.toString(), value.map((item) {
+          if (item is Map<dynamic, dynamic>) {
+            return _convertToStringKeyedMap(item);
+          }
+          return item;
+        }).toList());
+      }
+      return MapEntry(key.toString(), value);
+    });
+  }
   /// Fetches comprehensive sleep analysis (data + environment + context)
+  // Update the fetchSleepAnalysis method
   static Future<Map<String, dynamic>> fetchSleepAnalysis(List<Map<String, dynamic>> sleepData) async {
     final connectivity = await Connectivity().checkConnectivity();
     if (connectivity == ConnectivityResult.none) {
@@ -1117,7 +1169,6 @@ Output only the JSON object without any additional text.
           'nutrition',
           'streaks',
           'smart_goals'
-
         ],
         'user_context': userContext,
         'environment_data': env,
@@ -1131,7 +1182,15 @@ Output only the JSON object without any additional text.
 
       debugPrint('🔍 /sleep-analysis status ${response.statusCode}');
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        final decoded = jsonDecode(response.body);
+
+        // Convert dynamic map to string-keyed map
+        final Map<String, dynamic> result = _convertToStringKeyedMap(decoded);
+
+        // Ensure all required sections exist with proper structure
+        _ensureReportSections(result);
+
+        return result;
       } else {
         throw ApiResponseException(response.statusCode, response.body);
       }
@@ -1142,6 +1201,45 @@ Output only the JSON object without any additional text.
     }
   }
 
+
+// Update the _ensureReportSections method to handle type conversion
+  static void _ensureReportSections(Map<String, dynamic> result) {
+    // Ensure all required sections exist with proper structure
+    final sections = {
+      'executive_summary': '',
+      'risk_assessment': {'risks': []},
+      'daily_energy_plan': {'title': 'Daily Energy Plan', 'steps': []},
+      'wake_windows': [],
+      'what_if_scenarios': [],
+      'recommendations': [],
+      'ai_highlights': []
+    };
+
+    for (final entry in sections.entries) {
+      if (!result.containsKey(entry.key)) {
+        result[entry.key] = entry.value;
+      } else if (result[entry.key] is Map<dynamic, dynamic>) {
+        // Convert dynamic map to string-keyed map
+        result[entry.key] = _convertToStringKeyedMap(result[entry.key] as Map<dynamic, dynamic>);
+      }
+    }
+
+    // Ensure nested analysis structure exists
+    if (!result.containsKey('analysis')) {
+      result['analysis'] = {};
+    } else if (result['analysis'] is Map<dynamic, dynamic>) {
+      result['analysis'] = _convertToStringKeyedMap(result['analysis'] as Map<dynamic, dynamic>);
+    }
+
+    final analysis = result['analysis'] as Map<String, dynamic>;
+    for (final entry in sections.entries) {
+      if (!analysis.containsKey(entry.key)) {
+        analysis[entry.key] = entry.value;
+      } else if (analysis[entry.key] is Map<dynamic, dynamic>) {
+        analysis[entry.key] = _convertToStringKeyedMap(analysis[entry.key] as Map<dynamic, dynamic>);
+      }
+    }
+  }
   static Future<SleepPlan> generateSleepPlan(String analysisSummary) async {
     return _retry(() async {
       final connectivity = await Connectivity().checkConnectivity();

@@ -1,6 +1,8 @@
 
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -26,6 +28,7 @@ class ReportTab extends StatefulWidget {
   final num? sleepScore;
 
   // Sections
+  final dynamic executiveSummary;
   final dynamic dailyComparison;
   final dynamic lifestyleCorrelations;
   final dynamic environmentAnalysis;
@@ -54,6 +57,7 @@ class ReportTab extends StatefulWidget {
   final dynamic nutrition;
   final dynamic streaks;
   final dynamic smartGoals;
+
 
   const ReportTab({
     Key? key,
@@ -96,7 +100,7 @@ class ReportTab extends StatefulWidget {
     this.recoveryPlan,
     this.nutrition,
     this.streaks,
-    this.smartGoals,
+    this.smartGoals, this.executiveSummary,
   }) : super(key: key);
 
   @override
@@ -115,273 +119,12 @@ class _ReportTabState extends State<ReportTab> {
     final legacy = _legacyParamsAsMap();
     if (legacy.isNotEmpty) {
       _data = {...?_data, ...legacy};
+
     }
     if (_data == null && widget.loadReport != null) {
       _fetchOnce();
     }
   }
-
-  Map<String, dynamic> _legacyParamsAsMap() {
-    final m = <String, dynamic>{};
-
-    if (widget.totalSleepHours != null ||
-        widget.efficiency != null ||
-        widget.deepPct != null ||
-        widget.remPct != null ||
-        widget.lightPct != null ||
-        widget.last7DaysHours != null ||
-        widget.sleepScore != null) {
-      m['metrics'] = {
-        if (widget.totalSleepHours != null) 'total_sleep_hours': widget.totalSleepHours,
-        if (widget.efficiency != null) 'sleep_efficiency': widget.efficiency,
-        if (widget.deepPct != null) 'deep_pct': widget.deepPct,
-        if (widget.remPct != null) 'rem_pct': widget.remPct,
-        if (widget.lightPct != null) 'light_pct': widget.lightPct,
-        if (widget.last7DaysHours != null) 'last7days_hours': widget.last7DaysHours,
-        if (widget.sleepScore != null) 'sleep_score': widget.sleepScore,
-      };
-    }
-
-    void put(String key, dynamic val) { if (val != null) m[key] = val; }
-    put('daily_comparison', widget.dailyComparison);
-    put('lifestyle_correlations', widget.lifestyleCorrelations);
-    put('environment_analysis', widget.environmentAnalysis);
-    put('dream_mood_forecast', widget.dreamMoodForecast);
-    put('ai_highlights', widget.aiHighlights);
-    put('recommendations', widget.recommendations);
-    put('chronotype', widget.chronotype);
-    put('sleep_midpoint', widget.sleepMidpoint);
-    put('morning_readiness', widget.morningReadiness);
-    put('what_if_scenarios', widget.whatIfScenarios);
-    put('wake_windows', widget.wakeWindows);
-    put('risk_assessment', widget.riskAssessment);
-    put('energy_plan', widget.energyPlan);
-    put('drivers', widget.drivers);
-    put('achievements', widget.achievements);
-    put('hrv_summary', widget.hrvSummary);
-    put('respiratory', widget.respiratory);
-    put('glucose_correlation', widget.glucoseCorrelation);
-    put('action_items', widget.actionItems);
-    put('causal_graph', widget.causalGraph);
-    put('energy_timeline', widget.energyTimeline);
-    put('cognitive_windows', widget.cognitiveWindows);
-    put('micro_arousals', widget.microArousals);
-    put('architecture_notes', widget.architectureNotes);
-    put('recovery_plan', widget.recoveryPlan);
-    put('nutrition', widget.nutrition);
-    put('streaks', widget.streaks);
-    put('smart_goals', widget.smartGoals);
-
-    return m;
-  }
-
-  Future<void> _fetchOnce() async {
-    if (_loading) return;
-    setState(() { _loading = true; _error = null; });
-    try {
-      final res = await widget.loadReport!.call();
-      final normalized = _asStringKeyedMap(res);
-      if (mounted) {
-        setState(() {
-          _data = {...?_data, ...normalized};
-          _loading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() { _error = e; _loading = false; });
-      }
-    }
-  }
-
-  Map<String, dynamic> _asStringKeyedMap(Map input) {
-    return input.map((key, value) => MapEntry(key.toString(), value));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    // Non-scroll content to be embedded inside parent sliver
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _Header(),
-          SizedBox(height: 12.h),
-          if (_loading) _SkeletonList(),
-          if (_error != null) _ErrorBox(error: _error),
-          if (!_loading && _error == null) ...[
-            _buildExecutiveSummary(theme),
-            SizedBox(height: 12.h),
-            _buildKeyMetrics(theme),
-            SizedBox(height: 12.h),
-            _buildRiskAssessment(theme),
-            SizedBox(height: 12.h),
-            _buildEnergyPlan(theme),
-            SizedBox(height: 12.h),
-            _buildWakeWindows(theme),
-            SizedBox(height: 12.h),
-            _buildWhatIfScenarios(theme),
-            SizedBox(height: 24.h),
-          ],
-        ],
-      ),
-    );
-  }
-
-  // ---- Sections ----
-
-  Widget _buildExecutiveSummary(ThemeData theme) {
-    final text = _readString(['executive_summary', 'summary', 'overview']);
-    return _SectionCard(
-      title: 'Executive Summary',
-      subtitle: 'One-glance recap of your night',
-      child: text.isEmpty
-          ? _EmptyText('No summary available yet.')
-          : Text(
-        text,
-        style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14.sp, height: 1.35),
-      ),
-    );
-  }
-
-  Widget _buildKeyMetrics(ThemeData theme) {
-    final totalSleep = widget.totalSleepHours ?? _readNum(['metrics.total_sleep_hours', 'metrics.totalSleepHours', 'total_sleep_hours']).toDouble();
-    final efficiency = widget.efficiency ?? _readNum(['metrics.sleep_efficiency', 'metrics.sleepEfficiency', 'sleep_efficiency']).toDouble();
-
-    num deep = widget.deepPct ?? _readNum(['metrics.deep_pct', 'sleep_stages.deep', 'sleepStages.deep', 'deepPct']);
-    num rem  = widget.remPct  ?? _readNum(['metrics.rem_pct', 'sleep_stages.rem',  'sleepStages.rem',  'remPct']);
-    num light= widget.lightPct?? _readNum(['metrics.light_pct','sleep_stages.light','sleepStages.light','lightPct']);
-
-    final items = [
-      _MetricItem(label: 'Total Sleep', value: (totalSleep > 0) ? '${totalSleep.toStringAsFixed(1)} h' : '—'),
-      _MetricItem(label: 'Efficiency', value: (efficiency > 0) ? '${efficiency.toStringAsFixed(0)}%' : '—'),
-      _MetricItem(label: 'Deep', value: (deep >= 0) ? '${deep.toStringAsFixed(0)}%' : '—'),
-      _MetricItem(label: 'REM', value: (rem >= 0) ? '${rem.toStringAsFixed(0)}%' : '—'),
-      _MetricItem(label: 'Light', value: (light >= 0) ? '${light.toStringAsFixed(0)}%' : '—'),
-    ];
-
-    return _SectionCard(
-      title: 'Sleep Efficiency & Stages',
-      subtitle: 'Core quality indicators',
-      child: _MetricsGrid(items: items),
-    );
-  }
-
-  Widget _buildRiskAssessment(ThemeData theme) {
-    List risks = const [];
-    if (widget.riskAssessment is Map && (widget.riskAssessment as Map)['risks'] is List) {
-      risks = List.from((widget.riskAssessment as Map)['risks']);
-    } else {
-      risks = _readList(['risk_assessment.risks', 'riskAssessment.risks']);
-    }
-
-    return _SectionCard(
-      title: 'Risk Assessment',
-      subtitle: 'Potential sleep disruptors',
-      child: (risks.isEmpty)
-          ? _EmptyText('No notable risks detected.')
-          : Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (final r in risks.take(6))
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 6.h),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 8.w,
-                    height: 8.w,
-                    margin: EdgeInsets.only(top: 6.h, right: 10.w),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: theme.colorScheme.primary.withOpacity(.9),
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      r.toString(),
-                      style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14.sp, height: 1.35),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEnergyPlan(ThemeData theme) {
-    List steps = const [];
-    String headline = 'Daily Energy Plan';
-
-    if (widget.energyPlan is Map) {
-      final map = widget.energyPlan as Map;
-      if (map['steps'] is List) steps = List.from(map['steps']);
-      if (map['title'] != null) headline = map['title'].toString();
-    } else {
-      steps = _readList(['energy_plan.steps', 'energyPlan.steps', 'plan.steps']);
-      headline = _readString(['energy_plan.title', 'energyPlan.title'], fallback: headline);
-    }
-
-    return _SectionCard(
-      title: headline,
-      subtitle: 'Simple steps to feel better today',
-      child: steps.isEmpty
-          ? _EmptyText('No plan generated yet.')
-          : Column(children: [for (final s in steps.take(6)) _StepRow(text: s.toString())]),
-    );
-  }
-
-  Widget _buildWakeWindows(ThemeData theme) {
-    List windows;
-    if (widget.wakeWindows is List) {
-      windows = List.from(widget.wakeWindows as List);
-    } else {
-      windows = _readList(['wake_windows', 'wakeWindows']);
-    }
-    return _SectionCard(
-      title: 'Suggested Wake Windows',
-      subtitle: 'Optimal times to start your day',
-      child: windows.isEmpty
-          ? _EmptyText('No wake windows available.')
-          : Wrap(
-        spacing: 8.w,
-        runSpacing: 8.h,
-        children: [for (final w in windows) _Chip(text: w.toString())],
-      ),
-    );
-  }
-  Widget _buildWhatIfScenarios(ThemeData theme) {
-    List scenarios;
-    if (widget.whatIfScenarios is List) {
-      scenarios = List.from(widget.whatIfScenarios as List);
-    } else {
-      scenarios = _readList(['what_if_scenarios', 'whatIfScenarios']);
-    }
-
-    return _SectionCard(
-      title: 'What-If Scenarios',
-      subtitle: 'Small changes, predicted impact',
-      child: scenarios.isEmpty
-          ? _EmptyText('Add more sleep logs to unlock simulations.')
-          : Column(
-        children: scenarios
-            .map((s) => ListTile(
-          leading: const Icon(Icons.auto_graph),
-          title: Text(s.toString()),
-        ))
-            .toList(),
-      ),
-    );
-  }
-
-
-  // ---- Safe readers ----
 
   String _readString(List<String> keys, {String fallback = ''}) {
     final map = _data;
@@ -429,7 +172,306 @@ class _ReportTabState extends State<ReportTab> {
     }
     return current;
   }
+  Map<String, dynamic> _legacyParamsAsMap() {
+    final m = <String, dynamic>{};
+
+    if (widget.totalSleepHours != null ||
+        widget.efficiency != null ||
+        widget.deepPct != null ||
+        widget.remPct != null ||
+        widget.lightPct != null ||
+        widget.last7DaysHours != null ||
+        widget.sleepScore != null) {
+      m['metrics'] = {
+        if (widget.totalSleepHours != null) 'total_sleep_hours': widget.totalSleepHours,
+        if (widget.efficiency != null) 'sleep_efficiency': widget.efficiency,
+        if (widget.deepPct != null) 'deep_pct': widget.deepPct,
+        if (widget.remPct != null) 'rem_pct': widget.remPct,
+        if (widget.lightPct != null) 'light_pct': widget.lightPct,
+        if (widget.last7DaysHours != null) 'last7days_hours': widget.last7DaysHours,
+        if (widget.sleepScore != null) 'sleep_score': widget.sleepScore,
+      };
+    }
+
+    void put(String key, dynamic val) {
+      if (val != null) {
+        if (val is Map<dynamic, dynamic>) {
+          m[key] = _convertToStringKeyedMap(val);
+        } else {
+          m[key] = val;
+        }
+      }
+    }
+
+    put('daily_comparison', widget.dailyComparison);
+    put('lifestyle_correlations', widget.lifestyleCorrelations);
+    put('environment_analysis', widget.environmentAnalysis);
+    put('dream_mood_forecast', widget.dreamMoodForecast);
+    put('ai_highlights', widget.aiHighlights);
+    put('recommendations', widget.recommendations);
+    put('chronotype', widget.chronotype);
+    put('sleep_midpoint', widget.sleepMidpoint);
+    put('morning_readiness', widget.morningReadiness);
+    put('what_if_scenarios', widget.whatIfScenarios);
+    put('wake_windows', widget.wakeWindows);
+    put('risk_assessment', widget.riskAssessment);
+    put('energy_plan', widget.energyPlan);
+    put('drivers', widget.drivers);
+    put('achievements', widget.achievements);
+    put('hrv_summary', widget.hrvSummary);
+    put('respiratory', widget.respiratory);
+    put('glucose_correlation', widget.glucoseCorrelation);
+    put('action_items', widget.actionItems);
+    put('causal_graph', widget.causalGraph);
+    put('energy_timeline', widget.energyTimeline);
+    put('cognitive_windows', widget.cognitiveWindows);
+    put('micro_arousals', widget.microArousals);
+    put('architecture_notes', widget.architectureNotes);
+    put('recovery_plan', widget.recoveryPlan);
+    put('nutrition', widget.nutrition);
+    put('streaks', widget.streaks);
+    put('smart_goals', widget.smartGoals);
+
+    return m;
+  }
+
+// Add this helper method to convert dynamic maps to string-keyed maps
+  Map<String, dynamic> _convertToStringKeyedMap(Map<dynamic, dynamic> dynamicMap) {
+    return dynamicMap.map((key, value) {
+      if (value is Map<dynamic, dynamic>) {
+        return MapEntry(key.toString(), _convertToStringKeyedMap(value));
+      } else if (value is List) {
+        return MapEntry(key.toString(), value.map((item) {
+          if (item is Map<dynamic, dynamic>) {
+            return _convertToStringKeyedMap(item);
+          }
+          return item;
+        }).toList());
+      }
+      return MapEntry(key.toString(), value);
+    });
+  }
+
+  Future<void> _fetchOnce() async {
+    if (_loading) return;
+    setState(() { _loading = true; _error = null; });
+    try {
+      final res = await widget.loadReport!.call();
+      final normalized = _asStringKeyedMap(res);
+      if (mounted) {
+        setState(() {
+          _data = {...?_data, ...normalized};
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() { _error = e; _loading = false; });
+      }
+    }
+  }
+
+  Map<String, dynamic> _asStringKeyedMap(Map input) {
+    return input.map((key, value) => MapEntry(key.toString(), value));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    // Non-scroll content to be embedded inside parent sliver
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _Header(),
+          SizedBox(height: 12.h),
+          if (_loading) _SkeletonList(),
+          if (_error != null) _ErrorBox(error: _error),
+          if (!_loading && _error == null) ...[
+            _buildExecutiveSummary(theme),
+            SizedBox(height: 12.h),
+            _buildRiskAssessment(theme),
+            SizedBox(height: 12.h),
+            _buildEnergyPlan(theme),
+            SizedBox(height: 12.h),
+            _buildWakeWindows(theme),
+            SizedBox(height: 12.h),
+            _buildWhatIfScenarios(theme),
+            SizedBox(height: 24.h),
+          ],
+        ],
+      ),
+    );
+  }
+
+
+  // ---- Sections ----
+  Widget _buildExecutiveSummary(ThemeData theme) {
+    // Try to read from both legacy parameter and data map
+    final legacySummary = widget.executiveSummary;
+    var raw = legacySummary is String ? legacySummary :
+    _readString(['executive_summary', 'executiveSummary', 'summary', 'overview']);
+
+    final text = _ensurePlainReportText(raw);
+    return _SectionCard(
+      title: 'Executive Summary',
+      subtitle: 'One-glance recap of your night',
+      child: text.isEmpty
+          ? _EmptyText('No summary available yet.')
+          : Text(
+        text,
+        style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14.sp, height: 1.35),
+      ),
+    );
+  }
+
+  Widget _buildRiskAssessment(ThemeData theme) {
+    // Try to read from legacy parameter first
+    dynamic riskData = widget.riskAssessment;
+    List risks = const [];
+
+    if (riskData is Map && riskData['risks'] is List) {
+      risks = List.from(riskData['risks']);
+    } else if (riskData is List) {
+      risks = List.from(riskData);
+    } else {
+      // Fall back to stored data
+      risks = _readList([
+        'risk_assessment.risks',
+        'riskAssessment.risks',
+        'risk_assessment',
+        'riskAssessment'
+      ]);
+    }
+
+    return _SectionCard(
+      title: 'Risk Assessment',
+      subtitle: 'Potential sleep disruptors',
+      child: (risks.isEmpty)
+          ? _EmptyText('No notable risks detected.')
+          : Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final r in risks.take(6))
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 6.h),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 8.w,
+                    height: 8.w,
+                    margin: EdgeInsets.only(top: 6.h, right: 10.w),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: theme.colorScheme.primary.withOpacity(.9),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      r.toString(),
+                      style: theme.textTheme.bodyMedium?.copyWith(height: 1.35),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEnergyPlan(ThemeData theme) {
+    // Try to read from legacy parameter first
+    dynamic energyData = widget.energyPlan;
+    List steps = const [];
+    String headline = 'Daily Energy Plan';
+
+    if (energyData is Map) {
+      if (energyData['steps'] is List) steps = List.from(energyData['steps']);
+      if (energyData['title'] != null) headline = energyData['title'].toString();
+    } else if (energyData is List) {
+      steps = List.from(energyData);
+    } else {
+      // Fall back to stored data
+      steps = _readList(['energy_plan.steps', 'energyPlan.steps', 'plan.steps']);
+      headline = _readString([
+        'energy_plan.title',
+        'energyPlan.title'
+      ], fallback: headline);
+    }
+
+    return _SectionCard(
+      title: headline,
+      subtitle: 'Simple steps to feel better today',
+      child: steps.isEmpty
+          ? _EmptyText('No plan generated yet.')
+          : Column(children: [for (final s in steps.take(6)) _StepRow(text: s.toString())]),
+    );
+  }
+
+  Widget _buildWakeWindows(ThemeData theme) {
+    // Try to read from legacy parameter first
+    dynamic windowsData = widget.wakeWindows;
+    List windows = [];
+
+    if (windowsData is List) {
+      windows = List.from(windowsData);
+    } else {
+      // Fall back to stored data
+      windows = _readList(['wake_windows', 'wakeWindows']);
+    }
+
+    return _SectionCard(
+      title: 'Suggested Wake Windows',
+      subtitle: 'Optimal times to start your day',
+      child: windows.isEmpty
+          ? _EmptyText('No wake windows available.')
+          : Wrap(
+        spacing: 8.w,
+        runSpacing: 8.h,
+        children: [for (final w in windows) _Chip(text: w.toString())],
+      ),
+    );
+  }
+
+  Widget _buildWhatIfScenarios(ThemeData theme) {
+    // Try to read from legacy parameter first
+    dynamic scenariosData = widget.whatIfScenarios;
+    List scenarios = [];
+
+    if (scenariosData is List) {
+      scenarios = List.from(scenariosData);
+    } else {
+      // Fall back to stored data
+      scenarios = _readList(['what_if_scenarios', 'whatIfScenarios', 'scenarios', 'items']);
+    }
+
+    return _SectionCard(
+      title: 'What-If Scenarios',
+      subtitle: 'Small changes, predicted impact',
+      child: scenarios.isEmpty
+          ? _EmptyText('Add more sleep logs to unlock simulations.')
+          : Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final s in scenarios)
+            Padding(
+              padding: EdgeInsets.only(bottom: 8.h),
+              child: _BulletItem(
+                title: s is Map && s['title'] != null ? s['title'].toString() : s.toString(),
+                subtitle: s is Map && s['impact'] != null ? s['impact'].toString() : null,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
+
+
 
 // ---- UI Pieces ----
 
@@ -550,6 +592,49 @@ class _SectionCard extends StatelessWidget {
           child,
         ],
       ),
+    );
+  }
+}
+// ADD THIS WIDGET in report_tab.dart (after _SectionCard is fine)
+class _BulletItem extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+
+  const _BulletItem({Key? key, required this.title, this.subtitle}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.only(top: 4.h),
+              child: Text('•', style: theme.textTheme.titleMedium),
+            ),
+            SizedBox(width: 8.w),
+            Expanded(
+              child: Text(
+                title,
+                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+        if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
+          SizedBox(height: 4.h),
+          Padding(
+            padding: EdgeInsets.only(left: 18.w),
+            child: Text(
+              subtitle!,
+              style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+            ),
+          ),
+        ]
+      ],
     );
   }
 }
@@ -802,5 +887,84 @@ class _ErrorBox extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+
+extension ReportTabStateSanitizer on _ReportTabState {
+  String _ensurePlainReportText(dynamic input) {
+    if (input == null) return '';
+    if (input is String) {
+      final s = input.trim();
+      // Strip fenced code blocks ```...```
+      final fence = RegExp(r'^```(?:[\\w+-]+)?\\s*([\\s\\S]*?)\\s*```$');
+      final m = fence.firstMatch(s);
+      final content = m != null ? (m.group(1) ?? '').trim() : s;
+
+      // Try to parse JSON-like strings
+      if (content.startsWith('{') || content.startsWith('[')) {
+        try {
+          final decoded = jsonDecode(content);
+          return _flattenJson(decoded).trim();
+        } catch (_) {
+          // fall through
+        }
+      }
+      // Unquote stray quotes
+      final unquoted = content.replaceAll(RegExp(r'^[\\s"]+|[\\s"]+$'), '');
+      return unquoted;
+    }
+    if (input is List) {
+      final items = input
+          .map((e) => _ensurePlainReportText(e))
+          .where((e) => e.isNotEmpty)
+          .toList();
+      if (items.isEmpty) return '';
+      return '• ' + items.join('\\n• ');
+    }
+    if (input is Map) {
+      return _flattenJson(input).trim();
+    }
+    return input.toString();
+  }
+
+  String _flattenJson(dynamic v, {int depth = 0}) {
+    final indent = '  ' * depth;
+    if (v is Map) {
+      final buf = StringBuffer();
+      v.forEach((key, val) {
+        if (val == null) return;
+        final k = _titleize(key.toString());
+        if (val is Map || val is List) {
+          buf.writeln('$indent• $k:');
+          buf.writeln(_flattenJson(val, depth: depth + 1));
+        } else {
+          buf.writeln('$indent• $k: ${val.toString()}');
+        }
+      });
+      return buf.toString();
+    }
+    if (v is List) {
+      final buf = StringBuffer();
+      for (final e in v) {
+        if (e is Map || e is List) {
+          buf.writeln('$indent•');
+          buf.writeln(_flattenJson(e, depth: depth + 1));
+        } else {
+          buf.writeln('$indent• ${e.toString()}');
+        }
+      }
+      return buf.toString();
+    }
+    return '$indent• ${v.toString()}';
+  }
+
+  String _titleize(String s) {
+    // snake_case and camelCase -> Title Case
+    var t = s.replaceAll('_', ' ');
+    t = t.replaceAllMapped(RegExp(r'(?<!^)([A-Z])'), (m) => ' ${m.group(1)}');
+    t = t.trim();
+    if (t.isEmpty) return t;
+    return t[0].toUpperCase() + t.substring(1);
   }
 }
