@@ -121,8 +121,31 @@ class _ReportTabState extends State<ReportTab> {
       _data = {...?_data, ...legacy};
 
     }
-    if (_data == null && widget.loadReport != null) {
-      _fetchOnce();
+
+    if (widget.loadReport != null) {
+      final sectionPaths = [
+        'executive_summary',
+        'executiveSummary',
+        'risk_assessment',
+        'riskAssessment',
+        'energy_plan',
+        'energyPlan',
+        'wake_windows',
+        'wakeWindows',
+        'sections.executive_summary',
+        'sections.executiveSummary',
+        'sections.risk_assessment',
+        'sections.riskAssessment',
+        'sections.energy_plan',
+        'sections.energyPlan',
+        'sections.wake_windows',
+        'sections.wakeWindows',
+      ];
+      final hasSections = _data != null && sectionPaths.any((k) => _readByPath(_data!, k) != null);
+
+      if (!hasSections) {
+        _fetchOnce();
+      }
     }
   }
 
@@ -160,7 +183,23 @@ class _ReportTabState extends State<ReportTab> {
     }
     return const [];
   }
+  bool _hasMeaningful(dynamic v) {
+    if (v == null) return false;
+    if (v is String) return v.trim().isNotEmpty;
+    if (v is Iterable) return v.isNotEmpty;
+    if (v is Map) return v.isNotEmpty;
+    return true;
+  }
 
+  dynamic _readAny(List<String> keys) {
+    final map = _data;
+    if (map == null) return null;
+    for (final k in keys) {
+      final v = _readByPath(map, k);
+      if (_hasMeaningful(v)) return v;
+    }
+    return null;
+  }
   dynamic _readByPath(Map source, String path) {
     dynamic current = source;
     for (final part in path.split('.')) {
@@ -202,7 +241,7 @@ class _ReportTabState extends State<ReportTab> {
         }
       }
     }
-
+    put('executive_summary', widget.executiveSummary);
     put('daily_comparison', widget.dailyComparison);
     put('lifestyle_correlations', widget.lifestyleCorrelations);
     put('environment_analysis', widget.environmentAnalysis);
@@ -272,7 +311,7 @@ class _ReportTabState extends State<ReportTab> {
   }
 
   Map<String, dynamic> _asStringKeyedMap(Map input) {
-    return input.map((key, value) => MapEntry(key.toString(), value));
+    return _convertToStringKeyedMap(input.cast<dynamic, dynamic>());
   }
 
   @override
@@ -311,8 +350,16 @@ class _ReportTabState extends State<ReportTab> {
   Widget _buildExecutiveSummary(ThemeData theme) {
     // Try to read from both legacy parameter and data map
     final legacySummary = widget.executiveSummary;
-    var raw = legacySummary is String ? legacySummary :
-    _readString(['executive_summary', 'executiveSummary', 'summary', 'overview']);
+    var raw = legacySummary is String
+        ? legacySummary
+        : _readString([
+      'executive_summary',
+      'executiveSummary',
+      'summary',
+      'overview',
+      'sections.executive_summary',//
+      'sections.executiveSummary',
+    ]);
 
     final text = _ensurePlainReportText(raw);
     return _SectionCard(
@@ -342,7 +389,11 @@ class _ReportTabState extends State<ReportTab> {
         'risk_assessment.risks',
         'riskAssessment.risks',
         'risk_assessment',
-        'riskAssessment'
+        'riskAssessment',
+        'sections.risk_assessment.risks',
+        'sections.riskAssessment.risks',
+        'sections.risk_assessment',
+        'sections.riskAssessment',
       ]);
     }
 
@@ -396,10 +447,18 @@ class _ReportTabState extends State<ReportTab> {
       steps = List.from(energyData);
     } else {
       // Fall back to stored data
-      steps = _readList(['energy_plan.steps', 'energyPlan.steps', 'plan.steps']);
+      steps = _readList([
+        'energy_plan.steps',
+        'energyPlan.steps',
+        'plan.steps',
+        'sections.energy_plan.steps',
+        'sections.energyPlan.steps',
+      ]);
       headline = _readString([
         'energy_plan.title',
-        'energyPlan.title'
+        'energyPlan.title',
+        'sections.energy_plan.title',
+        'sections.energyPlan.title',
       ], fallback: headline);
     }
 
@@ -421,7 +480,14 @@ class _ReportTabState extends State<ReportTab> {
       windows = List.from(windowsData);
     } else {
       // Fall back to stored data
-      windows = _readList(['wake_windows', 'wakeWindows']);
+      windows = _readList([
+        'wake_windows',
+        'wakeWindows',
+        'sections.wake_windows',
+        'sections.wake_windows.items',
+        'sections.wakeWindows',
+        'sections.wakeWindows.items',
+      ]);
     }
 
     return _SectionCard(
@@ -446,7 +512,18 @@ class _ReportTabState extends State<ReportTab> {
       scenarios = List.from(scenariosData);
     } else {
       // Fall back to stored data
-      scenarios = _readList(['what_if_scenarios', 'whatIfScenarios', 'scenarios', 'items']);
+      scenarios = _readList([
+        'what_if_scenarios',
+        'whatIfScenarios',
+        'scenarios',
+        'items',
+        'sections.what_if_scenarios',
+        'sections.what_if_scenarios.items',
+        'sections.whatIfScenarios',
+        'sections.whatIfScenarios.items',
+        'sections.scenarios',
+        'sections.items',
+      ]);
     }
 
     return _SectionCard(

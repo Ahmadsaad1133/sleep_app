@@ -1225,10 +1225,14 @@ Output only the JSON object without any additional text.
     }
 
     // Ensure nested analysis structure exists
-    if (!result.containsKey('analysis')) {
-      result['analysis'] = {};
+    if (!result.containsKey('analysis') || result['analysis'] is! Map) {
+      // If analysis section is missing or not in the expected Map format,
+      // initialize it to an empty map to avoid type cast errors.
+      result['analysis'] = <String, dynamic>{};
     } else if (result['analysis'] is Map<dynamic, dynamic>) {
-      result['analysis'] = _convertToStringKeyedMap(result['analysis'] as Map<dynamic, dynamic>);
+      // Convert dynamic map to a proper string-keyed map.
+      result['analysis'] =
+          _convertToStringKeyedMap(result['analysis'] as Map<dynamic, dynamic>);
     }
 
     final analysis = result['analysis'] as Map<String, dynamic>;
