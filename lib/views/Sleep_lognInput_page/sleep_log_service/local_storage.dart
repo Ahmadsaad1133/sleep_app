@@ -20,8 +20,9 @@ class SleepLogLocalStorage {
     return SleepLog.fromMap(map);
   }
 
-  static Future<void> clear() async {
+  static Future<void> clearPartial() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_key);
   }
+static Future<void> clear() => clearPartial();
 }

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_loginput/widgets/disturbance_section.dart';
 import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_loginput/widgets/enviroment_section.dart';
 
@@ -11,6 +13,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../sleep_analysis/loading/ai_loading_analysis_page.dart';
 import '../sleep_analysis/models/sleeplog_model_page.dart';
 import '../sleep_log_service/local_storage.dart';
 // Import your section widgets here
@@ -111,8 +114,13 @@ class _SleepLogFlowState extends State<_SleepLogFlow> {
       await SleepLogLocalStorage.clearPartial();
       if (mounted) {
         Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const AiLoadingAnalysisPage()),
+          MaterialPageRoute(
+            builder: (_) => AILoadingAnalysisPage(
+              sleepLog: context.read<SleepLog>(),
+            ),
+          ),
         );
+
       }
     }
   }
