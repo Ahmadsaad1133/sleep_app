@@ -3,41 +3,18 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 import '../../../../constants/fonts.dart';
 import '../../sleep_analysis/models/sleeplog_model_page.dart';
-
+import 'step_wrapper.dart';
 class InputSection extends StatelessWidget {
   const InputSection({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle('COSMIC HABITS'),
-        const SizedBox(height: 16),
-        _buildHabitTilesRow(context),
-      ],
-    );
-  }
-
-  Widget _buildSectionTitle(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 0),
-      child: AutoSizeText(
-        text,
-        maxLines: 1,
-        minFontSize: 12,
-        maxFontSize: 14,
-        style: TextStyle(
-          color: Colors.blueGrey[100]!.withOpacity(0.8),
-          fontSize: 14,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 1.5,
-          fontFamily: AppFonts.ComfortaaBold,
-        ),
-      ),
+    return StepWrapper(
+      title: 'Pre-Bed Habits',
+      icon: Icons.nightlight_round,
+      child: _buildHabitTilesRow(context),
     );
   }
 

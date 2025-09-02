@@ -2,7 +2,7 @@
 import 'dart:math';
 
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_loginput/widgets/section_title.dart';
+import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_loginput/widgets/step_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -19,13 +19,13 @@ class QualitySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionTitle('COSMIC SLEEP QUALITY', icon: Icons.star_border),
-        SizedBox(height: ScreenUtils.height(16)),
-        const _QualityCard(),
-      ],
+    return StepWrapper(
+      title: 'Sleep Quality',
+      icon: Icons.star_border,
+      child: Padding(
+        padding: EdgeInsets.only(top: ScreenUtils.height(16)),
+        child: const _QualityCard(),
+      ),
     );
   }
 }

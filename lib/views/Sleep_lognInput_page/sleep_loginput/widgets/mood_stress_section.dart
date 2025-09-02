@@ -1,5 +1,6 @@
 // lib/widgets/mood_stress_section.dart
 import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_loginput/widgets/section_title.dart';
+import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_loginput/widgets/step_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
@@ -14,12 +15,9 @@ class MoodStressSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionTitle('MOOD & STRESS'),
-        SizedBox(height: ScreenUtils.height(12)),
-        Container(
+    return StepWrapper(
+      title: 'Mood & Stress',
+      child: Container(
           decoration: BoxDecoration(
             gradient: const RadialGradient(
               center: Alignment.topCenter,
@@ -48,7 +46,6 @@ class MoodStressSection extends StatelessWidget {
             },
           ),
         ),
-      ],
     );
   }
 }

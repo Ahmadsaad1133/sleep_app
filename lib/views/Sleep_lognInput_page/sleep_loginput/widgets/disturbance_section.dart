@@ -26,8 +26,6 @@ class DisturbanceSection extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionTitle('SLEEP DISTURBANCES'),
-            SizedBox(height: ScreenUtils.height(16)),
             Wrap(
               spacing: ScreenUtils.width(12),
               runSpacing: ScreenUtils.height(12),
@@ -38,29 +36,6 @@ class DisturbanceSection extends StatelessWidget {
           ],
         );
       },
-    );
-  }
-
-  Widget _buildSectionTitle(String text) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: ScreenUtils.width(4),
-        bottom: ScreenUtils.height(8),
-      ),
-      child: Shimmer(
-        duration: const Duration(seconds: 3),
-        child: AutoSizeText(
-          text,
-          maxLines: 1,
-          minFontSize: 12,
-          style: TextStyle(
-            color: Colors.blueGrey[100]!.withOpacity(0.8),
-            fontSize: ScreenUtils.textScale(14),
-            fontWeight: FontWeight.w600,
-            letterSpacing: 1.5,
-          ),
-        ),
-      ),
     );
   }
 

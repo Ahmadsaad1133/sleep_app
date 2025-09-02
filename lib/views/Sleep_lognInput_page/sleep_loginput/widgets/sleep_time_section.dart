@@ -1,5 +1,6 @@
 // sleep_time_section.dart
 import 'dart:ui';
+import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_loginput/widgets/step_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer_animation/shimmer_animation.dart';
@@ -15,13 +16,10 @@ class SleepTimeSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionTitle('SLEEP TIMELINE', icon: Icons.timeline),
-        const SizedBox(height: 24),
-        _SleepTimeListLayout(),
-      ],
+    return StepWrapper(
+      title: 'Sleep Timeline',
+      icon: Icons.timeline,
+      child: _SleepTimeListLayout(),
     );
   }
 }

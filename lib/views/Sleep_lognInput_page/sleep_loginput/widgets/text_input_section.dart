@@ -1,6 +1,7 @@
 // text_input_section.dart
 import 'dart:math';
 import 'dart:ui';
+import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_loginput/widgets/step_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
@@ -12,11 +13,12 @@ class TextInputSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle('COSMIC NOTES'),
-        const SizedBox(height: 24),
+    return StepWrapper(
+        title: 'Dream Journal',
+        icon: Icons.drive_file_rename_outline,
+        child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
         SleepTextInputField(
           label: 'Diet Notes (dinner/snacks)',
           icon: Icons.restaurant,
@@ -41,36 +43,7 @@ class TextInputSection extends StatelessWidget {
           ],
         ),
       ],
-    );
-  }
-
-  Widget _buildSectionTitle(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4.0, bottom: 4),
-      child: Row(
-        children: [
-          Text(
-            text,
-            style: TextStyle(
-              color: Colors.blueGrey[100]!.withOpacity(0.8),
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 1.5,
-              fontFamily: AppFonts.ComfortaaBold,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Tooltip(
-            message: 'Record anything that might affect your cosmic sleep',
-            child: Icon(
-                Icons.info_outline_rounded,
-                size: 18,
-                color: Colors.blueGrey[200]!.withOpacity(0.7)
-            ),
-          ),
-        ],
-      ),
-    );
+    ));
   }
 }
 

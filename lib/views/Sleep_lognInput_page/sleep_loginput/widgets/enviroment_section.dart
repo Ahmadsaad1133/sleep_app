@@ -28,8 +28,6 @@ class EnvironmentSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionTitle(),
-          SizedBox(height: ScreenUtils.height(28)),
           _buildFactorSection(
             title: 'NOISE LEVEL',
             icon: Icons.volume_down,
@@ -72,47 +70,6 @@ class EnvironmentSection extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle() {
-    return Row(
-      children: [
-        Shimmer(
-          duration: const Duration(seconds: 3),
-          child: Container(
-            padding: ScreenUtils.paddingAll(8),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFF5A6BC0).withOpacity(0.2),
-            ),
-            child: Icon(
-              Icons.nightlight_round,
-              color: const Color(0xFF37B9C6),
-              size: ScreenUtils.textScale(20),
-            ),
-          ),
-        ),
-        SizedBox(width: ScreenUtils.width(12)),
-        Expanded(
-          child: AutoSizeText(
-            'SLEEP ENVIRONMENT',
-            maxLines: 1,
-            minFontSize: 14,
-            style: TextStyle(
-              fontSize: ScreenUtils.textScale(18),
-              fontWeight: FontWeight.w600,
-              color: Colors.amber[100],
-              letterSpacing: 1.2,
-              shadows: [
-                Shadow(
-                  color: Colors.blueAccent.withOpacity(0.4),
-                  blurRadius: 6,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildFactorSection({
     required String title,
