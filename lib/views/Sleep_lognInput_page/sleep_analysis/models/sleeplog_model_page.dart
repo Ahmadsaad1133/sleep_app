@@ -524,7 +524,57 @@ class SleepLog with ChangeNotifier {
     }
     if (!_disposed) notifyListeners();
   }
+  /// Basic AI-driven suggestions based on current log values
+  List<String> generateHealthHints() {
+    final hints = <String>[];
+    if (caffeineIntake > 200) {
+      hints.add('High caffeine intake can delay sleep.');
+    }
+    if (screenTimeBeforeBed > 60) {
+      hints.add('Reduce screen time before bed for better rest.');
+    }
+    if (exerciseMinutes < 30) {
+      hints.add('Aim for 30+ minutes of exercise for deeper sleep.');
+    }
+    if (disturbances.contains('Noise') || disturbances.contains('Light')) {
+      hints.add('Consider earplugs or blackout curtains to limit disturbances.');
+    }
+    return hints;
+  }
 
+  /// Copy all fields from another log instance
+  void copyFrom(SleepLog other) {
+    id = other.id;
+    date = other.date;
+    bedtime = other.bedtime;
+    wakeTime = other.wakeTime;
+    quality = other.quality;
+    waterIntake = other.waterIntake;
+    caffeineIntake = other.caffeineIntake;
+    exerciseMinutes = other.exerciseMinutes;
+    screenTimeBeforeBed = other.screenTimeBeforeBed;
+    mood = other.mood;
+    durationMinutes = other.durationMinutes;
+    stressLevel = other.stressLevel;
+    sleepEnvironment = other.sleepEnvironment;
+    dietNotes = other.dietNotes;
+    medications = other.medications;
+    disturbances = List.from(other.disturbances);
+    latencyMinutes = other.latencyMinutes;
+    wasoMinutes = other.wasoMinutes;
+    noiseLevel = other.noiseLevel;
+    lightExposure = other.lightExposure;
+    temperature = other.temperature;
+    comfortLevel = other.comfortLevel;
+    timeInBedMinutes = other.timeInBedMinutes;
+    deepSleepMinutes = other.deepSleepMinutes;
+    remSleepMinutes = other.remSleepMinutes;
+    lightSleepMinutes = other.lightSleepMinutes;
+    userId = other.userId;
+    dreamJournal = other.dreamJournal;
+    dreamElements = List.from(other.dreamElements);
+    if (!_disposed) notifyListeners();
+  }
   // Set active section index for validation
   void setActiveIndex(int index) {
     _activeIndex = index;

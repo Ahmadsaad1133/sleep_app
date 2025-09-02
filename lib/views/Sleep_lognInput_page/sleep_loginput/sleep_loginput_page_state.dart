@@ -11,6 +11,7 @@ import '../../../core/utils/screen_utils.dart';
 import '../sleep_analysis/loading/ai_loading_analysis_page.dart';
 import '../sleep_analysis/models/sleeplog_model_page.dart';
 
+import '../sleep_log_service/local_storage.dart';
 import '../sleep_log_service/sleep_log_service.dart';
 import 'widgets/mood_stress_section.dart';
 import 'widgets/quality_section.dart';
@@ -57,71 +58,89 @@ class _CosmicWeaverPageState extends State<_CosmicWeaverPage>
   final List<bool> _showScrollHint = [];
   final List<bool> _hasUserScrolled = [];
 
-  final List<DreamThread> _dreamThreads = [
+  late List<DreamThread> _dreamThreads;
+  bool _simpleMode = false;
+
+  List<DreamThread> _buildDreamThreads() {
+    return [
     DreamThread(
-      title: 'Time Portal',
-      hint: 'When did you enter the dream realm?',
+      title: _simpleMode ? 'Sleep Times' : 'Time Portal',
+      hint: _simpleMode
+          ? 'Enter your bedtime and wake time'
+          : 'When did you enter the dream realm?',
       icon: Icons.hourglass_top,
       color: const Color(0xFF6A67CE),
       content: const SleepTimeSection(),
     ),
     DreamThread(
-      title: 'Quality Nebula',
-      hint: 'How vivid was your dreamscape?',
-      icon: Icons.auto_awesome,
-      color: const Color(0xFF4FC1E9),
-      content: const QualitySection(),
+    title: _simpleMode ? 'Sleep Quality' : 'Quality Nebula',
+    hint: _simpleMode
+    ? 'How well did you sleep?'
+        : 'How vivid was your dreamscape?',
+    icon: Icons.auto_awesome,
+    color: const Color(0xFF4FC1E9),
+    content: const QualitySection(),
     ),
     DreamThread(
-      title: 'Emotion Galaxy',
-      hint: 'What emotions colored your dreams?',
-      icon: Icons.psychology,
-      color: const Color(0xFFA0D568),
-      content: const MoodStressSection(),
+    title: _simpleMode ? 'Mood & Stress' : 'Emotion Galaxy',
+    hint: _simpleMode
+    ? 'What emotions did you feel?'
+        : 'What emotions colored your dreams?',
+    icon: Icons.psychology,
+    color: const Color(0xFFA0D568),
+    content: const MoodStressSection(),
     ),
     DreamThread(
-      title: 'Depth Singularity',
-      hint: 'How deep did you journey?',
-      icon: Icons.waves,
-      color: const Color(0xFFFFCE54),
-      content: const SleepStagesSection(),
+    title: _simpleMode ? 'Sleep Stages' : 'Depth Singularity',
+    hint: _simpleMode
+    ? 'Track your stage durations'
+        : 'How deep did you journey?',
+    icon: Icons.waves,
+    color: const Color(0xFFFFCE54),
+    content: const SleepStagesSection(),
     ),
     DreamThread(
-      title: 'Continuity Fabric',
-      hint: 'Did the dreamworld hold together?',
-      icon: Icons.account_tree,
-      color: const Color(0xFFED5565),
-      content: const SleepEfficiencySection(),
+    title: _simpleMode ? 'Sleep Efficiency' : 'Continuity Fabric',
+    hint: _simpleMode
+    ? 'Latency, WASO, and time in bed'
+        : 'Did the dreamworld hold together?',
+    icon: Icons.account_tree,
+    color: const Color(0xFFED5565),
+    content: const SleepEfficiencySection(),
     ),
     DreamThread(
-      title: 'Habit Comets',
-      hint: 'What rituals preceded your journey?',
-      icon: Icons.nightlight_round,
-      color: const Color(0xFFAC92EC),
-      content: const InputSection(),
-    ),
-    DreamThread(
-      title: 'Environment Matrix',
-      hint: 'Describe your physical vessel',
-      icon: Icons.rocket_launch,
-      color: const Color(0xFF48CFAD),
-      content: Column(
-        children: const [
-          EnvironmentSection(),
-          SizedBox(height: 24),
-          DisturbanceSection(),
-        ],
+    title: _simpleMode ? 'Pre-Bed Habits' : 'Habit Comets',
+    hint: _simpleMode
+    ? 'Water, caffeine, exercise...'
+        : 'What rituals preceded your journey?',
+    icon: Icons.nightlight_round,
+    color: const Color(0xFFAC92EC),
+    content: const InputSection(),
       ),
-    ),
-    // New Dream Journal Section
     DreamThread(
-      title: 'Dream Journal',
-      hint: 'Record your dreams for deeper analysis',
-      icon: Icons.drive_file_rename_outline,
-      color: const Color(0xFFFF6B6B),
-      content: const DreamJournalSection(),
+    title: _simpleMode ? 'Environment' : 'Environment Matrix',
+    hint: _simpleMode
+    ? 'Bedroom conditions and disturbances'
+        : 'Describe your physical vessel',
+    icon: Icons.rocket_launch,
+    color: const Color(0xFF48CFAD),
+    content: Column(
+    children: const [
+    EnvironmentSection(),
+    SizedBox(height: 24),
+    DisturbanceSection(),
+    ],
     ),
-  ];
+    ),
+    DreamThread(
+    title: 'Dream Journal',
+    hint: 'Record your dreams for deeper analysis',
+    icon: Icons.drive_file_rename_outline,
+    color: const Color(0xFFFF6B6B),
+    content: const DreamJournalSection(),
+    ),
+    ];
+  }
 
   @override
   void initState() {
@@ -137,7 +156,7 @@ class _CosmicWeaverPageState extends State<_CosmicWeaverPage>
     )..repeat(reverse: true);
 
     _initQuantumField();
-
+    _dreamThreads = _buildDreamThreads();
     _pageController = PageController(viewportFraction: 0.8);
     _pageController.addListener(() {
       setState(() {
@@ -153,7 +172,12 @@ class _CosmicWeaverPageState extends State<_CosmicWeaverPage>
     }
 
     // Schedule a check for overflow after initial layout
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Schedule a check for overflow and load any saved partial log
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final saved = await SleepLogLocalStorage.loadPartial();
+      if (saved != null) {
+        context.read<SleepLog>().copyFrom(saved);
+      }
       _checkContentOverflow();
     });
   }
@@ -238,6 +262,8 @@ class _CosmicWeaverPageState extends State<_CosmicWeaverPage>
     try {
       // Save the log to Firebase
       await SleepLogService.saveSleepLog(model);
+      await SleepLogLocalStorage.clear();
+      await SleepLogService.logAnalytics(model);
 
       if (mounted) {
         // Navigate to AI loading page with cosmic transition
@@ -271,6 +297,7 @@ class _CosmicWeaverPageState extends State<_CosmicWeaverPage>
   }
 
   void _weaveNextThread(SleepLog model) {
+    SleepLogLocalStorage.savePartial(model);
     if (_isWeavingComplete) return;
 
     if (_activeIndex < _dreamThreads.length - 1) {
@@ -278,6 +305,56 @@ class _CosmicWeaverPageState extends State<_CosmicWeaverPage>
     } else {
       _completeWeaving(model);
     }
+  }
+  void _toggleMode() {
+    setState(() {
+      _simpleMode = !_simpleMode;
+      _dreamThreads = _buildDreamThreads();
+    });
+  }
+
+  Future<void> _fillFromLastLog() async {
+    try {
+      final logs = await SleepLogService.getHistoricalSleepLogs(limit: 1);
+      if (logs.isNotEmpty) {
+        context.read<SleepLog>().copyFrom(logs.first);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Loaded previous log')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load: $e')),
+        );
+      }
+    }
+  }
+
+  Widget _buildHints(SleepLog model, Color color) {
+    final hints = model.generateHealthHints();
+    if (hints.isEmpty) return const SizedBox.shrink();
+    return Container(
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: hints
+            .map((h) => Padding(
+          padding: EdgeInsets.only(bottom: 4.h),
+          child: Text(
+            h,
+            style: TextStyle(color: Colors.white, fontSize: 12.sp),
+          ),
+        ))
+            .toList(),
+      ),
+    );
   }
 
   @override
@@ -310,6 +387,17 @@ class _CosmicWeaverPageState extends State<_CosmicWeaverPage>
                       time: _controller.value,
                       activeColor: thread.color,
                     ),
+                  ),
+                ),
+                // Progress bar
+                Positioned(
+                  top: 60.h,
+                  left: 20.w,
+                  right: 20.w,
+                  child: LinearProgressIndicator(
+                    value: (_activeIndex + 1) / _dreamThreads.length,
+                    color: thread.color,
+                    backgroundColor: Colors.white24,
                   ),
                 ),
 
@@ -360,7 +448,13 @@ class _CosmicWeaverPageState extends State<_CosmicWeaverPage>
                     }),
                   ),
                 ),
-
+                // AI Hints
+                Positioned(
+                  bottom: 90.h,
+                  left: 20.w,
+                  right: 20.w,
+                  child: _buildHints(model, thread.color),
+                ),
                 // Next/Analyze Button
                 Positioned(
                   bottom: 20.h,
@@ -542,9 +636,16 @@ class _CosmicWeaverPageState extends State<_CosmicWeaverPage>
       ),
       actions: [
         IconButton(
-          icon: Icon(Icons.help_outline,
-              color: Colors.white70, size: 24.w),
-          onPressed: () {},
+          icon: Icon(Icons.history, color: Colors.white70, size: 24.w),
+          onPressed: _fillFromLastLog,
+        ),
+        IconButton(
+          icon: Icon(
+            _simpleMode ? Icons.auto_fix_high : Icons.auto_awesome,
+            color: Colors.white70,
+            size: 24.w,
+          ),
+          onPressed: _toggleMode,
         ),
       ],
     );
