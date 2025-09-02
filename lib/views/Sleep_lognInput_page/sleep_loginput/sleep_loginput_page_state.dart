@@ -591,6 +591,9 @@ class _CosmicWeaverPageState extends State<_CosmicWeaverPage>
                             child: SingleChildScrollView(
                               controller: _scrollControllers[index],
                               physics: const BouncingScrollPhysics(),
+                              padding: EdgeInsets.only(
+                                bottom: 120.h,
+                              ),
                               child: item.content,
                             ),
                           ),

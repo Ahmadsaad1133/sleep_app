@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:shimmer_animation/shimmer_animation.dart';
 import '../../../../core/utils/screen_utils.dart';
 import '../../sleep_analysis/models/sleeplog_model_page.dart';
 
@@ -46,15 +47,18 @@ class DisturbanceSection extends StatelessWidget {
         left: ScreenUtils.width(4),
         bottom: ScreenUtils.height(8),
       ),
-      child: AutoSizeText(
-        text,
-        maxLines: 1,
-        minFontSize: 12,
-        style: TextStyle(
-          color: Colors.blueGrey[100]!.withOpacity(0.8),
-          fontSize: ScreenUtils.textScale(14),
-          fontWeight: FontWeight.w600,
-          letterSpacing: 1.5,
+      child: Shimmer(
+        duration: const Duration(seconds: 3),
+        child: AutoSizeText(
+          text,
+          maxLines: 1,
+          minFontSize: 12,
+          style: TextStyle(
+            color: Colors.blueGrey[100]!.withOpacity(0.8),
+            fontSize: ScreenUtils.textScale(14),
+            fontWeight: FontWeight.w600,
+            letterSpacing: 1.5,
+          ),
         ),
       ),
     );

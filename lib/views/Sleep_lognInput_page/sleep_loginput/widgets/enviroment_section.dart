@@ -156,6 +156,7 @@ class EnvironmentSection extends StatelessWidget {
         ),
         SizedBox(height: ScreenUtils.height(16)),
         Wrap(
+          alignment: WrapAlignment.center,
           spacing: ScreenUtils.width(12),
           runSpacing: ScreenUtils.height(12),
           children: options.map((option) {
