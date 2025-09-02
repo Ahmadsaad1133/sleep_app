@@ -441,22 +441,26 @@ class _AILoadingAnalysisPageState extends State<AILoadingAnalysisPage>
             ),
           ),
           child: Stack(
+            alignment: Alignment.center,
             children: [
               // Background elements
               _buildQuantumField(),
               _buildParticleOverlay(),
-
-              if (_showCompletion) _buildCosmicPortal(),
 
               // Main content
               SafeArea(
                 child: Center(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 30),
-                    child: _buildMainContent(),
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 300),
+                      opacity: _showCompletion ? 0.0 : 1.0,
+                      child: _buildMainContent(),
+                    ),
                   ),
                 ),
               ),
+              if (_showCompletion) _buildCosmicPortal(),
             ],
           ),
         ),
@@ -500,7 +504,7 @@ class _AILoadingAnalysisPageState extends State<AILoadingAnalysisPage>
     // panel sits directly beneath the title.
     final leftColumn = Column(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _buildAnimatedOrb(),
         const SizedBox(height: 20),
@@ -508,20 +512,21 @@ class _AILoadingAnalysisPageState extends State<AILoadingAnalysisPage>
         const SizedBox(height: 12),
       ],
     );
-
+    final leftSized = SizedBox(width: 300, child: leftColumn);
     if (isWide) {
       return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(child: leftColumn),
+          leftSized,
           const SizedBox(width: 18),
           // Place the panel directly under the title without extra top padding.
-          Align(
-            alignment: Alignment.topLeft,
+          SizedBox(
+            width: 420,
             child: MiniPCPanel(
               panelWidth: 420,
               externalProgress: null,
-              panelHeight: math.min(size.width * 0.40, size.height * 0.40), // 👈 now applied
+              panelHeight: math.min(size.width * 0.40, size.height * 0.40),
               stepSubProgress: _currentStepProgress,
               externalLabel: _currentStep,
               showLabel: true,
@@ -536,19 +541,13 @@ class _AILoadingAnalysisPageState extends State<AILoadingAnalysisPage>
         ],
       );
     } else {
-      // On narrow screens, avoid wrapping the content in a scroll view to keep the
-      // page non‑scrollable. We stack the panel directly after the left column
-      // with minimal vertical spacing.
-      // Calculate a height for the panel that scales with both the width and
-      // the available vertical space to avoid bottom overflow on smaller
-      // devices. We choose the smaller value between 60% of the screen
-      // width and 40% of the screen height. This dual constraint ensures
-      // that on very tall or very narrow screens the panel does not exceed
-      // a sensible portion of the viewport.
-      final double panelHeight = math.max(size.width * 0.55, size.height * 0.40);
+      final double panelHeight =
+      math.min(size.width * 0.55, size.height * 0.40);
       return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          leftColumn,
+          leftSized,
           MiniPCPanel(
             panelWidth: 400,
             panelHeight: panelHeight,
@@ -689,46 +688,51 @@ class _AILoadingAnalysisPageState extends State<AILoadingAnalysisPage>
 
   Widget _buildCosmicPortal() {
     return Positioned.fill(
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: RadialGradient(
-            colors: [
-              _activeColor.withOpacity(0.1),
-              Colors.transparent,
-            ],
-            stops: const [0.1, 1.0],
+      child: IgnorePointer(
+        ignoring: true,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              colors: [
+                _activeColor.withOpacity(0.1),
+                Colors.transparent,
+              ],
+              stops: const [0.1, 1.0],
+            ),
           ),
-        ),
-        child: Center(
-          child: TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.0, end: 1.0),
-            duration: const Duration(seconds: 2),
-            builder: (_, value, __) => Transform.scale(
-              scale: value,
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      _activeColor.withOpacity(0.8),
-                      _activeColor.withOpacity(0.6),
+          child: Center(
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(seconds: 2),
+              builder: (_, value, __) => Transform.scale(
+                scale: value,
+                child: Container(
+                  width: 300,
+                  height: 300,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        _activeColor.withOpacity(0.8),
+                        _activeColor.withOpacity(0.6),
+                      ],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _activeColor.withOpacity(0.5),
+                        blurRadius: 100,
+                        spreadRadius: 50,
+                      ),
                     ],
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _activeColor.withOpacity(0.5),
-                      blurRadius: 100,
-                      spreadRadius: 50,
+              child: Center(
+              child: Lottie.asset(
+             'assets/animations/sleep_moon.json',
+              width: 150,
+                height: 150,
+      fit: BoxFit.contain,
                     ),
-                  ],
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.nightlight_round,
-                    color: Colors.white,
-                    size: 80,
+
                   ),
                 ),
               ),
