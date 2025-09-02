@@ -259,61 +259,37 @@ class _LoadingContents extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Top Icon
-              Icon(
-                Icons.nightlight_round,
-                size: (dense ? 18.sp : 22.sp), // much smaller
-                color: Colors.white.withOpacity(0.9),
-              ),
-
-              if (!dense) ...[
-                SizedBox(height: 4.h),
-                Text(
-                  'AI Sleep Analysis',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12.sp, // smaller
-                  ),
-                ),
-                SizedBox(height: 3.h),
-                Text(
-                  'Harnessing cosmic patterns and dream insights to decode your nightly journey.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.white.withOpacity(0.75),
-                    fontSize: 9.sp, // compact
-                    height: 1.2,
-                  ),
-                ),
-                SizedBox(height: 6.h),
-
-                /// Pills
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 6.w,
-                  runSpacing: 4.h,
+              if (showLabel || showPercent)
+                Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    _InfoPill(icon: Icons.psychology_alt, label: 'Dreams', dense: true),
-                    _InfoPill(icon: Icons.eco, label: 'Environment', dense: true),
-                    _InfoPill(icon: Icons.bedtime, label: 'Quality', dense: true),
-                    _InfoPill(icon: Icons.auto_graph, label: 'Forecast', dense: true),
-                  ],
-                ),
-              ],
-
-              if (showLabel) ...[
-                SizedBox(height: 6.h),
-                Text(
+                    if (showLabel)
+              Expanded(
+                child: Text(
                   label ?? 'Preparing your Sleep Analysis…',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
-                    fontSize: 11.sp, // smaller
+                    fontSize: 11.sp,
                   ),
                 ),
-              ],
+              ),
+              if (showPercent)
+                Padding(
+                  padding: EdgeInsets.only(left: 8.w),
+                  child: Text(
+                    '${(pct * 100).toStringAsFixed(0)}%',
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: Colors.white.withOpacity(0.9),
+                      letterSpacing: 0.2,
+                      fontSize: 10.sp,
+                    ),
+                  ),
+                ),
+                  ],
+                ),
 
               if (hasDots) ...[
                 SizedBox(height: 6.h),
@@ -326,7 +302,7 @@ class _LoadingContents extends StatelessWidget {
                         ? const Color(0xFF6FA8FF)
                         : (isActive ? Colors.white : Colors.white24);
                     return Container(
-                      width: (dense ? 6.w : 8.w), // smaller dots
+                      width: (dense ? 6.w : 8.w),
                       height: (dense ? 6.w : 8.w),
                       margin: EdgeInsets.symmetric(horizontal: 2.w),
                       decoration: BoxDecoration(
@@ -344,18 +320,6 @@ class _LoadingContents extends StatelessWidget {
 
               SizedBox(height: 8.h),
               _ProgressBar(value: pct),
-
-              if (showPercent) ...[
-                SizedBox(height: 4.h),
-                Text(
-                  '${(pct * 100).toStringAsFixed(0)}%',
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: Colors.white.withOpacity(0.9),
-                    letterSpacing: 0.2,
-                    fontSize: 10.sp, // compact
-                  ),
-                ),
-              ],
             ],
           ),
         ),
@@ -529,46 +493,5 @@ class _Stand extends StatelessWidget {
     );
   }
 }
-class _InfoPill extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool dense;
-
-  const _InfoPill({
-    required this.icon,
-    required this.label,
-    this.dense = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: dense ? 8.w : 12.w,
-        vertical: dense ? 4.h : 6.h,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: Colors.white24, width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: dense ? 14.sp : 18.sp, color: Colors.white),
-          SizedBox(width: 6.w),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.white,
-              fontSize: dense ? 11.sp : 13.sp,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 
 
