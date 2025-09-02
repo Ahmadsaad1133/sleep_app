@@ -1,4 +1,5 @@
 // lib/services/api/api_service.dart
+// lib/services/api/api_service.dart
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
@@ -125,44 +126,8 @@ class ApiService {
   static final Uri _storyUri = Uri.parse('$baseUrl/generate-story');
   static final Uri _storyImageUri = Uri.parse('$baseUrl/generate-story-and-image');
   static final Uri _insightsUri = Uri.parse('$baseUrl/insights');
-  static const Duration apiTimeout = Duration(seconds: 45);
-
-  /// Recursively decode JSON strings embedded within API responses.
-  ///
-  /// Some endpoints may return values that are themselves JSON-encoded strings
-  /// (e.g. a field like `"wake_windows": "[\"07:30-08:00\", \"08:15-08:45\"]"`).
-  /// This helper will attempt to parse any string that looks like JSON into
-  /// its corresponding Dart representation. Maps and lists are processed
-  /// recursively, while non‑string primitives are returned unchanged.
-  static dynamic _deepJsonParse(dynamic input) {
-    // If it's a string, attempt to decode JSON. If decoding fails, return
-    // the original trimmed string. Otherwise, recursively parse the decoded
-    // value to handle nested JSON.
-    if (input is String) {
-      final trimmed = input.trim();
-      final startsWithBrace = trimmed.startsWith('{') && trimmed.endsWith('}');
-      final startsWithBracket = trimmed.startsWith('[') && trimmed.endsWith(']');
-      if (startsWithBrace || startsWithBracket) {
-        try {
-          final decoded = jsonDecode(trimmed);
-          return _deepJsonParse(decoded);
-        } catch (_) {
-          // Not valid JSON; fall through
-        }
-      }
-      return trimmed;
-    }
-    // If it's a map, recurse into each value
-    if (input is Map) {
-      return input.map((k, v) => MapEntry(k, _deepJsonParse(v)));
-    }
-    // If it's a list, recurse into each element
-    if (input is List) {
-      return input.map((e) => _deepJsonParse(e)).toList();
-    }
-    // Otherwise, return as is
-    return input;
-  }
+  static final Uri _reportUri = Uri.parse('$baseUrl/report');
+  static const Duration apiTimeout = Duration(seconds: 60);
   static Future<Map<String, String>> _getHeaders() async {
     final user = FirebaseAuth.instance.currentUser;
     String? token;
@@ -175,6 +140,48 @@ class ApiService {
       'Accept': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
     };
+  }
+
+  /// Fetch user's recent sleep logs as raw Maps (sanitized for JSON).
+  /// This is useful when a caller needs to pass "current" + "history" to /report
+  /// without depending on the SleepLog model shape.
+  static Future<List<Map<String, dynamic>>> getHistoricalSleepLogsAsMaps({int limit = 7}) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw SleepAnalysisException('User not authenticated');
+      }
+      final snapshot = await FirebaseFirestore.instance
+          .collection('anonymous_sleep_logs')
+          .doc(user.uid)
+          .collection('logs')
+          .orderBy('date', descending: true)
+          .limit(limit)
+          .get();
+
+      final logs = <Map<String, dynamic>>[];
+      for (final doc in snapshot.docs) {
+        final data = Map<String, dynamic>.from(doc.data());
+        data['id'] = doc.id;
+        logs.add(_sanitizeForJson(data));
+      }
+      return logs;
+    } on FirebaseException catch (e) {
+      debugPrint('getHistoricalSleepLogsAsMaps Firestore error: ${e.message}');
+      return <Map<String, dynamic>>[];
+    } catch (e, st) {
+      debugPrint('getHistoricalSleepLogsAsMaps exception: $e\n$st');
+      return <Map<String, dynamic>>[];
+    }
+  }
+
+  /// Convenience: build a report for the latest logs automatically.
+  static Future<Map<String, dynamic>> fetchReportForLatestLogs({int historyLimit = 7}) async {
+    final logs = await getHistoricalSleepLogsAsMaps(limit: historyLimit);
+    if (logs.isEmpty) return <String, dynamic>{};
+    final current = Map<String, dynamic>.from(logs.first);
+    final history = logs.length > 1 ? logs.sublist(1).map((e) => Map<String, dynamic>.from(e)).toList() : <Map<String, dynamic>>[];
+    return await fetchReport(current: current, history: history);
   }
   static Future<List<SleepLog>> getHistoricalSleepLogs({int limit = 7}) async {
     try {
@@ -380,6 +387,168 @@ class ApiService {
       return MapEntry(key, value);
     });
   }
+
+  /// Fetch unified report sections from the backend /report endpoint.
+  /// Expects: { "executiveSummary", "riskAssessment", "energyPlan", "wakeWindows", "whatIfScenarios" }.
+
+  /// Normalize /report response into a stable schema with defensive aliasing.
+  static Map<String, dynamic> _normalizeReport(Map<String, dynamic> raw, {Map<String, dynamic>? current, List<Map<String, dynamic>>? history}) {
+    Map<String, dynamic> out = {};
+
+    dynamic _first(List keys) {
+      for (final k in keys) {
+        if (raw.containsKey(k) && raw[k] != null) return raw[k];
+      }
+      return null;
+    }
+
+    // Executive summary may be string or nested {text: ...}
+    final exec = _first(['executive_summary','executiveSummary','summary','overview']);
+    String execText;
+    if (exec is Map) {
+      execText = (exec['text'] ?? exec['value'] ?? exec['content'] ?? '').toString();
+    } else {
+      execText = (exec ?? '').toString();
+    }
+    out['executive_summary'] = execText;
+
+    // Risk assessment: allow multiple shapes
+    final risk = _first(['risk_assessment','riskAssessment','risks','risk']);
+    if (risk is Map) {
+      out['risk_assessment'] = Map<String, dynamic>.from(risk);
+    } else if (risk is List) {
+      out['risk_assessment'] = {'hotspots': risk};
+    } else if (risk != null) {
+      out['risk_assessment'] = {'notes': risk.toString()};
+    } else {
+      out['risk_assessment'] = {};
+    }
+
+    // Energy plan: normalize to {advice: string, plan: [ {time_range, action, rationale} ]}
+    dynamic energy = _first(['energy_plan','energyPlan','daily_energy_plan','dailyEnergyPlan','energy']);
+    Map<String, dynamic> energyMap = {};
+    if (energy is Map) {
+      energyMap = Map<String,dynamic>.from(energy);
+    } else if (energy is List) {
+      energyMap = {'plan': energy};
+    }
+    final epAdvice = (energyMap['advice'] ?? energyMap['note'] ?? energyMap['notes'] ?? '').toString();
+    final dynamic blocksRaw = energyMap['plan'] ?? energyMap['blocks'] ?? energyMap['schedule'] ?? energyMap['items'];
+    final List blocks = (blocksRaw is List) ? List.from(blocksRaw) : (blocksRaw != null ? [blocksRaw] : []);
+    final List<Map<String, dynamic>> planBlocks = [];
+    for (final b in blocks) {
+      if (b is Map) {
+        final start = b['start'] ?? b['from'] ?? b['begin'];
+        final end = b['end'] ?? b['to'] ?? b['finish'];
+        final timeRange = (b['time_range'] ?? b['timeRange'] ?? (start != null && end != null ? '$start–$end' : null))?.toString();
+        planBlocks.add({
+          'time_range': timeRange,
+          'action': (b['action'] ?? b['title'] ?? b['task'] ?? b['activity'] ?? 'Activity').toString(),
+          'rationale': (b['rationale'] ?? b['why'] ?? b['detail'] ?? b['explanation'] ?? '').toString(),
+        });
+      } else {
+        planBlocks.add({'time_range': null, 'action': b.toString(), 'rationale': ''});
+      }
+    }
+    out['energy_plan'] = {'advice': epAdvice, 'plan': planBlocks};
+
+    // Wake windows: list of {start, end, type}
+    dynamic ww = _first(['wake_windows','wakeWindows','wake_up_windows','wakeUpWindows','suggested_wake_windows','suggestedWakeWindows']);
+    final List windows = (ww is List) ? List.from(ww) : (ww != null ? [ww] : []);
+    final List<Map<String, dynamic>> wwOut = [];
+    for (final w in windows) {
+      if (w is Map) {
+        wwOut.add({
+          'start': w['start'] ?? w['from'] ?? w['window_start'] ?? w['begin'],
+          'end': w['end'] ?? w['to'] ?? w['window_end'] ?? w['finish'],
+          'type': w['type'] ?? w['label'] ?? w['note'],
+        });
+      } else {
+        wwOut.add({'start': null, 'end': null, 'type': w.toString()});
+      }
+    }
+    out['wake_windows'] = wwOut;
+
+    // What-if scenarios: list of {title, impact, detail}
+    dynamic wi = _first(['what_if_scenarios','whatIfScenarios','what_if','whatIf','scenarios']);
+    List wiList = (wi is List) ? List.from(wi) : (wi is Map && wi['scenarios'] is List ? List.from(wi['scenarios']) : (wi != null ? [wi] : []));
+    final List<Map<String, dynamic>> wiOut = [];
+    for (final s in wiList) {
+      if (s is Map) {
+        wiOut.add({
+          'title': (s['title'] ?? s['change'] ?? 'Scenario').toString(),
+          'impact': (s['impact'] ?? s['effect'] ?? s['result'] ?? '').toString(),
+          'detail': (s['detail'] ?? s['explanation'] ?? s['why'] ?? '').toString(),
+        });
+      } else {
+        wiOut.add({'title': s.toString(), 'impact': '', 'detail': ''});
+      }
+    }
+    out['what_if_scenarios'] = wiOut;
+
+    // If any part is missing, synthesize lightweight fallback using current/history
+    Map<String, dynamic> cur = Map<String, dynamic>.from(current ?? {});
+    List<Map<String, dynamic>> hist = List<Map<String, dynamic>>.from(history ?? const []);
+    double durationHrs = 0.0;
+    try {
+      final minutes = cur['duration_minutes'] ?? cur['duration'] ?? cur['total_sleep_minutes'];
+      if (minutes is num) durationHrs = minutes.toDouble() / 60.0;
+      else { final p = double.tryParse(minutes?.toString() ?? ''); if (p != null) durationHrs = p / 60.0; }
+    } catch (_) {}
+
+    // Fallback energy plan if planBlocks empty
+    if ((out['energy_plan']?['plan'] as List).isEmpty) {
+      final List<Map<String, dynamic>> fb = [
+        {'time_range': 'Morning', 'action': 'Bright light & movement', 'rationale': 'Boost circadian alertness'},
+        {'time_range': 'Midday', 'action': 'Deep work block', 'rationale': 'Capitalize on peak focus window'},
+        {'time_range': 'Afternoon', 'action': 'Short walk & caffeine (<=2pm)', 'rationale': 'Avoid sleep interference'},
+        {'time_range': 'Evening', 'action': 'Wind‑down routine (30–60m)', 'rationale': 'Lower arousal for sleep onset'},
+      ];
+      out['energy_plan'] = {'advice': epAdvice.isNotEmpty ? epAdvice : 'Structure your day around natural alertness dips and peaks.', 'plan': fb};
+    }
+
+    // Fallback what-if if absent
+    if ((out['what_if_scenarios'] as List).isEmpty) {
+      out['what_if_scenarios'] = [
+        {'title': 'Sleep +30 minutes', 'impact': '↓ sleep debt, ↑ energy next day', 'detail': 'Extend time in bed by 30–45 minutes tonight.'},
+        {'title': 'No caffeine after 2pm', 'impact': 'Faster sleep onset', 'detail': 'Shift last caffeine dose to before 14:00.'},
+        {'title': '10‑min daylight walk AM', 'impact': 'Stronger circadian signal', 'detail': 'Get outside within 1 hour of waking.'},
+      ];
+    }
+
+    return out;
+  }
+
+  static Future<Map<String, dynamic>> fetchReport({
+    required Map<String, dynamic> current,
+    List<Map<String, dynamic>> history = const [],
+  }) async {
+    try {
+      final sanitizedCurrent = _sanitizeForJson(Map<String, dynamic>.from(current));
+      final sanitizedHistory = history.map((e) => _sanitizeForJson(Map<String, dynamic>.from(e))).toList();
+      final body = json.encode({
+        'current': sanitizedCurrent,
+        'history': sanitizedHistory,
+      });
+      debugPrint('📤 POST /report → $_reportUri');
+      final response = await http
+          .post(_reportUri, headers: await _getHeaders(), body: body)
+          .timeout(apiTimeout);
+      debugPrint('📥 /report status ${response.statusCode}');
+      if (response.statusCode == 200) {
+        final parsed = json.decode(response.body);
+        return (parsed is Map) ? _normalizeReport(Map<String, dynamic>.from(parsed), current: sanitizedCurrent, history: sanitizedHistory) : <String, dynamic>{};
+      }
+      debugPrint('❗ /report error ${response.statusCode}: ${response.body}');
+      return <String, dynamic>{};
+    } on TimeoutException {
+      debugPrint('⏱️ /report timeout');
+      return <String, dynamic>{};
+    } catch (e, st) {
+      debugPrint('❌ /report exception: $e\n$st');
+      return <String, dynamic>{};
+    }
+  }
   static Future<String> getHistoricalSleepAnalysis({int limit = 10}) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -431,9 +600,18 @@ Your response should be a comprehensive analysis in markdown format, with sectio
       debugPrint('🌐 Generating historical sleep analysis (AI)');
       final response = await generateResponse(prompt);
       debugPrint('📥 AI Response length: ${response.length}');
-      // Ensure we never show raw JSON blocks in the UI.
-      final plain = _ensurePlainReportText(response);
-      return plain;
+      try {
+        // Ensure we never show raw JSON blocks in the UI or attempt to parse as JSON.
+        final plain = _ensurePlainReportText(response);
+        return plain;
+      } on FormatException catch (fe) {
+        // If any parsing/sanitization throws, fall back to the raw response (still trimmed).
+        debugPrint('Error fetching historical sleep analysis: $fe');
+        return response.trim();
+      } catch (e) {
+        debugPrint('Error sanitizing historical sleep analysis: $e');
+        return response.trim();
+      }
     } on FirebaseException catch (e) {
       debugPrint('🔥 Firestore exception: ${e.message}');
       final message = e.message ?? e.toString();
@@ -1078,23 +1256,8 @@ Output only the JSON object without any additional text.
       throw SleepAnalysisException('Failed to get analysis: ${e.toString()}');
     }
   }
-  static Map<String, dynamic> _convertToStringKeyedMap(Map<dynamic, dynamic> dynamicMap) {
-    return dynamicMap.map((key, value) {
-      if (value is Map<dynamic, dynamic>) {
-        return MapEntry(key.toString(), _convertToStringKeyedMap(value));
-      } else if (value is List) {
-        return MapEntry(key.toString(), value.map((item) {
-          if (item is Map<dynamic, dynamic>) {
-            return _convertToStringKeyedMap(item);
-          }
-          return item;
-        }).toList());
-      }
-      return MapEntry(key.toString(), value);
-    });
-  }
+
   /// Fetches comprehensive sleep analysis (data + environment + context)
-  // Update the fetchSleepAnalysis method
   static Future<Map<String, dynamic>> fetchSleepAnalysis(List<Map<String, dynamic>> sleepData) async {
     final connectivity = await Connectivity().checkConnectivity();
     if (connectivity == ConnectivityResult.none) {
@@ -1169,6 +1332,7 @@ Output only the JSON object without any additional text.
           'nutrition',
           'streaks',
           'smart_goals'
+
         ],
         'user_context': userContext,
         'environment_data': env,
@@ -1182,15 +1346,7 @@ Output only the JSON object without any additional text.
 
       debugPrint('🔍 /sleep-analysis status ${response.statusCode}');
       if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
-
-        // Convert dynamic map to string-keyed map
-        final Map<String, dynamic> result = _convertToStringKeyedMap(decoded);
-
-        // Ensure all required sections exist with proper structure
-        _ensureReportSections(result);
-
-        return result;
+        return jsonDecode(response.body);
       } else {
         throw ApiResponseException(response.statusCode, response.body);
       }
@@ -1201,49 +1357,6 @@ Output only the JSON object without any additional text.
     }
   }
 
-
-// Update the _ensureReportSections method to handle type conversion
-  static void _ensureReportSections(Map<String, dynamic> result) {
-    // Ensure all required sections exist with proper structure
-    final sections = {
-      'executive_summary': '',
-      'risk_assessment': {'risks': []},
-      'daily_energy_plan': {'title': 'Daily Energy Plan', 'steps': []},
-      'wake_windows': [],
-      'what_if_scenarios': [],
-      'recommendations': [],
-      'ai_highlights': []
-    };
-
-    for (final entry in sections.entries) {
-      if (!result.containsKey(entry.key)) {
-        result[entry.key] = entry.value;
-      } else if (result[entry.key] is Map<dynamic, dynamic>) {
-        // Convert dynamic map to string-keyed map
-        result[entry.key] = _convertToStringKeyedMap(result[entry.key] as Map<dynamic, dynamic>);
-      }
-    }
-
-    // Ensure nested analysis structure exists
-    if (!result.containsKey('analysis') || result['analysis'] is! Map) {
-      // If analysis section is missing or not in the expected Map format,
-      // initialize it to an empty map to avoid type cast errors.
-      result['analysis'] = <String, dynamic>{};
-    } else if (result['analysis'] is Map<dynamic, dynamic>) {
-      // Convert dynamic map to a proper string-keyed map.
-      result['analysis'] =
-          _convertToStringKeyedMap(result['analysis'] as Map<dynamic, dynamic>);
-    }
-
-    final analysis = result['analysis'] as Map<String, dynamic>;
-    for (final entry in sections.entries) {
-      if (!analysis.containsKey(entry.key)) {
-        analysis[entry.key] = entry.value;
-      } else if (analysis[entry.key] is Map<dynamic, dynamic>) {
-        analysis[entry.key] = _convertToStringKeyedMap(analysis[entry.key] as Map<dynamic, dynamic>);
-      }
-    }
-  }
   static Future<SleepPlan> generateSleepPlan(String analysisSummary) async {
     return _retry(() async {
       final connectivity = await Connectivity().checkConnectivity();
@@ -1754,4 +1867,4 @@ SLEEP_LOG: ${jsonEncode(sleepData)}
     }
   }
 
-}
+}///

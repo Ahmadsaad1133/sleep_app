@@ -1,22 +1,21 @@
-
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-/// ReportTab (ScreenUtil + Sliver-friendly)
-/// This widget is **non-scrollable** and is meant to be placed inside a parent's
-/// CustomScrollView via SliverToBoxAdapter (as your _wrapTabWithSliverWidget likely does).
-/// It supports:
-/// - Modern map via [initialReportData]/[loadReport]
-/// - Legacy named params (permissive dynamic types)
+import '../neo_design.dart';
+
+import '../../../../../services/api/api_service.dart';
+
+/// ReportTab
+/// - Sliver-friendly (non-scrollable), to be wrapped in SliverToBoxAdapter by parent
+/// - Accepts modern map data or legacy named params (dynamic-friendly)
 class ReportTab extends StatefulWidget {
   // Modern map-based
   final Map<String, dynamic>? initialReportData;
   final Future<Map<String, dynamic>> Function()? loadReport;
-  final SliverOverlapAbsorberHandle? overlapHandle; // accepted but unused (no inner scroll)
+  final SliverOverlapAbsorberHandle? overlapHandle; // accepted but unused here
 
   // Legacy named params (permissive types)
   final double? totalSleepHours;
@@ -27,45 +26,26 @@ class ReportTab extends StatefulWidget {
   final dynamic last7DaysHours;
   final num? sleepScore;
 
-  // Sections
+  // Sections (legacy)
   final dynamic executiveSummary;
-  final dynamic dailyComparison;
+  final dynamic riskAssessment;
+  final dynamic energyPlan;
+  final dynamic wakeWindows;
+  final dynamic whatIfScenarios;
+  final dynamic drivers;
   final dynamic lifestyleCorrelations;
   final dynamic environmentAnalysis;
-  final dynamic dreamMoodForecast;
-  final dynamic aiHighlights;
   final dynamic recommendations;
   final String? chronotype;
   final String? sleepMidpoint;
-  final dynamic morningReadiness;
-  final dynamic whatIfScenarios;
-  final dynamic wakeWindows;
-  final dynamic riskAssessment;
-  final dynamic energyPlan;
-  final dynamic drivers;
-  final dynamic achievements;
-  final dynamic hrvSummary;
-  final dynamic respiratory;
-  final dynamic glucoseCorrelation;
-  final dynamic actionItems;
-  final dynamic causalGraph;
-  final dynamic energyTimeline;
-  final dynamic cognitiveWindows;
-  final dynamic microArousals;
-  final dynamic architectureNotes;
-  final dynamic recoveryPlan;
-  final dynamic nutrition;
-  final dynamic streaks;
-  final dynamic smartGoals;
-
 
   const ReportTab({
-    Key? key,
+    super.key,
     // modern
     this.initialReportData,
     this.loadReport,
     this.overlapHandle,
-    // legacy
+    // legacy metrics
     this.totalSleepHours,
     this.efficiency,
     this.deepPct,
@@ -73,144 +53,109 @@ class ReportTab extends StatefulWidget {
     this.lightPct,
     this.last7DaysHours,
     this.sleepScore,
-    this.dailyComparison,
+    // legacy sections
+    this.executiveSummary,
+    this.riskAssessment,
+    this.energyPlan,
+    this.wakeWindows,
+    this.whatIfScenarios,
+    this.drivers,
     this.lifestyleCorrelations,
     this.environmentAnalysis,
-    this.dreamMoodForecast,
-    this.aiHighlights,
     this.recommendations,
     this.chronotype,
     this.sleepMidpoint,
-    this.morningReadiness,
-    this.whatIfScenarios,
-    this.wakeWindows,
-    this.riskAssessment,
-    this.energyPlan,
-    this.drivers,
-    this.achievements,
-    this.hrvSummary,
-    this.respiratory,
-    this.glucoseCorrelation,
-    this.actionItems,
-    this.causalGraph,
-    this.energyTimeline,
-    this.cognitiveWindows,
-    this.microArousals,
-    this.architectureNotes,
-    this.recoveryPlan,
-    this.nutrition,
-    this.streaks,
-    this.smartGoals, this.executiveSummary,
-  }) : super(key: key);
+  });
 
   @override
   State<ReportTab> createState() => _ReportTabState();
 }
 
 class _ReportTabState extends State<ReportTab> {
+
+  Future<void> _fetchOnce() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      Map<String, dynamic> normalized = <String, dynamic>{};
+
+      if (widget.loadReport != null) {
+        // Use the caller-provided loader
+        normalized = await widget.loadReport!.call();
+      } else {
+        // Default: pull latest logs and build report using ApiService
+        final report = await ApiService.fetchReportForLatestLogs(historyLimit: 7);
+        normalized = Map<String, dynamic>.from(report);
+      }
+
+      if (mounted) {
+        setState(() {
+          // Merge with any prefilled/legacy data
+          _data = {...?_data, ...normalized};
+          _loading = false;
+        });
+      }
+
+      // Fetch historical text analysis in the background (non-blocking)
+      try {
+        final histRaw = await ApiService.getHistoricalSleepAnalysis(limit: 10);
+        dynamic decoded;
+        if (histRaw is String) {
+          final s = histRaw.trimLeft();
+          if (s.startsWith('[') || s.startsWith('{')) {
+            decoded = jsonDecode(s);
+          } else {
+            decoded = null; // plain text; ignore
+          }
+        } else {
+          decoded = histRaw;
+        }
+        if (mounted && decoded is List && decoded.isNotEmpty) {
+          final list = <Map<String, dynamic>>[];
+          for (final h in decoded) {
+            if (h is Map) list.add(Map<String, dynamic>.from(h));
+          }
+          setState(() => _historical = list);
+        }
+      } catch (e) {
+        debugPrint('Error fetching historical sleep analysis: $e');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _loading = false;
+        });
+      }
+    }
+  }
+
+
   Map<String, dynamic>? _data;
+  List<Map<String, dynamic>>? _historical;
   bool _loading = false;
-  Object? _error;
+  String? _error;
+
+  bool _compact = false;
 
   @override
   void initState() {
     super.initState();
-    _data = widget.initialReportData != null ? Map<String, dynamic>.from(widget.initialReportData!) : null;
+    _data = widget.initialReportData != null
+        ? Map<String, dynamic>.from(widget.initialReportData!)
+        : null;
+
+    // merge legacy if present
     final legacy = _legacyParamsAsMap();
     if (legacy.isNotEmpty) {
       _data = {...?_data, ...legacy};
-
     }
 
-    if (widget.loadReport != null) {
-      final sectionPaths = [
-        'executive_summary',
-        'executiveSummary',
-        'risk_assessment',
-        'riskAssessment',
-        'energy_plan',
-        'energyPlan',
-        'wake_windows',
-        'wakeWindows',
-        'sections.executive_summary',
-        'sections.executiveSummary',
-        'sections.risk_assessment',
-        'sections.riskAssessment',
-        'sections.energy_plan',
-        'sections.energyPlan',
-        'sections.wake_windows',
-        'sections.wakeWindows',
-      ];
-      final hasSections = _data != null && sectionPaths.any((k) => _readByPath(_data!, k) != null);
-
-      if (!hasSections) {
-        _fetchOnce();
-      }
-    }
+    if (_data == null) { _fetchOnce(); }
   }
 
-  String _readString(List<String> keys, {String fallback = ''}) {
-    final map = _data;
-    if (map == null) return fallback;
-    for (final k in keys) {
-      final v = _readByPath(map, k);
-      if (v is String && v.trim().isNotEmpty) return v.trim();
-    }
-    return fallback;
-  }
-
-  num _readNum(List<String> keys, {num fallback = -1}) {
-    final map = _data;
-    if (map == null) return fallback;
-    for (final k in keys) {
-      final v = _readByPath(map, k);
-      if (v is num) return v;
-      if (v is String) {
-        final parsed = num.tryParse(v);
-        if (parsed != null) return parsed;
-      }
-    }
-    return fallback;
-  }
-
-  List _readList(List<String> keys) {
-    final map = _data;
-    if (map == null) return const [];
-    for (final k in keys) {
-      final v = _readByPath(map, k);
-      if (v is List) return v;
-      if (v != null) return [v];
-    }
-    return const [];
-  }
-  bool _hasMeaningful(dynamic v) {
-    if (v == null) return false;
-    if (v is String) return v.trim().isNotEmpty;
-    if (v is Iterable) return v.isNotEmpty;
-    if (v is Map) return v.isNotEmpty;
-    return true;
-  }
-
-  dynamic _readAny(List<String> keys) {
-    final map = _data;
-    if (map == null) return null;
-    for (final k in keys) {
-      final v = _readByPath(map, k);
-      if (_hasMeaningful(v)) return v;
-    }
-    return null;
-  }
-  dynamic _readByPath(Map source, String path) {
-    dynamic current = source;
-    for (final part in path.split('.')) {
-      if (current is Map && current.containsKey(part)) {
-        current = current[part];
-      } else {
-        return null;
-      }
-    }
-    return current;
-  }
   Map<String, dynamic> _legacyParamsAsMap() {
     final m = <String, dynamic>{};
 
@@ -227,512 +172,1000 @@ class _ReportTabState extends State<ReportTab> {
         if (widget.deepPct != null) 'deep_pct': widget.deepPct,
         if (widget.remPct != null) 'rem_pct': widget.remPct,
         if (widget.lightPct != null) 'light_pct': widget.lightPct,
-        if (widget.last7DaysHours != null) 'last7days_hours': widget.last7DaysHours,
+        if (widget.last7DaysHours != null) 'last7DaysHours': widget.last7DaysHours,
         if (widget.sleepScore != null) 'sleep_score': widget.sleepScore,
       };
     }
 
-    void put(String key, dynamic val) {
-      if (val != null) {
-        if (val is Map<dynamic, dynamic>) {
-          m[key] = _convertToStringKeyedMap(val);
-        } else {
-          m[key] = val;
-        }
-      }
+    void put(String key, dynamic value) {
+      if (value != null) m[key] = value;
     }
+
     put('executive_summary', widget.executiveSummary);
-    put('daily_comparison', widget.dailyComparison);
+    put('risk_assessment', widget.riskAssessment);
+    put('energy_plan', widget.energyPlan);
+    put('wake_windows', widget.wakeWindows);
+    put('what_if_scenarios', widget.whatIfScenarios);
+    put('drivers', widget.drivers);
     put('lifestyle_correlations', widget.lifestyleCorrelations);
-    put('environment_analysis', widget.environmentAnalysis);
-    put('dream_mood_forecast', widget.dreamMoodForecast);
-    put('ai_highlights', widget.aiHighlights);
+    put('environmentAnalysis', widget.environmentAnalysis);
     put('recommendations', widget.recommendations);
     put('chronotype', widget.chronotype);
     put('sleep_midpoint', widget.sleepMidpoint);
-    put('morning_readiness', widget.morningReadiness);
-    put('what_if_scenarios', widget.whatIfScenarios);
-    put('wake_windows', widget.wakeWindows);
-    put('risk_assessment', widget.riskAssessment);
-    put('energy_plan', widget.energyPlan);
-    put('drivers', widget.drivers);
-    put('achievements', widget.achievements);
-    put('hrv_summary', widget.hrvSummary);
-    put('respiratory', widget.respiratory);
-    put('glucose_correlation', widget.glucoseCorrelation);
-    put('action_items', widget.actionItems);
-    put('causal_graph', widget.causalGraph);
-    put('energy_timeline', widget.energyTimeline);
-    put('cognitive_windows', widget.cognitiveWindows);
-    put('micro_arousals', widget.microArousals);
-    put('architecture_notes', widget.architectureNotes);
-    put('recovery_plan', widget.recoveryPlan);
-    put('nutrition', widget.nutrition);
-    put('streaks', widget.streaks);
-    put('smart_goals', widget.smartGoals);
 
     return m;
   }
 
-// Add this helper method to convert dynamic maps to string-keyed maps
-  Map<String, dynamic> _convertToStringKeyedMap(Map<dynamic, dynamic> dynamicMap) {
-    return dynamicMap.map((key, value) {
-      if (value is Map<dynamic, dynamic>) {
-        return MapEntry(key.toString(), _convertToStringKeyedMap(value));
-      } else if (value is List) {
-        return MapEntry(key.toString(), value.map((item) {
-          if (item is Map<dynamic, dynamic>) {
-            return _convertToStringKeyedMap(item);
-          }
-          return item;
-        }).toList());
-      }
-      return MapEntry(key.toString(), value);
+  Future<void> _fetchReportOnce() async {
+    if (widget.loadReport == null) return;
+    setState(() {
+      _loading = true;
+      _error = null;
     });
-  }
-
-  Future<void> _fetchOnce() async {
-    if (_loading) return;
-    setState(() { _loading = true; _error = null; });
     try {
-      final res = await widget.loadReport!.call();
-      final normalized = _asStringKeyedMap(res);
+      final normalized = await widget.loadReport!.call();
       if (mounted) {
         setState(() {
           _data = {...?_data, ...normalized};
           _loading = false;
         });
       }
+      // fetch historical async (non-blocking)
+      try {
+        final histRaw = await ApiService.getHistoricalSleepAnalysis(limit: 10);
+
+        // Decode JSON if needed
+        dynamic decoded;
+        if (histRaw is String) {
+          final s = histRaw.trimLeft();
+          if (s.startsWith('[') || s.startsWith('{')) {
+            decoded = jsonDecode(s);
+          } else {
+            decoded = null; // plain text; ignore
+          }
+        } else {
+          decoded = histRaw;
+        }
+
+        if (mounted && decoded is List && decoded.isNotEmpty) {
+          final list = <Map<String, dynamic>>[];
+          for (final h in decoded) {
+            if (h is Map) list.add(Map<String, dynamic>.from(h));
+          }
+          setState(() => _historical = list);
+        }
+      } catch (e) {
+        print('Error fetching historical sleep analysis: $e');
+      }
+      catch (_) {}
     } catch (e) {
       if (mounted) {
-        setState(() { _error = e; _loading = false; });
+        setState(() {
+          _error = e.toString();
+          _loading = false;
+        });
       }
     }
   }
 
-  Map<String, dynamic> _asStringKeyedMap(Map input) {
-    return _convertToStringKeyedMap(input.cast<dynamic, dynamic>());
+  // ---------- small data helpers ----------
+  String _readString(List<String> keys, {String fallback = ''}) {
+    final map = _data;
+    if (map == null) return fallback;
+    for (final k in keys) {
+      final v = _readByPath(map, k);
+      if (v is String && v.trim().isNotEmpty) return v.trim();
+      if (v != null) return v.toString();
+    }
+    return fallback;
   }
 
+  List<dynamic> _readList(List<String> keys) {
+    final map = _data;
+    if (map == null) return const [];
+    for (final k in keys) {
+      final v = _readByPath(map, k);
+      if (v is List) return List<dynamic>.from(v);
+      if (v != null) return [v];
+    }
+    return const [];
+  }
+
+  Map<String, dynamic> _readMap(List<String> keys) {
+    final map = _data;
+    if (map == null) return const {};
+    for (final k in keys) {
+      final v = _readByPath(map, k);
+      if (v is Map) return Map<String, dynamic>.from(v);
+    }
+    return const {};
+  }
+
+  dynamic _readByPath(Map source, String path) {
+    dynamic current = source;
+    for (final part in path.split('.')) {
+      if (current is Map && current.containsKey(part)) {
+        current = current[part];
+      } else {
+        return null;
+      }
+    }
+    return current;
+  }
+
+  String _titleize(String text) {
+    return text
+        .split(RegExp(r'\s+'))
+        .map((w) => w.isEmpty ? w : (w[0].toUpperCase() + (w.length > 1 ? w.substring(1) : '')))
+        .join(' ');
+  }
+
+
+  Widget _sectionTitle(String title, IconData icon) {
+    return Row(
+        children: [
+          Icon(icon, color: Colors.white, size: 16.r),
+          SizedBox(width: 8.w),
+          Text(title, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14.5.sp)),
+        ]);
+  }
+// ---------- UI ----------
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    return DefaultTextStyle.merge(style: const TextStyle(color: Colors.white), child: Padding(
+        padding: EdgeInsets.all(16.r),
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                  children: [
+                    Text('Report', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18.sp)),
+                    Spacer(),
+                    if (_loading) Padding(
+                        padding: EdgeInsets.only(right: 8.w),
+                        child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))),
+                    if (_error != null)
+                      TextButton.icon(style: TextButton.styleFrom(foregroundColor: Colors.white),
+                          onPressed: (_loading || widget.loadReport == null) ? null : _fetchOnce,
+                          icon: Icon(Icons.refresh),
+                          label: Text('Retry'))
+                    else if (widget.loadReport != null)
+                      TextButton.icon(style: TextButton.styleFrom(foregroundColor: Colors.white),
+                          onPressed: _loading ? null : _fetchOnce,
+                          icon: Icon(Icons.sync),
+                          label: Text('Refresh')),
+                  ]),
+              SizedBox(height: 12.h),
 
-    // Non-scroll content to be embedded inside parent sliver
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _Header(),
-          SizedBox(height: 12.h),
-          if (_loading) _SkeletonList(),
-          if (_error != null) _ErrorBox(error: _error),
-          if (!_loading && _error == null) ...[
-            _buildExecutiveSummary(theme),
-            SizedBox(height: 12.h),
-            _buildRiskAssessment(theme),
-            SizedBox(height: 12.h),
-            _buildEnergyPlan(theme),
-            SizedBox(height: 12.h),
-            _buildWakeWindows(theme),
-            SizedBox(height: 12.h),
-            _buildWhatIfScenarios(theme),
-            SizedBox(height: 24.h),
-          ],
-        ],
-      ),
-    );
+              if (_loading) _SkeletonList(),
+              if (_error != null) _ErrorBox(error: _error),
+
+              if (!_loading && _error == null) ...[
+                _buildViewModeToggle(theme),
+                SizedBox(height: 12.h),
+                _buildExecutiveSummary(theme),
+                SizedBox(height: 12.h),
+                _buildKeyMetrics(theme),
+                SizedBox(height: 12.h),
+                _buildTrendsAndDebt(theme),
+                SizedBox(height: 12.h),
+                _buildChronotypeQuick(theme),
+                SizedBox(height: 12.h),
+                _buildRiskHotspots(theme),
+                SizedBox(height: 12.h),
+                _buildRiskAssessment(theme),
+                SizedBox(height: 12.h),
+                _buildDynamicFactors(theme),
+                SizedBox(height: 12.h),
+                _buildActionCenter(theme),
+                SizedBox(height: 12.h),
+                _buildEnergyPlan(theme),
+                SizedBox(height: 12.h),
+                _buildWakeWindows(theme),
+                SizedBox(height: 12.h),
+                _buildWhatIfScenarios(theme),
+                SizedBox(height: 24.h),
+              ],
+            ])));
+  }
+  Widget _EmptyText(String message) {
+    return Center(
+        child: Text(
+        message,
+        style: TextStyle(color: Colors.white, fontSize: 16)));
   }
 
+  // ---- View toggle ----
+  Widget _buildViewModeToggle(ThemeData theme) {
+    return Row(
+        children: [
+          Text('View:', style: theme.textTheme.labelMedium?.copyWith(color: Colors.white)),
+          SizedBox(width: 8.w),
+          ChoiceChip(
+              label: Text('Detailed'),
+              selected: !_compact,
+              onSelected: (v) => setState(() => _compact = false)),
+          SizedBox(width: 8.w),
+          ChoiceChip(
+              label: Text('Compact'),
+              selected: _compact,
+              onSelected: (v) => setState(() => _compact = true)),
+        ]);
+  }
 
   // ---- Sections ----
-  Widget _buildExecutiveSummary(ThemeData theme) {
-    // Try to read from both legacy parameter and data map
-    final legacySummary = widget.executiveSummary;
-    var raw = legacySummary is String
-        ? legacySummary
-        : _readString([
-      'executive_summary',
-      'executiveSummary',
-      'summary',
-      'overview',
-      'sections.executive_summary',//
-      'sections.executiveSummary',
-    ]);
 
-    final text = _ensurePlainReportText(raw);
+  Widget _buildExecutiveSummary(ThemeData theme) {
+    List bullets = _readList(['executive_summary.bullets', 'executiveSummary.bullets']);
+    String textBlob = _readString(['executive_summary.text', 'executiveSummary.text']);
+// If not provided as nested .text, accept a direct string too
+    if (textBlob.isEmpty) {
+      final direct = _readString(['executive_summary', 'executiveSummary', 'summary', 'overview']);
+      if (direct.isNotEmpty) textBlob = direct;
+    }
+
+    // flatten code fences & json-ish
+    if ((textBlob.isEmpty || textBlob == 'null') && bullets.isNotEmpty) { textBlob = bullets.map((e)=> e.toString()).join('\n'); }
+    String plainText(String t) {
+      t = t
+          .replaceAll(RegExp(r'^```[a-zA-Z]*\n|```$', multiLine: true), '')
+          .trim();
+      try {
+        final dynamic decoded = jsonDecode(t);
+        return _flattenJson(decoded);
+      } catch (_) {
+        final looksJson = RegExp(r'^[\s\n]*[\{\[]').hasMatch(t) &&
+            RegExp(r'[\}\]]\s*$').hasMatch(t);
+        if (looksJson) {
+          t = t.replaceAll(RegExp(r'[\{\}\[\]\" ]'), '').replaceAll(',', '\n').replaceAll(':', ': ');
+        }
+        return t;
+      }
+    }
+
+    if (bullets.isEmpty && textBlob.isEmpty) {
+      // synth from risk/energy if possible
+      final riskMap = _readMap(['risk_assessment', 'riskAssessment', 'risks', 'risk']);
+      final energyMap = _readMap(['energy_plan', 'energyPlan']);
+      final synth = <String>[];
+      final riskLevel = riskMap['level']?.toString();
+      final energyTip = energyMap['advice']?.toString();
+      if (riskLevel != null) synth.add('Risk level: ${_titleize(riskLevel)}');
+      if (energyTip != null) synth.add('Energy tip: $energyTip');
+      bullets = synth;
+    }
+
+
+    // Raw-dump fallback if empty
+    final sec = _readMap(['executive_summary','executiveSummary']);
+    final rawSec = sec.isNotEmpty ? sec : _data;
+    if (!(bullets.isNotEmpty || (textBlob.trim().isNotEmpty))) {
+      return _SectionCard(title: 'Executive Summary', subtitle: 'Raw', child: _JsonDump(rawSec));
+    }
+
     return _SectionCard(
-      title: 'Executive Summary',
-      subtitle: 'One-glance recap of your night',
-      child: text.isEmpty
-          ? _EmptyText('No summary available yet.')
-          : Text(
-        text,
-        style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14.sp, height: 1.35),
-      ),
-    );
+        title: 'Executive Summary',
+        subtitle: 'Fast overview for today',
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (bullets.isNotEmpty) ...[
+                for (final b in bullets) Padding(
+                    padding: EdgeInsets.only(bottom: 6.h),
+                    child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('• ', style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white)),
+                          Expanded(child: Text(b.toString(), style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white))),
+                        ])),
+              ] else if (textBlob.isNotEmpty) ...[
+                Text(plainText(textBlob), style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white)),
+              ] else
+                _EmptyText('No summary available yet.'),
+            ]));
+  }
+
+  Widget _buildKeyMetrics(ThemeData theme) {
+    final m = _readMap(['metrics']);
+    final total = (m['total_sleep_hours'] ?? widget.totalSleepHours) as num?;
+    final eff = (m['sleep_efficiency'] ?? widget.efficiency) as num?;
+    final deep = (m['deep_pct'] ?? widget.deepPct) as num?;
+    final rem = (m['rem_pct'] ?? widget.remPct) as num?;
+    final light = (m['light_pct'] ?? widget.lightPct) as num?;
+    final score = (m['sleep_score'] ?? widget.sleepScore) as num?;
+
+    final items = <_MetricItem>[
+      _MetricItem(label: 'Duration', value: total != null ? '${total.toStringAsFixed(2)} h' : '—'),
+      _MetricItem(label: 'Efficiency', value: eff != null ? '${eff.toStringAsFixed(1)} %' : '—'),
+      _MetricItem(label: 'Deep', value: deep != null ? '${deep.toString()} %' : '—'),
+      _MetricItem(label: 'REM', value: rem != null ? '${rem.toString()} %' : '—'),
+      _MetricItem(label: 'Light', value: light != null ? '${light.toString()} %' : '—'),
+      _MetricItem(label: 'Score', value: score != null ? score.toStringAsFixed(1) : '—'),
+    ];
+
+    return _SectionCard(
+        title: 'Sleep Efficiency & Stages',
+        subtitle: 'Core quality indicators',
+        child: _MetricsGrid(items: items));
+  }
+
+  Widget _buildTrendsAndDebt(ThemeData theme) {
+    final List<double> scoreSeries = [];
+    final List<double> effSeries = [];
+    final List<double> hoursSeries = [];
+
+    for (final h in _historical ?? const <Map<String, dynamic>>[]) {
+      try {
+        final m = (h['metrics'] ?? {}) as Map;
+        final s = m['sleep_score'] ?? h['sleepScore'] ?? h['score'];
+        final e = m['sleep_efficiency'] ?? h['efficiency'];
+        final t = m['total_sleep_hours'] ?? h['totalSleepHours'] ?? h['hours'];
+        if (s is num) scoreSeries.add(s.toDouble());
+        if (e is num) effSeries.add(e.toDouble());
+        if (t is num) hoursSeries.add(t.toDouble());
+      } catch (_) {}
+    }
+
+    if (scoreSeries.isEmpty && effSeries.isEmpty && hoursSeries.isEmpty) {
+      // fallback from metrics.last7DaysHours if provided
+      for (final v in _readList(['metrics.last7DaysHours', 'last7DaysHours'])) {
+        if (v is num) hoursSeries.add(v.toDouble());
+      }
+    }
+
+    final hasAnything = scoreSeries.length >= 2 || effSeries.length >= 2 || hoursSeries.length >= 2;
+    if (!hasAnything) return SizedBox.shrink();
+
+    // Weekly sleep debt vs 7.5h target
+    final target = 7.5;
+    double debt = 0.0;
+    final recent = hoursSeries.take(7).toList();
+    for (final h in recent) {
+      debt += (target - h);
+    }
+    final debtStr = (debt >= 0 ? '+' : '−') + debt.abs().toStringAsFixed(1) + 'h';
+
+    return _SectionCard(
+        title: 'Trends & Sleep Debt',
+        subtitle: 'Mini history and weekly balance',
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (scoreSeries.length >= 2) _TrendTile(title: 'Sleep Score', series: scoreSeries, unit: ''),
+              if (effSeries.length >= 2) SizedBox(height: 8.h),
+              if (effSeries.length >= 2) _TrendTile(title: 'Efficiency', series: effSeries, unit: '%'),
+              if (hoursSeries.length >= 2) SizedBox(height: 8.h),
+              if (hoursSeries.length >= 2) _TrendTile(title: 'Duration', series: hoursSeries, unit: 'h'),
+              SizedBox(height: 10.h),
+              Row(
+                  children: [
+                    _impactDot(debt >= 0 ? 'negative' : 'positive', size: 10),
+                    SizedBox(width: 8.w),
+                    Text('Weekly Sleep Debt: ', style: theme.textTheme.labelLarge),
+                    Text(debtStr, style: theme.textTheme.labelLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
+                  ]),
+            ]));
+  }
+
+  Widget _buildChronotypeQuick(ThemeData theme) {
+    final chronotype = _readString(['chronotype']);
+    final midpoint = _readString(['sleep_midpoint', 'sleepMidpoint']);
+    if (chronotype.isEmpty && midpoint.isEmpty) return SizedBox.shrink();
+
+    return _SectionCard(
+        title: 'Chronotype & Midpoint',
+        subtitle: 'Personal rhythm snapshot',
+        child: Row(
+            children: [
+              if (chronotype.isNotEmpty) _Chip(text: _titleize(chronotype)),
+              if (chronotype.isNotEmpty && midpoint.isNotEmpty) SizedBox(width: 8.w),
+              if (midpoint.isNotEmpty) _Chip(text: 'Midpoint $midpoint'),
+            ]));
+  }
+
+  Widget _buildRiskHotspots(ThemeData theme) {
+    final comp = _readMap(['risk_assessment.components', 'riskAssessment.components']);
+    if (comp.isEmpty) return SizedBox.shrink();
+
+    final entries = <MapEntry<String, double>>[];
+    comp.forEach((k, v) {
+      double val = 0.0;
+      if (v is num) val = v.toDouble();
+      else if (v is String) {
+        final s = v.replaceAll('%', '');
+        val = double.tryParse(s) ?? 0.0;
+        if (v.contains('%')) val = val / 100.0;
+      }
+      entries.add(MapEntry(k.toString(), val.abs()));
+    });
+    entries.sort((a, b) => b.value.compareTo(a.value));
+
+    return _SectionCard(
+        title: 'Risk Hotspots',
+        subtitle: 'Where to focus first',
+        child: LayoutBuilder(
+            builder: (context, constraints) {
+              final total = entries.fold<double>(0.0, (p, e) => p + e.value);
+              if (total <= 0) return _EmptyText('No components found.');
+              return Container(
+                  padding: EdgeInsets.all(10.w),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(.2))),
+                  child: Row(
+                      children: [
+                      for (final e in entries) ...[
+              Expanded(
+              flex: (e.value * 1000).round().clamp(1, 1000),
+              child: Container(
+              height: 18.h,
+              decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withOpacity(.15),
+              borderRadius: BorderRadius.circular(6.r)),
+              alignment: Alignment.center,
+              child: Text(
+              _titleize(e.key.replaceAll('_', ' ')),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: Colors.white, fontSize: 10.sp, fontWeight: FontWeight.w700))),
+              )],
+              ]));
+            }));
   }
 
   Widget _buildRiskAssessment(ThemeData theme) {
-    // Try to read from legacy parameter first
-    dynamic riskData = widget.riskAssessment;
-    List risks = const [];
+    // Read multiple aliases and shapes
+    final ra = _readMap(['risk_assessment', 'riskAssessment', 'risks', 'risk']);
+    List risks = _readList(['risk_assessment.risks', 'risk_assessment.hotspots', 'riskAssessment.hotspots', 'risks', 'risk']);
+    final level = ra['level']?.toString();
+    final score = ra['score'] is num ? (ra['score'] as num).toDouble() : null;
+    final advice = (ra['advice'] ?? ra['notes'] ?? ra['note'])?.toString();
 
-    if (riskData is Map && riskData['risks'] is List) {
-      risks = List.from(riskData['risks']);
-    } else if (riskData is List) {
-      risks = List.from(riskData);
-    } else {
-      // Fall back to stored data
-      risks = _readList([
-        'risk_assessment.risks',
-        'riskAssessment.risks',
-        'risk_assessment',
-        'riskAssessment',
-        'sections.risk_assessment.risks',
-        'sections.riskAssessment.risks',
-        'sections.risk_assessment',
-        'sections.riskAssessment',
-      ]);
+
+    // Raw-dump fallback if empty
+    final sec = _readMap(['risk_assessment','riskAssessment']);
+    final rawSec = sec.isNotEmpty ? sec : _data;
+    if (!(risks.isNotEmpty || (level != null && level.toString().isNotEmpty) || (advice != null && advice!.trim().isNotEmpty) || score != null)) {
+      return _SectionCard(title: 'Risk Assessment', subtitle: 'Raw', child: _JsonDump(rawSec));
     }
 
     return _SectionCard(
-      title: 'Risk Assessment',
-      subtitle: 'Potential sleep disruptors',
-      child: (risks.isEmpty)
-          ? _EmptyText('No notable risks detected.')
-          : Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (final r in risks.take(6))
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 6.h),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        title: 'Risk Assessment',
+        subtitle: 'Potential sleep disruptors',
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (level != null || score != null) Row(
+                  children: [
+                    if (level != null) _Chip(text: _titleize(level)),
+                    if (score != null) ...[SizedBox(width: 8.w), _Chip(text: 'Score ${score.toStringAsFixed(0)}')],
+                  ]),
+              if (advice != null && advice.trim().isNotEmpty) ...[
+                SizedBox(height: 8.h),
+                Text(advice, style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white)),
+              ],
+              SizedBox(height: 8.h),
+              if (risks.isEmpty)
+                _EmptyText('No notable risks detected.')
+              else
+                ...risks.map((r) {
+                  if (r is Map) {
+                    final title = (r['title'] ?? r['name'] ?? 'Risk').toString();
+                    final impact = (r['impact'] ?? r['effect'] ?? '').toString();
+                    return Padding(
+                        padding: EdgeInsets.only(bottom: 6.h),
+                        child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(Icons.warning_amber_rounded, size: 18.r),
+                              SizedBox(width: 8.w),
+                              Expanded(child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(title, style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w600)),
+                                    if (impact.trim().isNotEmpty) Text(impact, style: theme.textTheme.bodySmall?.copyWith(color: Colors.white)),
+                                  ])),
+                            ]));
+                  } else {
+                    return Padding(
+                        padding: EdgeInsets.only(bottom: 6.h),
+                        child: Row(
+                            children: [
+                              Icon(Icons.warning_amber_rounded, size: 18.r),
+                              SizedBox(width: 8.w),
+                              Expanded(child: Text(r.toString(), style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white))),
+                            ]));
+                  }
+                }).toList(),
+            ]));
+  }
+  Widget _buildDynamicFactors(ThemeData theme) {
+    final List<_FactorEntry> factors = [];
+
+    // drivers
+    for (final d in _readList(['drivers', 'key_factors', 'contributors', 'top_drivers'])) {
+      if (d is String) {
+        factors.add(_FactorEntry(label: _titleize(d), impact: _inferImpactFromLabel(d)));
+      } else if (d is Map) {
+        final map = Map<String, dynamic>.from(d);
+        final name = (map['name'] ?? map['label'] ?? map['factor'] ?? '').toString();
+        final impact = (map['impact'] ?? map['direction'] ?? map['polarity'] ?? 'neutral').toString();
+        final score = _toDouble(map['score'] ?? map['weight'] ?? map['strength']);
+        final tip = map['tip']?.toString();
+        if (name.isNotEmpty) {
+          factors.add(_FactorEntry(label: _titleize(name), impact: impact, score: score, tip: tip));
+        }
+      }
+    }
+
+    // lifestyle correlations
+    final lcMap = _readMap(['lifestyle_correlations', 'lifestyleCorrelations']);
+    if (lcMap.isNotEmpty) {
+      lcMap.forEach((k, v) {
+        String impact = 'neutral';
+        double? score;
+        if (v is num) {
+          score = v.toDouble();
+          impact = score >= 0 ? 'positive' : 'negative';
+        } else if (v is Map) {
+          final mv = Map<String, dynamic>.from(v);
+          score = _toDouble(mv['score'] ?? mv['correlation'] ?? mv['value']);
+          impact = (mv['impact'] ?? mv['direction'] ?? (score != null && score >= 0 ? 'positive' : 'negative')).toString();
+        }
+        factors.add(_FactorEntry(label: _titleize(k.toString().replaceAll('_', ' ')), impact: impact, score: score));
+      });
+    } else {
+      final lcList = _readList(['lifestyle_correlations', 'lifestyleCorrelations']);
+      for (final item in lcList) {
+        if (item is Map) {
+          final label = (item['label'] ?? item['name'] ?? item['key'] ?? '').toString();
+          final val = item['value'];
+          String impact = 'neutral';
+          double? score;
+          if (val is num) { score = val.toDouble(); impact = score >= 0 ? 'positive' : 'negative'; }
+          final tip = item['tip']?.toString();
+          if (label.isNotEmpty) {
+            factors.add(_FactorEntry(label: _titleize(label), impact: impact, score: score, tip: tip));
+          }
+        }
+      }
+    }
+
+    // environment factors
+    final envFactors = _readMap(['environment_analysis.factors', 'environmentAnalysis.factors']);
+    envFactors.forEach((k, v) {
+      final valStr = v?.toString() ?? '';
+      if (valStr.isNotEmpty) {
+        factors.add(_FactorEntry(label: _titleize(k.toString().replaceAll('_', ' ')), impact: 'neutral', tip: valStr));
+      }
+    });
+
+    // de-dup
+    final seen = <String>{};
+    final deduped = <_FactorEntry>[];
+    for (final f in factors) {
+      final key = f.label.toLowerCase();
+      if (!seen.contains(key)) {
+        seen.add(key);
+        deduped.add(f);
+      }
+    }
+
+    if (deduped.isEmpty) {
+      return _SectionCard(
+          title: 'Dynamic Factors',
+          subtitle: 'What’s shaping tonight’s sleep',
+          child: _EmptyText('Add more sleep logs to unlock your personalized factor map.'));
+    }
+
+    return _SectionCard(
+        title: 'Dynamic Factors',
+        subtitle: 'What’s shaping tonight’s sleep',
+        child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
                 children: [
-                  Container(
-                    width: 8.w,
-                    height: 8.w,
-                    margin: EdgeInsets.only(top: 6.h, right: 10.w),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: theme.colorScheme.primary.withOpacity(.9),
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      r.toString(),
-                      style: theme.textTheme.bodyMedium?.copyWith(height: 1.35),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
+                  for (final f in deduped) ...[
+                    _DynamicFactorTile(
+                        entry: f,
+                        onTap: () {
+                          final tips = _readMap(['recommendations', 'tips']);
+                          final List<String> recs = [];
+                          if (tips.isNotEmpty) {
+                            final key = f.label.toLowerCase().replaceAll(' ', '_');
+                            final v = tips[key] ?? tips[f.label] ?? tips[key.replaceAll('_', '')];
+                            if (v is List) {
+                              for (final t in v) {
+                                if (t != null) recs.add(t.toString());
+                              }
+                            } else if (v is String) {
+                              recs.add(v);
+                            }
+                          }
+                          _showFactorTipsSheet(context, f, recs);
+                        }),
+                    SizedBox(width: 10.w),
+                  ]
+                ])));
+  }
+
+  void _showFactorTipsSheet(BuildContext context, _FactorEntry f, List<String> recs) {
+    showModalBottomSheet(
+        context: context,
+        showDragHandle: true,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20.r))),
+        builder: (context) {
+          final theme = Theme.of(context);
+          return Padding(
+              padding: EdgeInsets.all(16.r),
+              child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                        children: [
+                          _impactDot(f.impact, size: 12),
+                          SizedBox(width: 10.w),
+                          Expanded(
+                              child: Text(f.label, style: theme.textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w800))),
+                          if (f.score != null)
+                            Text('${(f.score! >= 0 ? '+' : '')}${f.score!.toStringAsFixed(2)}', style: theme.textTheme.labelLarge),
+                        ]),
+                    if (f.tip != null && f.tip!.isNotEmpty) ...[
+                      SizedBox(height: 12.h),
+                      Text(f.tip!, style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white)),
+                    ],
+                    if (recs.isNotEmpty) ...[
+                      SizedBox(height: 16.h),
+                      Text('Suggestions', style: theme.textTheme.titleSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
+                      SizedBox(height: 8.h),
+                      for (final r in recs) Padding(
+                          padding: EdgeInsets.only(bottom: 8.h),
+                          child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('• ', style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white)),
+                                Expanded(child: Text(r, style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white))),
+                              ])),
+                    ],
+                  ]));
+        });
+  }
+
+  Widget _buildActionCenter(ThemeData theme) {
+    final actions = <String>[];
+    for (final x in _readList(['action_items', 'actions', 'next_actions'])) {
+      if (x is String) actions.add(x);
+      else if (x is Map) {
+        final t = (x['text'] ?? x['title'] ?? x['action'])?.toString();
+        if (t != null && t.isNotEmpty) actions.add(t);
+      }
+    }
+    if (actions.isEmpty) {
+      for (final r in _readList(['recommendations', 'tips'])) {
+        if (r is String) actions.add(r);
+      }
+    }
+    if (actions.isEmpty) return SizedBox.shrink();
+
+    return _SectionCard(
+        title: 'Action Center',
+        subtitle: 'Quick wins for tonight',
+        child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+                children: [
+                  for (final t in actions) ...[
+                    _ActionItemTile(text: t),
+                    SizedBox(width: 10.w),
+                  ],
+                ])));
   }
 
   Widget _buildEnergyPlan(ThemeData theme) {
-    // Try to read from legacy parameter first
-    dynamic energyData = widget.energyPlan;
-    List steps = const [];
-    String headline = 'Daily Energy Plan';
+    // Accept multiple aliases and shapes
+    final e = _readMap(['energy_plan', 'energyPlan', 'daily_energy_plan', 'dailyEnergyPlan', 'energy']);
+    final blocksRaw = e['plan'] ?? e['blocks'] ?? e['schedule'] ?? e['items'];
+    final advice = (e['advice'] ?? e['note'] ?? e['notes'])?.toString();
+    final blocksList = (blocksRaw is List) ? List.from(blocksRaw) : (blocksRaw != null ? [blocksRaw] : <dynamic>[]);
+    final blocks = blocksList.map((b) {
+      if (b is Map) {
+        final start = b['start'] ?? b['from'] ?? b['begin'];
+        final end = b['end'] ?? b['to'] ?? b['finish'];
+        final timeRange = (b['time_range'] ?? b['timeRange'] ?? (start != null && end != null ? '$start–$end' : null))?.toString();
+        return {
+          'time_range': timeRange,
+          'action': (b['action'] ?? b['title'] ?? b['task'] ?? b['activity'] ?? 'Activity').toString(),
+          'rationale': (b['rationale'] ?? b['why'] ?? b['detail'] ?? b['explanation'] ?? '').toString(),
+        };
+      }
+      return {'time_range': null, 'action': b.toString(), 'rationale': ''};
+    }).toList();
 
-    if (energyData is Map) {
-      if (energyData['steps'] is List) steps = List.from(energyData['steps']);
-      if (energyData['title'] != null) headline = energyData['title'].toString();
-    } else if (energyData is List) {
-      steps = List.from(energyData);
-    } else {
-      // Fall back to stored data
-      steps = _readList([
-        'energy_plan.steps',
-        'energyPlan.steps',
-        'plan.steps',
-        'sections.energy_plan.steps',
-        'sections.energyPlan.steps',
-      ]);
-      headline = _readString([
-        'energy_plan.title',
-        'energyPlan.title',
-        'sections.energy_plan.title',
-        'sections.energyPlan.title',
-      ], fallback: headline);
+    if (blocks.isEmpty && (advice == null || advice.trim().isEmpty)) {
+
+      // Raw-dump fallback if nothing to show
+      if (blocks.isEmpty && (advice == null || advice.trim().isEmpty)) {
+        final rawSec = e.isNotEmpty ? e : _data;
+        return _SectionCard(title: 'Daily Energy Plan', subtitle: 'Raw', child: _JsonDump(rawSec));
+      }
+
+      return _SectionCard(
+          title: 'Daily Energy Plan',
+          subtitle: 'How to pace your day',
+          child: _EmptyText('Add more sleep logs to unlock a personalized plan.'));
+    }
+
+
+    // Raw-dump fallback if nothing to show
+    if (blocks.isEmpty && (advice == null || advice.trim().isEmpty)) {
+      final rawSec = e.isNotEmpty ? e : _data;
+      return _SectionCard(title: 'Daily Energy Plan', subtitle: 'Raw', child: _JsonDump(rawSec));
     }
 
     return _SectionCard(
-      title: headline,
-      subtitle: 'Simple steps to feel better today',
-      child: steps.isEmpty
-          ? _EmptyText('No plan generated yet.')
-          : Column(children: [for (final s in steps.take(6)) _StepRow(text: s.toString())]),
-    );
+        title: 'Daily Energy Plan',
+        subtitle: 'How to pace your day',
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (advice != null && advice.trim().isNotEmpty)
+                Text(advice, style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white)),
+              if (blocks.isNotEmpty) ...[
+                SizedBox(height: 10.h),
+                ...blocks.map((b) => Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.bolt_rounded, size: 18.r),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                    b['time_range']?.toString() ?? '—',
+                                    style: theme.textTheme.labelMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w600)),
+                                Text(
+                                    b['action']?.toString() ?? '',
+                                    style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white)),
+                                if ((b['rationale'] ?? '').toString().trim().isNotEmpty)
+                                  Text(
+                                      b['rationale']?.toString() ?? '',
+                                      style: theme.textTheme.bodySmall?.copyWith(color: Colors.white)),
+                                SizedBox(height: 8.h),
+                              ])),
+                    ]))
+              ],
+            ]));
   }
-
   Widget _buildWakeWindows(ThemeData theme) {
-    // Try to read from legacy parameter first
-    dynamic windowsData = widget.wakeWindows;
-    List windows = [];
-
-    if (windowsData is List) {
-      windows = List.from(windowsData);
-    } else {
-      // Fall back to stored data
-      windows = _readList([
-        'wake_windows',
-        'wakeWindows',
-        'sections.wake_windows',
-        'sections.wake_windows.items',
-        'sections.wakeWindows',
-        'sections.wakeWindows.items',
-      ]);
-    }
-
+    final _wwTop = _readList(['wake_windows', 'wakeWindows', 'wakeUpWindows', 'suggested_wake_windows', 'suggestedWakeWindows']);
+    final ww = _wwTop.isNotEmpty ? _wwTop : _readList(['wake_windows.windows', 'wakeWindows.windows']);
+    if (ww.isEmpty) { final sec = _readMap(['wake_windows','wakeWindows']); final rawSec = sec.isNotEmpty ? sec : _data; return _SectionCard(title: 'Suggested Wake Windows', subtitle: 'Raw', child: _JsonDump(rawSec)); }
     return _SectionCard(
-      title: 'Suggested Wake Windows',
-      subtitle: 'Optimal times to start your day',
-      child: windows.isEmpty
-          ? _EmptyText('No wake windows available.')
-          : Wrap(
-        spacing: 8.w,
-        runSpacing: 8.h,
-        children: [for (final w in windows) _Chip(text: w.toString())],
-      ),
-    );
+        title: 'Suggested Wake Windows',
+        subtitle: 'Best times to wake up',
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: ww.map((w) {
+              if (w is Map) {
+                final start = (w['start'] ?? w['from'] ?? w['window_start'] ?? '').toString();
+                final end = (w['end'] ?? w['to'] ?? w['window_end'] ?? '').toString();
+                final type = (w['type'] ?? w['label'] ?? '').toString();
+                final line = '${start.isNotEmpty ? start : '—'} – ${end.isNotEmpty ? end : '—'}'
+                    '${type.isNotEmpty ? '  ($type)' : ''}';
+                return Padding(
+                    padding: EdgeInsets.only(bottom: 6.h),
+                    child: Text(line, style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white)));
+              } else {
+                return Padding(
+                    padding: EdgeInsets.only(bottom: 6.h),
+                    child: Text(w.toString(), style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white)));
+              }
+            }).toList()));
   }
 
   Widget _buildWhatIfScenarios(ThemeData theme) {
-    // Try to read from legacy parameter first
-    dynamic scenariosData = widget.whatIfScenarios;
-    List scenarios = [];
+    // Accept multiple aliases and shapes
+    dynamic scenariosDyn = _readList([
+      'what_if_scenarios',
+      'whatIfScenarios',
+      'what_if',
+      'whatIf',
+      'scenarios'
+    ]);
 
-    if (scenariosData is List) {
-      scenarios = List.from(scenariosData);
-    } else {
-      // Fall back to stored data
-      scenarios = _readList([
-        'what_if_scenarios',
-        'whatIfScenarios',
-        'scenarios',
-        'items',
-        'sections.what_if_scenarios',
-        'sections.what_if_scenarios.items',
-        'sections.whatIfScenarios',
-        'sections.whatIfScenarios.items',
-        'sections.scenarios',
-        'sections.items',
-      ]);
+    List scenarios = (scenariosDyn is List)
+        ? List.from(scenariosDyn)
+        : (scenariosDyn != null ? [scenariosDyn] : <dynamic>[]);
+
+    // Expand nested {scenarios:[...]} shape
+    if (scenarios.length == 1 &&
+        scenarios.first is Map &&
+        (scenarios.first['scenarios'] is List)) {
+      scenarios = List.from(scenarios.first['scenarios']);
+    }
+
+    if (scenarios.isEmpty) {
+
+      // Raw-dump fallback if empty
+      final sec = _readMap(['what_if_scenarios','whatIfScenarios']);
+      final rawSec = sec.isNotEmpty ? sec : _data;
+      if (!(scenarios.isNotEmpty)) {
+        return _SectionCard(title: 'What-If Scenarios', subtitle: 'Raw', child: _JsonDump(rawSec));
+      }
+
+      return _SectionCard(
+          title: 'What-If Scenarios',
+          subtitle: 'Small changes, predicted impact',
+          child: _EmptyText(
+              'No scenarios yet. Add more logs to unlock simulations.'));
+    }
+
+
+    // Raw-dump fallback if empty
+    final sec = _readMap(['what_if_scenarios','whatIfScenarios']);
+    final rawSec = sec.isNotEmpty ? sec : _data;
+    if (!(scenarios.isNotEmpty)) {
+      return _SectionCard(title: 'What-If Scenarios', subtitle: 'Raw', child: _JsonDump(rawSec));
     }
 
     return _SectionCard(
-      title: 'What-If Scenarios',
-      subtitle: 'Small changes, predicted impact',
-      child: scenarios.isEmpty
-          ? _EmptyText('Add more sleep logs to unlock simulations.')
-          : Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (final s in scenarios)
-            Padding(
-              padding: EdgeInsets.only(bottom: 8.h),
-              child: _BulletItem(
-                title: s is Map && s['title'] != null ? s['title'].toString() : s.toString(),
-                subtitle: s is Map && s['impact'] != null ? s['impact'].toString() : null,
-              ),
-            ),
-        ],
-      ),
-    );
+        title: 'What-If Scenarios',
+        subtitle: 'Small changes, predicted impact',
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: scenarios.map((s) {
+              if (s is Map) {
+                return _WhatIfTile(
+                    title: (s['title'] ?? s['change'] ?? 'Scenario').toString(),
+                    impact: (s['impact'] ?? s['effect'] ?? s['result'])?.toString(),
+                    detail: (s['detail'] ?? s['explanation'] ?? s['why'])?.toString());
+              } else {
+                return _WhatIfTile(title: s.toString());
+              }
+            }).toList()));
+  }
+
+// helpers
+  double? _toDouble(dynamic v) {
+    if (v == null) return null;
+    if (v is double) return v;
+    if (v is int) return v.toDouble();
+    if (v is String) return double.tryParse(v);
+    return null;
+  }
+
+  String _inferImpactFromLabel(String s) {
+    final l = s.toLowerCase();
+    if (l.contains('caffeine') || l.contains('screen') || l.contains('late') || l.contains('stress')) return 'negative';
+    if (l.contains('walk') || l.contains('exercise') || l.contains('sun') || l.contains('wind down') || l.contains('tea')) return 'positive';
+    return 'neutral';
+  }
+
+  String _flattenJson(dynamic v) {
+    if (v == null) return '';
+    if (v is String) return v;
+    if (v is num || v is bool) return v.toString();
+    if (v is List) {
+      return v.map((e) => '- ${_flattenJson(e)}').join('\n');
+    }
+    if (v is Map) {
+      final b = StringBuffer();
+      v.forEach((k, val) {
+        final key = k.toString();
+        final child = _flattenJson(val);
+        if (child.contains('\n')) {
+          b.writeln('$key:');
+          for (final line in child.split('\n')) {
+            b.writeln('  $line');
+          }
+        } else {
+          b.writeln('$key: $child');
+        }
+      });
+      return b.toString().trimRight();
+    }
+    return v.toString();
   }
 }
 
+// ====================== UI helpers (top-level classes) ======================
 
 
-// ---- UI Pieces ----
-
-class _Header extends StatelessWidget {
+class _JsonDump extends StatelessWidget {
+  final dynamic node;
+  const _JsonDump(this.node, {super.key});
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Icon(Icons.analytics_outlined, size: 24.sp, color: theme.colorScheme.primary),
-        SizedBox(width: 8.w),
-        Text(
-          'Report',
-          style: theme.textTheme.titleLarge?.copyWith(fontSize: 18.sp, fontWeight: FontWeight.w700),
-        ),
-        Spacer(),
-        _HelpBadge(),
-      ],
-    );
-  }
-}
-
-class _HelpBadge extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    String txt;
+    try {
+      if (node is String) {
+        txt = node as String;
+      } else {
+        txt = const JsonEncoder.withIndent('  ').convert(node);
+      }
+    } catch (_) {
+      txt = node?.toString() ?? '';
+    }
+    if (txt.isEmpty) txt = '(no data)';
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withOpacity(.08),
-        borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: theme.colorScheme.primary.withOpacity(.2)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.info_outline, size: 14.sp, color: theme.colorScheme.primary),
-          SizedBox(width: 6.w),
-          Text(
-            'AI generated',
-            style: theme.textTheme.labelMedium?.copyWith(fontSize: 12.sp, color: theme.colorScheme.primary),
-          ),
-        ],
-      ),
-    );
+        width: double.infinity,
+        padding: EdgeInsets.all(12.w),
+    decoration: BoxDecoration(
+    color: theme.colorScheme.surfaceVariant.withOpacity(.4),
+    borderRadius: BorderRadius.circular(12.r),
+    border: Border.all(color: theme.dividerColor.withOpacity(.3))),
+    child: SelectableText(txt, style: theme.textTheme.bodySmall?.copyWith(color: Colors.white, fontFamily: 'monospace', height: 1.3)));
   }
 }
+
 
 class _SectionCard extends StatelessWidget {
   final String title;
   final String? subtitle;
   final Widget child;
+  final IconData? icon;
 
   const _SectionCard({
     Key? key,
     required this.title,
     required this.child,
     this.subtitle,
+    this.icon,
   }) : super(key: key);
+
+  IconData _guessIcon() {
+    final t = title.toLowerCase();
+    if (t.contains('summary')) return Icons.auto_awesome;
+    if (t.contains('metric')) return Icons.speed;
+    if (t.contains('risk')) return Icons.health_and_safety;
+    if (t.contains('energy')) return Icons.battery_full;
+    if (t.contains('wake')) return Icons.alarm;
+    if (t.contains('what') && t.contains('if')) return Icons.science;
+    if (t.contains('driver') || t.contains('insight')) return Icons.insights;
+    if (t.contains('trend') || t.contains('history')) return Icons.trending_up;
+    return Icons.widgets_outlined;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ic = icon ?? _guessIcon();
+    return NeoCard(
+        padding: EdgeInsets.all(16.r),
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (subtitle != null) ...[
+                SizedBox(height: 6.h),
+                Text(
+                    subtitle!,
+                    style: TextStyle(color: Colors.white, fontSize: 12.5.sp, fontWeight: FontWeight.w500)),
+              ],
+              SizedBox(height: 12.h),
+              DefaultTextStyle.merge(style: const TextStyle(color: Colors.white), child: child),
+            ]));
+  }
+}
+
+class _Chip extends StatelessWidget {
+  final String text;
+  const _Chip({Key? key, required this.text}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(14.w),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(.35), width: 1),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 12.r,
-            spreadRadius: 0,
-            offset: Offset(0, 4.h),
-            color: Colors.black.withOpacity(.05),
-          )
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                width: 8.w,
-                height: 8.w,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              SizedBox(width: 8.w),
-              Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          if (subtitle != null) ...[
-            SizedBox(height: 4.h),
-            Text(
-              subtitle!,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontSize: 12.5.sp,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-          SizedBox(height: 10.h),
-          child,
-        ],
-      ),
-    );
-  }
-}
-// ADD THIS WIDGET in report_tab.dart (after _SectionCard is fine)
-class _BulletItem extends StatelessWidget {
-  final String title;
-  final String? subtitle;
-
-  const _BulletItem({Key? key, required this.title, this.subtitle}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: EdgeInsets.only(top: 4.h),
-              child: Text('•', style: theme.textTheme.titleMedium),
-            ),
-            SizedBox(width: 8.w),
-            Expanded(
-              child: Text(
-                title,
-                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
-        ),
-        if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
-          SizedBox(height: 4.h),
-          Padding(
-            padding: EdgeInsets.only(left: 18.w),
-            child: Text(
-              subtitle!,
-              style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
-            ),
-          ),
-        ]
-      ],
-    );
-  }
-}
-
-class _EmptyText extends StatelessWidget {
-  final String text;
-  const _EmptyText(this.text, {Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8.h),
-      child: Text(
-        text,
-        style: theme.textTheme.bodySmall?.copyWith(
-          fontSize: 13.5.sp,
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
-      ),
-    );
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22.r),
+            border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(.35))),
+        child: Text(
+            text,
+            style: theme.textTheme.labelMedium?.copyWith(color: Colors.white, fontSize: 12.5.sp)));
   }
 }
 
@@ -750,103 +1183,47 @@ class _MetricsGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWide = constraints.maxWidth > 480.w;
-        final cross = isWide ? 5 : 2;
-        return GridView.builder(
-          padding: EdgeInsets.zero,
-          physics: NeverScrollableScrollPhysics(),
-          shrinkWrap: true,
-          itemCount: items.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: cross,
-            crossAxisSpacing: 10.w,
-            mainAxisSpacing: 10.h,
-            mainAxisExtent: 72.h,
-          ),
-          itemBuilder: (context, i) {
-            final it = items[i];
-            return Container(
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14.r),
-                border: Border.all(
-                  color: theme.colorScheme.outlineVariant.withOpacity(.35),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    it.label,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      fontSize: 12.5.sp,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  SizedBox(height: 6.h),
-                  Text(
-                    it.value,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-}
-
-class _StepRow extends StatelessWidget {
-  final String text;
-  const _StepRow({Key? key, required this.text}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 6.h),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.check_circle_outline, size: 18.sp, color: theme.colorScheme.primary),
-          SizedBox(width: 8.w),
-          Expanded(
-            child: Text(
-              text,
-              style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14.sp, height: 1.35),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Chip extends StatelessWidget {
-  final String text;
-  const _Chip({Key? key, required this.text}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22.r),
-        border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(.35)),
-      ),
-      child: Text(
-        text,
-        style: theme.textTheme.labelMedium?.copyWith(fontSize: 12.5.sp),
-      ),
-    );
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 520;
+          final cross = isWide ? 3 : 2;
+          return GridView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: items.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: cross,
+                  crossAxisSpacing: 10.w,
+                  mainAxisSpacing: 10.h,
+                  mainAxisExtent: 96.h),
+              itemBuilder: (context, i) {
+                final it = items[i];
+                return Container(
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14.r),
+                        border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(.25))),
+                    child: Row(
+                        children: [
+                          Container(
+                              width: 36.w, height: 36.w, constraints: BoxConstraints(minWidth: 32, minHeight: 32),
+                              decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: theme.colorScheme.primary.withOpacity(.12)),
+                              alignment: Alignment.center,
+                              child: Icon(Icons.brightness_7_outlined, size: 18, color: Colors.white)),
+                          SizedBox(width: 10.w),
+                          Expanded(
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(it.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.labelMedium?.copyWith(color: Colors.white)),
+                                    SizedBox(height: 2.h),
+                                    Text(it.value, maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15.sp)),
+                                  ])),
+                        ]));
+              });
+        });
   }
 }
 
@@ -866,182 +1243,276 @@ class _WhatIfTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      margin: EdgeInsets.only(bottom: 10.h),
-      padding: EdgeInsets.all(12.w),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(.35)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+        margin: EdgeInsets.only(bottom: 10.h),
+        padding: EdgeInsets.all(12.w),
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14.r),
+            border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(.25))),
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.auto_graph, size: 18.sp, color: theme.colorScheme.primary),
-              SizedBox(width: 8.w),
-              Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontSize: 14.5.sp,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              if (impact != null && impact!.trim().isNotEmpty)
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.secondaryContainer,
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  child: Text(
-                    impact!,
-                    style: theme.textTheme.labelSmall?.copyWith(fontSize: 12.sp),
-                  ),
-                ),
-            ],
-          ),
-          if (detail != null && detail!.trim().isNotEmpty) ...[
+              Row(
+                  children: [
+                    Icon(Icons.psychology_alt_outlined, size: 18),
+                    SizedBox(width: 8.w),
+                    Expanded(child: Text(title, style: theme.textTheme.titleSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w700))),
+                    if (impact != null) _Chip(text: impact!),
+                  ]),
+              if (detail != null) ...[
+                SizedBox(height: 6.h),
+                Text(detail!, style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white)),
+              ],
+            ]));
+  }
+}
+
+class _ActionItemTile extends StatefulWidget {
+  final String text;
+  const _ActionItemTile({super.key, required this.text});
+
+  @override
+  State<_ActionItemTile> createState() => _ActionItemTileState();
+}
+
+class _ActionItemTileState extends State<_ActionItemTile> {
+  bool done = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+        onTap: () => setState(() => done = !done),
+        child: Container(
+            constraints: BoxConstraints(minWidth: 200.w),
+            padding: EdgeInsets.all(14.r),
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(.25)),
+                color: done ? Colors.green.withOpacity(.12) : theme.colorScheme.surface.withOpacity(.8)),
+            child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(done ? Icons.check_circle : Icons.radio_button_unchecked, size: 18, color: done ? Colors.greenAccent : Colors.white),
+                  SizedBox(width: 10.w),
+                  Expanded(
+                      child: Text(
+                          widget.text,
+                          style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white, decoration: done ? TextDecoration.lineThrough : TextDecoration.none,
+                              fontWeight: FontWeight.w600))),
+                ])));
+  }
+}
+
+class _DynamicFactorTile extends StatelessWidget {
+  final _FactorEntry entry;
+  final VoidCallback? onTap;
+  const _DynamicFactorTile({Key? key, required this.entry, this.onTap}) : super(key: key);
+
+  Color _bg(BuildContext context) {
+    final c = Theme.of(context).colorScheme;
+    switch (entry.impact.toLowerCase()) {
+      case 'positive': return c.primary.withOpacity(0.12);
+      case 'negative': return Colors.redAccent.withOpacity(0.12);
+      default: return c.secondary.withOpacity(0.10);
+    }
+  }
+
+  Color _fg(BuildContext context) {
+    final c = Theme.of(context).colorScheme;
+    switch (entry.impact.toLowerCase()) {
+      case 'positive': return c.primary;
+      case 'negative': return Colors.redAccent;
+      default: return c.secondary;
+    }
+  }
+
+  String _valueText() {
+    if (entry.score != null) {
+      final s = entry.score!;
+      final sign = s >= 0 ? '+' : '';
+      return '$sign${s.toStringAsFixed(2)}';
+    }
+    return entry.tip ?? 'Tap for tips';
+  }
+
+  IconData _icon() {
+    final l = entry.label.toLowerCase();
+    if (l.contains('caffeine') || l.contains('coffee')) return Icons.local_cafe_outlined;
+    if (l.contains('screen') || l.contains('phone') || l.contains('blue light')) return Icons.phone_iphone_outlined;
+    if (l.contains('stress') || l.contains('anxiety')) return Icons.bolt_outlined;
+    if (l.contains('exercise') || l.contains('walk') || l.contains('workout')) return Icons.directions_run_outlined;
+    if (l.contains('sun') || l.contains('light')) return Icons.wb_sunny_outlined;
+    if (l.contains('noise')) return Icons.volume_up_outlined;
+    if (l.contains('temperature') || l.contains('temp')) return Icons.thermostat_outlined;
+    if (l.contains('alcohol')) return Icons.local_bar_outlined;
+    if (l.contains('hydration') || l.contains('water')) return Icons.water_drop_outlined;
+    return Icons.insights_outlined;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final text = _valueText();
+    return Semantics(
+        label: '${entry.label} factor: $text',
+        child: GestureDetector(
+            onTap: onTap,
+            child: Container(
+                width: 180.w,
+                padding: EdgeInsets.all(14.r),
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(.25)),
+                    color: _bg(context)),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                Row(
+                children: [
+                Icon(_icon(), size: 18.sp, color: _fg(context)),
+            SizedBox(width: 8.w),
+            Expanded(
+                child: Text(entry.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12.5.sp)),
+    )]),
             SizedBox(height: 8.h),
             Text(
-              detail!,
-              style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13.5.sp, height: 1.35),
-            ),
-          ],
-        ],
-      ),
-    );
+                text,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.w900)),
+            SizedBox(height: 4.h),
+            Row(
+                children: [
+                  _impactDot(entry.impact, size: 10),
+                  SizedBox(width: 6.w),
+                  Text(
+                      entry.impact[0].toUpperCase() + entry.impact.substring(1),
+                      style: TextStyle(color: Colors.white, fontSize: 11.sp)),
+                ]),
+            ]))));
   }
+}
+
+class _FactorEntry {
+  final String label;
+  final String impact; // positive | negative | neutral
+  final double? score; // optional numeric effect/correlation
+  final String? tip;   // optional description
+  _FactorEntry({required this.label, required this.impact, this.score, this.tip});
+}
+
+Widget _impactDot(String impact, {double size = 8}) {
+  Color color;
+  switch (impact.toLowerCase()) {
+    case 'positive': color = Colors.greenAccent; break;
+    case 'negative': color = Colors.redAccent; break;
+    default: color = Colors.blueAccent; break;
+  }
+  return Container(
+      width: size.w, height: size.w,
+      decoration: BoxDecoration(color: color.withOpacity(.9), shape: BoxShape.circle));
+}
+
+class _TrendTile extends StatelessWidget {
+  final String title;
+  final List<double> series;
+  final String unit;
+  const _TrendTile({super.key, required this.title, required this.series, required this.unit});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final first = series.isNotEmpty ? series.first : 0.0;
+    final last = series.isNotEmpty ? series[series.length - 1] : 0.0;
+    final delta = last - first;
+    final deltaStr = (delta >= 0 ? '+' : '−') + delta.abs().toStringAsFixed(2) + (unit.isNotEmpty ? unit : '');
+
+    return Row(
+        children: [
+          Expanded(
+              child: Container(
+                  height: 48.h,
+                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+                  decoration: BoxDecoration(
+                      border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(.25)),
+                      borderRadius: BorderRadius.circular(14.r)),
+                  child: CustomPaint(
+                      painter: _MiniSparkline(series),
+                      child: SizedBox.expand()))),
+          SizedBox(width: 10.w),
+          Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: theme.textTheme.labelMedium?.copyWith(color: Colors.white)),
+                Text(
+                    '${last.toStringAsFixed(2)}${unit.isNotEmpty ? unit : ''}',
+                    style: theme.textTheme.titleSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
+                Text(deltaStr, style: theme.textTheme.bodySmall?.copyWith(color: Colors.white)),
+              ]),
+        ]);
+  }
+}
+
+class _MiniSparkline extends CustomPainter {
+  final List<double> series;
+  _MiniSparkline(this.series);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (series.length < 2) return;
+    final maxV = series.reduce((a, b) => a > b ? a : b);
+    final minV = series.reduce((a, b) => a < b ? a : b);
+    final range = (maxV - minV).abs() < 1e-9 ? 1.0 : (maxV - minV);
+    final dx = size.width / (series.length - 1);
+
+    final path = Path();
+    for (int i = 0; i < series.length; i++) {
+      final x = i * dx;
+      final norm = (series[i] - minV) / range;
+      final y = size.height - norm * size.height;
+      if (i == 0) path.moveTo(x, y);
+      else path.lineTo(x, y);
+    }
+
+    final stroke = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..color = Colors.white.withOpacity(.9);
+    canvas.drawPath(path, stroke);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _SkeletonList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: [
-        for (int i = 0; i < 3; i++) ...[
-          _SkeletonCard(),
-          SizedBox(height: 12.h),
-        ],
-      ],
-    );
-  }
-}
-
-class _SkeletonCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 110.h,
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(.035),
-        borderRadius: BorderRadius.circular(16.r),
-      ),
-    );
+        children: List.generate(3, (i) => Container(
+            margin: EdgeInsets.only(bottom: 12.h),
+            height: 120.h,
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16.r),
+                color: Colors.white10))));
   }
 }
 
 class _ErrorBox extends StatelessWidget {
-  final Object? error;
-  const _ErrorBox({Key? key, this.error}) : super(key: key);
+  final String? error;
+  const _ErrorBox({super.key, this.error});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(14.w),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.errorContainer,
-        borderRadius: BorderRadius.circular(14.r),
-      ),
-      child: Text(
-        'Failed to load report: ${error ?? 'Unknown error'}',
-        style: theme.textTheme.bodyMedium?.copyWith(
-          color: theme.colorScheme.onErrorContainer,
-          fontSize: 13.5.sp,
-        ),
-      ),
-    );
+        width: double.infinity,
+        padding: EdgeInsets.all(12.r),
+    decoration: BoxDecoration(
+    borderRadius: BorderRadius.circular(12.r),
+    color: Colors.red.withOpacity(.08),
+    border: Border.all(color: Colors.red.withOpacity(.2))),
+    child: Text(error ?? 'Unknown error', style: TextStyle(color: Colors.white)));
   }
-}
-
-
-extension ReportTabStateSanitizer on _ReportTabState {
-  String _ensurePlainReportText(dynamic input) {
-    if (input == null) return '';
-    if (input is String) {
-      final s = input.trim();
-      // Strip fenced code blocks ```...```
-      final fence = RegExp(r'^```(?:[\\w+-]+)?\\s*([\\s\\S]*?)\\s*```$');
-      final m = fence.firstMatch(s);
-      final content = m != null ? (m.group(1) ?? '').trim() : s;
-
-      // Try to parse JSON-like strings
-      if (content.startsWith('{') || content.startsWith('[')) {
-        try {
-          final decoded = jsonDecode(content);
-          return _flattenJson(decoded).trim();
-        } catch (_) {
-          // fall through
-        }
-      }
-      // Unquote stray quotes
-      final unquoted = content.replaceAll(RegExp(r'^[\\s"]+|[\\s"]+$'), '');
-      return unquoted;
-    }
-    if (input is List) {
-      final items = input
-          .map((e) => _ensurePlainReportText(e))
-          .where((e) => e.isNotEmpty)
-          .toList();
-      if (items.isEmpty) return '';
-      return '• ' + items.join('\\n• ');
-    }
-    if (input is Map) {
-      return _flattenJson(input).trim();
-    }
-    return input.toString();
-  }
-
-  String _flattenJson(dynamic v, {int depth = 0}) {
-    final indent = '  ' * depth;
-    if (v is Map) {
-      final buf = StringBuffer();
-      v.forEach((key, val) {
-        if (val == null) return;
-        final k = _titleize(key.toString());
-        if (val is Map || val is List) {
-          buf.writeln('$indent• $k:');
-          buf.writeln(_flattenJson(val, depth: depth + 1));
-        } else {
-          buf.writeln('$indent• $k: ${val.toString()}');
-        }
-      });
-      return buf.toString();
-    }
-    if (v is List) {
-      final buf = StringBuffer();
-      for (final e in v) {
-        if (e is Map || e is List) {
-          buf.writeln('$indent•');
-          buf.writeln(_flattenJson(e, depth: depth + 1));
-        } else {
-          buf.writeln('$indent• ${e.toString()}');
-        }
-      }
-      return buf.toString();
-    }
-    return '$indent• ${v.toString()}';
-  }
-
-  String _titleize(String s) {
-    // snake_case and camelCase -> Title Case
-    var t = s.replaceAll('_', ' ');
-    t = t.replaceAllMapped(RegExp(r'(?<!^)([A-Z])'), (m) => ' ${m.group(1)}');
-    t = t.trim();
-    if (t.isEmpty) return t;
-    return t[0].toUpperCase() + t.substring(1);
-  }
-}
+}//
