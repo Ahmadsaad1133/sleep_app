@@ -13,55 +13,51 @@ class SleepEfficiencySection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<SleepLog>(
       builder: (context, log, _) {
-        return StepWrapper(
-          title: 'Sleep Efficiency',
-          icon: Icons.account_tree,
-          child: Container(
-            padding: ScreenUtils.paddingAll(20),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(ScreenUtils.scale(20)),
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSectionDescription(),
-                SizedBox(height: ScreenUtils.height(24)),
-                _buildInputRow(
-                  context: context,
-                  log: log,
-                  label: 'Time to Fall Asleep (min)',
-                  icon: Icons.hourglass_top_rounded,
-                  color: Colors.amber,
-                  value: log.latencyMinutes,
-                  setter: log.setLatencyMinutes,
-                ),
-                SizedBox(height: ScreenUtils.height(20)),
-                _buildInputRow(
-                  context: context,
-                  log: log,
-                  label: 'Wake After Sleep Onset (min)',
-                  icon: Icons.nightlight_round,
-                  color: Colors.deepOrangeAccent,
-                  value: log.wasoMinutes,
-                  setter: log.setWasoMinutes,
-                ),
-                SizedBox(height: ScreenUtils.height(20)),
-                _buildInputRow(
-                  context: context,
-                  log: log,
-                  label: 'Total Time in Bed (min)',
-                  icon: Icons.bed_rounded,
-                  color: Colors.purpleAccent,
-                  value: log.timeInBedMinutes,
-                  setter: log.setTimeInBedMinutes,
-                  helperText: 'Time from bedtime to wake time',
-                ),
-                if (log.timeInBedMinutes != null && log.durationMinutes > 0)
-                  _buildEfficiencyDisplay(log),
-              ],
-            ),
+        return Container(
+          padding: ScreenUtils.paddingAll(20),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(ScreenUtils.scale(20)),
+            border: Border.all(color: Colors.white.withOpacity(0.1)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionDescription(),
+              SizedBox(height: ScreenUtils.height(24)),
+              _buildInputRow(
+                context: context,
+                log: log,
+                label: 'Time to Fall Asleep (min)',
+                icon: Icons.hourglass_top_rounded,
+                color: Colors.amber,
+                value: log.latencyMinutes,
+                setter: log.setLatencyMinutes,
+              ),
+              SizedBox(height: ScreenUtils.height(20)),
+              _buildInputRow(
+                context: context,
+                log: log,
+                label: 'Wake After Sleep Onset (min)',
+                icon: Icons.nightlight_round,
+                color: Colors.deepOrangeAccent,
+                value: log.wasoMinutes,
+                setter: log.setWasoMinutes,
+              ),
+              SizedBox(height: ScreenUtils.height(20)),
+              _buildInputRow(
+                context: context,
+                log: log,
+                label: 'Total Time in Bed (min)',
+                icon: Icons.bed_rounded,
+                color: Colors.purpleAccent,
+                value: log.timeInBedMinutes,
+                setter: log.setTimeInBedMinutes,
+                helperText: 'Time from bedtime to wake time',
+              ),
+              if (log.timeInBedMinutes != null && log.durationMinutes > 0)
+                _buildEfficiencyDisplay(log),
+            ],
           ),
         );
       },

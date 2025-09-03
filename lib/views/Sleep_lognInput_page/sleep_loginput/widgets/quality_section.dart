@@ -19,13 +19,9 @@ class QualitySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StepWrapper(
-      title: 'Sleep Quality',
-      icon: Icons.star_border,
-      child: Padding(
-        padding: EdgeInsets.only(top: ScreenUtils.height(16)),
-        child: const _QualityCard(),
-      ),
+    return Padding(
+      padding: EdgeInsets.only(top: ScreenUtils.height(16)),
+      child: const _QualityCard(),
     );
   }
 }

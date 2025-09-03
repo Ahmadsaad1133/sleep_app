@@ -11,11 +11,7 @@ class InputSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StepWrapper(
-      title: 'Pre-Bed Habits',
-      icon: Icons.nightlight_round,
-      child: _buildHabitTilesRow(context),
-    );
+    return _buildHabitTilesRow(context);
   }
 
   Widget _buildHabitTilesRow(BuildContext context) {

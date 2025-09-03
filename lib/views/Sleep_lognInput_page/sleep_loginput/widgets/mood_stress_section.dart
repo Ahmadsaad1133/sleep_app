@@ -15,37 +15,34 @@ class MoodStressSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StepWrapper(
-      title: 'Mood & Stress',
-      child: Container(
-          decoration: BoxDecoration(
-            gradient: const RadialGradient(
-              center: Alignment.topCenter,
-              radius: 1.5,
-              colors: [Color(0x301A237E), Color(0x000A0E21)],
-            ),
-            borderRadius: BorderRadius.circular(ScreenUtils.scale(30)),
-            border: Border.all(
-              color: Colors.blueAccent,
-              width: ScreenUtils.scale(1.5),
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black38,
-                blurRadius: 15,
-                spreadRadius: 2,
-                offset: Offset(0, 6),
-              ),
-            ],
-          ),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return constraints.maxWidth > 600
-                  ? const _WideLayout()
-                  : const _NarrowLayout();
-            },
-          ),
+    return Container(
+        decoration: BoxDecoration(
+        gradient: const RadialGradient(
+        center: Alignment.topCenter,
+        radius: 1.5,
+        colors: [Color(0x301A237E), Color(0x000A0E21)],
+    ),
+    borderRadius: BorderRadius.circular(ScreenUtils.scale(30)),
+    border: Border.all(
+    color: Colors.blueAccent,
+    width: ScreenUtils.scale(1.5),
         ),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black38,
+              blurRadius: 15,
+              spreadRadius: 2,
+              offset: Offset(0, 6),
+            ),
+          ],
+        ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return constraints.maxWidth > 600
+              ? const _WideLayout()
+              : const _NarrowLayout();
+        },
+      ),
     );
   }
 }

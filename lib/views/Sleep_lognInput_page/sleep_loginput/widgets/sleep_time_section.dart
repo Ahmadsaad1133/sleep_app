@@ -16,11 +16,7 @@ class SleepTimeSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StepWrapper(
-      title: 'Sleep Timeline',
-      icon: Icons.timeline,
-      child: _SleepTimeListLayout(),
-    );
+    return _SleepTimeListLayout();
   }
 }
 

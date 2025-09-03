@@ -20,33 +20,39 @@ class StepWrapper extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isWide = constraints.maxWidth > 600;
-        final padding = EdgeInsets.symmetric(
-          horizontal: isWide ? 48.0 : 24.0,
-          vertical: 24.0,
-        );
+        final horizontal = isWide ? 64.0 : 24.0;
 
-        return SingleChildScrollView(
-          child: Padding(
-            padding: padding,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+
+        return AnimatedPadding(
+            duration: const Duration(milliseconds: 300),
+        padding: EdgeInsets.symmetric(horizontal: horizontal, vertical: 24.0),
+        child: Center(
+        child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 800),
+        child: SingleChildScrollView(
+        child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (icon != null) Icon(icon, size: 24),
-                    if (icon != null) const SizedBox(width: 8),
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleLarge,
+        Row(
+        children: [
+        if (icon != null) Icon(icon, size: 28),
+        if (icon != null) const SizedBox(width: 8),
+        Expanded(
+        child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleLarge,
+        ),
+        ),
+        ],
+        ),
+        const SizedBox(height: 16),
+        AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: child,
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: child,
-                ),
-              ],
+        ),/////
             ),
           ),
         );

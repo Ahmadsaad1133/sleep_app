@@ -45,9 +45,9 @@ class SleepLogInputPage extends StatelessWidget {
 class _StepData {
   final String title;
   final IconData icon;
-  final Widget content;
+  final WidgetBuilder builder;
 
-  const _StepData(this.title, this.icon, this.content);
+  const _StepData(this.title, this.icon, this.builder);
 }
 
 /// Main Flow Widget
@@ -69,16 +69,16 @@ class _SleepLogFlowState extends State<_SleepLogFlow> {
     _controller = PageController();
 
     _steps = [
-      const _StepData('Sleep Times', Icons.timeline, SleepTimeSection()),
-      const _StepData('Sleep Quality', Icons.star_border, QualitySection()),
-      const _StepData('Mood & Stress', Icons.psychology, MoodStressSection()),
-      const _StepData('Sleep Stages', Icons.waves, SleepStagesSection()),
-      const _StepData('Efficiency', Icons.account_tree, SleepEfficiencySection()),
-      const _StepData('Pre-Bed Habits', Icons.nightlight_round, InputSection()),
+      _StepData('Sleep Timeline', Icons.timeline, (_) => const SleepTimeSection()),
+      _StepData('Sleep Quality', Icons.star_border, (_) => const QualitySection()),
+      _StepData('Mood & Stress', Icons.psychology, (_) => const MoodStressSection()),
+      _StepData('Sleep Stages', Icons.waves, (_) => const SleepStagesSection()),
+      _StepData('Efficiency', Icons.account_tree, (_) => const SleepEfficiencySection()),
+      _StepData('Pre-Bed Habits', Icons.nightlight_round, (_) => const InputSection()),
       _StepData(
         'Environment',
         Icons.rocket_launch,
-        Column(
+            (_) => Column(
           children: const [
             EnvironmentSection(),
             SizedBox(height: 24),
@@ -86,7 +86,7 @@ class _SleepLogFlowState extends State<_SleepLogFlow> {
           ],
         ),
       ),
-      const _StepData('Dream Journal', Icons.drive_file_rename_outline, TextInputSection()),
+      _StepData('Dream Journal', Icons.drive_file_rename_outline, (_) => const TextInputSection()),
     ];
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -151,7 +151,7 @@ class _SleepLogFlowState extends State<_SleepLogFlow> {
                   return StepWrapper(
                     title: step.title,
                     icon: step.icon,
-                    child: step.content,
+                    child: step.builder(context),
                   );
                 },
               ),

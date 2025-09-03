@@ -18,67 +18,63 @@ class SleepStagesSection extends StatelessWidget {
         final light = _clampValue(log.lightSleepMinutes ?? 0, 360);
         final totalSleep = deep + rem + light;
 
-        return StepWrapper(
-          title: 'Sleep Stages',
-          icon: Icons.waves,
-          child: Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: ScreenUtils.width(20),
-              vertical: ScreenUtils.height(16),
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.03),
-              borderRadius: BorderRadius.circular(ScreenUtils.scale(24)),
-              border: Border.all(color: Colors.white.withOpacity(0.08)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 20,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSectionDescription(),
-                SizedBox(height: ScreenUtils.height(24)),
-                _buildStageSlider(
-                  context,
-                  label: 'Deep Sleep',
-                  icon: Icons.nights_stay_rounded,
-                  value: deep,
-                  min: 0.0,
-                  max: 180.0,
-                  color: const Color(0xFF6A67CE),
-                  setter: log.setDeepSleepMinutes,
-                ),
-                SizedBox(height: ScreenUtils.height(24)),
-                _buildStageSlider(
-                  context,
-                  label: 'REM Sleep',
-                  icon: Icons.self_improvement_rounded,
-                  value: rem,
-                  min: 0.0,
-                  max: 180.0,
-                  color: const Color(0xFF4CAF50),
-                  setter: log.setRemSleepMinutes,
-                ),
-                SizedBox(height: ScreenUtils.height(24)),
-                _buildStageSlider(
-                  context,
-                  label: 'Light Sleep',
-                  icon: Icons.bedtime_rounded,
-                  value: light,
-                  min: 0.0,
-                  max: 360.0,
-                  color: const Color(0xFF2196F3),
-                  setter: log.setLightSleepMinutes,
-                ),
-                SizedBox(height: ScreenUtils.height(20)),
-                _buildTotalSleep(totalSleep),
-              ],
-            ),
+        return Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: ScreenUtils.width(20),
+            vertical: ScreenUtils.height(16),
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.03),
+            borderRadius: BorderRadius.circular(ScreenUtils.scale(24)),
+            border: Border.all(color: Colors.white.withOpacity(0.08)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 20,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionDescription(),
+              SizedBox(height: ScreenUtils.height(24)),
+              _buildStageSlider(
+                context,
+                label: 'Deep Sleep',
+                icon: Icons.nights_stay_rounded,
+                value: deep,
+                min: 0.0,
+                max: 180.0,
+                color: const Color(0xFF6A67CE),
+                setter: log.setDeepSleepMinutes,
+              ),
+              SizedBox(height: ScreenUtils.height(24)),
+              _buildStageSlider(
+                context,
+                label: 'REM Sleep',
+                icon: Icons.self_improvement_rounded,
+                value: rem,
+                min: 0.0,
+                max: 180.0,
+                color: const Color(0xFF4CAF50),
+                setter: log.setRemSleepMinutes,
+              ),
+              SizedBox(height: ScreenUtils.height(24)),
+              _buildStageSlider(
+                context,
+                label: 'Light Sleep',
+                icon: Icons.bedtime_rounded,
+                value: light,
+                min: 0.0,
+                max: 360.0,
+                color: const Color(0xFF2196F3),
+                setter: log.setLightSleepMinutes,
+              ),
+              SizedBox(height: ScreenUtils.height(20)),
+              _buildTotalSleep(totalSleep),
+            ],
           ),
         );
       },
