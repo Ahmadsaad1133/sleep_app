@@ -36,7 +36,7 @@ class _MiniSleepTrendChartState extends State<MiniSleepTrendChart> {
   @override
   Widget build(BuildContext context) {
     if (_loading || _logs.isEmpty) {
-      return const SizedBox(height: 100);
+      return const SizedBox.shrink(); // no forced height
     }
 
     final spots = <FlSpot>[];

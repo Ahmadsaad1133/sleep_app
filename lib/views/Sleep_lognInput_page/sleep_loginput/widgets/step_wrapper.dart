@@ -22,15 +22,15 @@ class StepWrapper extends StatelessWidget {
         final isWide = constraints.maxWidth > 600;
         final padding = EdgeInsets.symmetric(
           horizontal: isWide ? 64.0 : 24.0,
-          vertical: 24.0,
+          vertical: 24.0, // reduced vertical padding
         );
         final colors = Theme.of(context).colorScheme;
-
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 400),
           padding: padding,
           decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -39,6 +39,13 @@ class StepWrapper extends StatelessWidget {
                 colors.surfaceVariant,
               ],
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
           child: Center(
             child: ConstrainedBox(
@@ -48,19 +55,20 @@ class StepWrapper extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         if (icon != null)
-                          Icon(icon, size: 28, color: colors.primary),
+                          Icon(icon, size: 24, color: colors.primary),
                         if (icon != null) const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             title,
-                            style: Theme.of(context).textTheme.titleLarge,
+                            style: Theme.of(context).textTheme.titleMedium,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 8), // much smaller gap
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
                       switchInCurve: Curves.easeOut,
@@ -79,7 +87,7 @@ class StepWrapper extends StatelessWidget {
                     ),
                   ],
                 ),
-        ),/////
+              ),
             ),
           ),
         );

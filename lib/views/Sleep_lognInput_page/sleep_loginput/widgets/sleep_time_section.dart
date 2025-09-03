@@ -22,7 +22,6 @@ class SleepTimeSection extends StatelessWidget {
   }
 }
 
-// Updated layout: vertical list instead of grid
 class _SleepTimeListLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -33,9 +32,10 @@ class _SleepTimeListLayout extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const MiniSleepTrendChart(),
-        SizedBox(height: spacing),
+        // Remove or shrink this:
+        // SizedBox(height: spacing),
         SleepTimeCard(type: 'Bedtime'),
-        SizedBox(height: spacing),
+        SizedBox(height: spacing / 2), // smaller gap between cards
         SleepTimeCard(type: 'Wake Up'),
       ],
     );
