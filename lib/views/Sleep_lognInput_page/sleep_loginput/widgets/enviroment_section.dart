@@ -2,230 +2,294 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import 'package:shimmer_animation/shimmer_animation.dart';
 import 'package:auto_size_text/auto_size_text.dart';
-import '../../../../core/utils/screen_utils.dart';
+
 import '../../sleep_analysis/models/sleeplog_model_page.dart';
 
+/// ------------------------------------------------------------
+/// EnvironmentSection (Refactored - No Humidity field)
+/// ------------------------------------------------------------
+/// - Dark background friendly (all texts are white)
+/// - Organized with Rows, Columns, Containers
+/// - Uses only: lightExposure, temperature, noiseLevel from SleepLog
+/// - Responsive via flutter_screenutil
 class EnvironmentSection extends StatelessWidget {
   const EnvironmentSection({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final model = context.watch<SleepLog>();
+    final log = context.watch<SleepLog>();
 
     return Container(
-      padding: ScreenUtils.paddingAll(20),
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(ScreenUtils.scale(24)),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0x252A2740), Color(0x101A237E)],
-        ),
-        border: Border.all(color: const Color(0xFF5A6BC0).withOpacity(0.2)),
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(16.r),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildFactorSection(
-            title: 'NOISE LEVEL',
-            icon: Icons.volume_down,
-            options: ['Quiet', 'Moderate', 'Noisy'],
-            currentValue: model.noiseLevel,
-            onChanged: model.setNoiseLevel,
-            color: const Color(0xFF5A6BC0),
+          // Header
+          Row(
+            children: [
+              Icon(Icons.eco, color: Colors.white, size: 22.sp),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: AutoSizeText(
+                  'Sleep Environment',
+                  maxLines: 1,
+                  minFontSize: 14,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: ScreenUtils.height(28)),
-          _buildFactorSection(
-            title: 'LIGHT EXPOSURE',
-            icon: Icons.light_mode,
-            options: ['Dark', 'Dim', 'Bright'],
-            currentValue: model.lightExposure,
-            onChanged: model.setLightExposure,
-            color: const Color(0xFFFCE38A),
+          SizedBox(height: 16.h),
+
+          // Row 1: Light Exposure | Temperature
+          Row(
+            children: [
+              Expanded(
+                child: _OptionCard(
+                  title: 'Light Exposure',
+                  icon: Icons.light_mode,
+                  description: 'How bright was your room?',
+                  options: const ['Dark', 'Dim', 'Bright'],
+                  selected: log.lightExposure,
+                  onSelect: (v) => log.setLightExposure(v),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: _OptionCard(
+                  title: 'Temperature',
+                  icon: Icons.thermostat,
+                  description: 'How did it feel?',
+                  options: const ['Cold', 'Cool', 'Comfortable', 'Warm', 'Hot'],
+                  selected: log.temperature,
+                  onSelect: (v) => log.setTemperature(v),
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: ScreenUtils.height(28)),
-          _buildFactorSection(
-            title: 'TEMPERATURE',
-            icon: Icons.thermostat,
-            options: ['Cold', 'Cool', 'Comfortable', 'Warm', 'Hot'],
-            currentValue: model.temperature,
-            onChanged: model.setTemperature,
-            color: const Color(0xFFE57373),
+          SizedBox(height: 12.h),
+
+          // Row 2: Noise Level | Tips (static)
+          Row(
+            children: [
+              Expanded(
+                child: _OptionCard(
+                  title: 'Noise Level',
+                  icon: Icons.volume_up,
+                  description: 'Ambient sound around you',
+                  options: const ['Silent', 'Low', 'Moderate', 'Loud'],
+                  selected: log.noiseLevel,
+                  onSelect: (v) => log.setNoiseLevel(v),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: _TipsCard(),
+              ),
+            ],
           ),
-          SizedBox(height: ScreenUtils.height(28)),
-          _buildFactorSection(
-            title: 'COMFORT LEVEL',
-            icon: Icons.king_bed,
-            options: ['Uncomfortable', 'Neutral', 'Comfortable'],
-            currentValue: model.comfortLevel,
-            onChanged: model.setComfortLevel,
-            color: const Color(0xFF81C784),
-          ),
-          SizedBox(height: ScreenUtils.height(28)),
-          _buildNotesField(model),
         ],
       ),
     );
   }
-
-
-  Widget _buildFactorSection({
-    required String title,
-    required IconData icon,
-    required List<String> options,
-    required String currentValue,
-    required Function(String) onChanged,
-    required Color color,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: ScreenUtils.paddingAll(6),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: color.withOpacity(0.1),
-              ),
-              child: Icon(icon, size: ScreenUtils.textScale(20), color: color),
-            ),
-            SizedBox(width: ScreenUtils.width(12)),
-            Expanded(
-              child: Shimmer(
-                duration: const Duration(seconds: 3),
-                child: AutoSizeText(
-                  title,
-                  maxLines: 1,
-                  minFontSize: 10,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: ScreenUtils.textScale(14),
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1.1,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: ScreenUtils.height(16)),
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: ScreenUtils.width(12),
-          runSpacing: ScreenUtils.height(12),
-          children: options.map((option) {
-            final isSelected = currentValue == option;
-            return _DreamyOption(
-              label: option,
-              isSelected: isSelected,
-              onSelected: () => onChanged(option),
-              color: color,
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildNotesField(SleepLog model) {
-    return TextField(
-      onChanged: model.setSleepEnvironment,
-      style: TextStyle(
-        color: Colors.white,
-        fontSize: ScreenUtils.textScale(14),
-      ),
-      decoration: InputDecoration(
-        labelText: 'Additional environment notes',
-        labelStyle: TextStyle(
-          color: Colors.white70,
-          fontSize: ScreenUtils.textScale(14),
-        ),
-        enabledBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.white24),
-        ),
-      ),
-      maxLines: 2,
-    );
-  }
 }
 
-class _DreamyOption extends StatefulWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onSelected;
-  final Color color;
+class _OptionCard extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final String description;
+  final List<String> options;
+  final String? selected;
+  final ValueChanged<String> onSelect;
 
-  const _DreamyOption({
-    Key? key,
-    required this.label,
-    required this.isSelected,
-    required this.onSelected,
-    required this.color,
-  }) : super(key: key);
-
-  @override
-  State<_DreamyOption> createState() => _DreamyOptionState();
-}
-
-class _DreamyOptionState extends State<_DreamyOption> {
-  bool _isTapped = false;
+  const _OptionCard({
+    required this.title,
+    required this.icon,
+    required this.description,
+    required this.options,
+    required this.selected,
+    required this.onSelect,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _isTapped = true),
-      onTapUp: (_) => setState(() => _isTapped = false),
-      onTapCancel: () => setState(() => _isTapped = false),
-      onTap: widget.onSelected,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: ScreenUtils.symmetric(h: 20, v: 12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(ScreenUtils.scale(20)),
-          gradient: widget.isSelected
-              ? LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              widget.color.withOpacity(0.2),
-              widget.color.withOpacity(0.05),
+    return Container(
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0D0D0D),
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: const Color(0xFF1E1E1E)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 34.w,
+                height: 34.w,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF171717),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, color: Colors.white, size: 18.sp),
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AutoSizeText(
+                      title,
+                      maxLines: 1,
+                      minFontSize: 12,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(height: 2.h),
+                    AutoSizeText(
+                      description,
+                      maxLines: 1,
+                      minFontSize: 10,
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.6),
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
-          )
-              : null,
-          border: Border.all(
-            color: widget.isSelected
-                ? widget.color.withOpacity(0.4)
-                : Colors.blueGrey.withOpacity(0.2),
-            width: ScreenUtils.scale(1.0),
           ),
-          boxShadow: widget.isSelected
-              ? [
-            BoxShadow(
-              color: widget.color.withOpacity(0.2),
-              blurRadius: 10,
-              spreadRadius: 1,
-              offset: const Offset(0, 3),
-            )
-          ]
-              : null,
+          SizedBox(height: 10.h),
+
+          // Options Wrap
+          Wrap(
+            spacing: 8.w,
+            runSpacing: 8.h,
+            children: options.map((opt) {
+              final bool isSelected = (opt == selected);
+              return _ChoicePill(
+                label: opt,
+                isSelected: isSelected,
+                onTap: () => onSelect(opt),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChoicePill extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _ChoicePill({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(22.r),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white : const Color(0xFF131313),
+          borderRadius: BorderRadius.circular(22.r),
+          border: Border.all(
+            color: isSelected ? Colors.white : const Color(0xFF2A2A2A),
+          ),
         ),
-        child: Shimmer(
-          duration: const Duration(seconds: 3),
-          child: AutoSizeText(
-            widget.label,
-            maxLines: 1,
+        child: AutoSizeText(
+          label,
+          maxLines: 1,
+          minFontSize: 10,
+          style: TextStyle(
+            color: isSelected ? Colors.black : Colors.white,
+            fontSize: 13.sp,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TipsCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0D0D0D),
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: const Color(0xFF1E1E1E)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 34.w,
+                height: 34.w,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF171717),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                alignment: Alignment.center,
+                child: Icon(Icons.tips_and_updates, color: Colors.white, size: 18.sp),
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: AutoSizeText(
+                  'Quick Tips',
+                  maxLines: 1,
+                  minFontSize: 12,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8.h),
+          AutoSizeText(
+            'Keep the room dark and cool.\nUse white noise if needed.\nAim for consistent conditions nightly.',
+            maxLines: 4,
             minFontSize: 10,
             style: TextStyle(
-              fontSize: ScreenUtils.textScale(14),
-              fontWeight: FontWeight.w500,
-              color:
-              widget.isSelected ? Colors.white : Colors.blueGrey[100],
+              color: Colors.white.withOpacity(0.8),
+              fontSize: 12.sp,
+              height: 1.3,
             ),
           ),
-        ),
+        ],
       ),
     );
   }

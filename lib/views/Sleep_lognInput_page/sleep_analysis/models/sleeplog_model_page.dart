@@ -534,6 +534,11 @@ class SleepLog with ChangeNotifier {
     }
     if (!_disposed) notifyListeners();
   }
+  void setDisturbances(List<String> list) {
+    disturbances = List.from(list);
+    if (!_disposed) notifyListeners();
+  }
+
   /// Basic AI-driven suggestions based on current log values
   List<String> generateHealthHints() {
     final hints = <String>[];

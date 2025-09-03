@@ -4,140 +4,223 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:shimmer_animation/shimmer_animation.dart';
-import '../../../../core/utils/screen_utils.dart';
+
 import '../../sleep_analysis/models/sleeplog_model_page.dart';
 
+/// ------------------------------------------------------------
+/// DisturbanceSection (Provider + SleepLog)
+/// ------------------------------------------------------------
+/// - Dark UI (texts white), organized with Rows/Columns/Containers
+/// - Uses SleepLog via Provider:
+///     - read: model.disturbances (List<String>)
+///     - toggle: model.toggleDisturbance(String)
+///     - (optional bulk): model.setDisturbances(List<String>)
 class DisturbanceSection extends StatelessWidget {
   const DisturbanceSection({Key? key}) : super(key: key);
+//
+  static const List<_DistItem> _all = [
+    _DistItem('Phone notifications', Icons.notifications_active),
+    _DistItem('Partner movement', Icons.bed),
+    _DistItem('Traffic noise', Icons.directions_car),
+    _DistItem('Pets', Icons.pets),
+    _DistItem('Children', Icons.child_care),
+    _DistItem('Late-night screens', Icons.phone_android),
+    _DistItem('Caffeine late', Icons.local_cafe),
+    _DistItem('Stress', Icons.self_improvement),
+    _DistItem('Nightmares', Icons.nightlight_round),
+    _DistItem('Snoring', Icons.record_voice_over),
+    _DistItem('Heat', Icons.device_thermostat),
+    _DistItem('Cold', Icons.ac_unit),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final disturbances = [
-      'Nightmares',
-      'Restless Legs',
-      'Snoring',
-      'Frequent Bathroom',
-      'Pain',
-    ];
+    final model = context.watch<SleepLog>();
+    final selected = model.disturbances;
 
-    return Consumer<SleepLog>(
-      builder: (context, model, _) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Wrap(
-              spacing: ScreenUtils.width(12),
-              runSpacing: ScreenUtils.height(12),
-              children: disturbances
-                  .map((dist) => _buildDisturbanceChip(context, dist, model))
-                  .toList(),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildDisturbanceChip(
-      BuildContext context, String dist, SleepLog model) {
-    final isSelected = model.disturbances.contains(dist);
-    final scheme = Theme.of(context).colorScheme;
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.fastOutSlowIn,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(ScreenUtils.scale(20)),
-        onTap: () {
-          HapticFeedback.lightImpact();
-          model.toggleDisturbance(dist);
-        },
-        child: Container(
-          padding: ScreenUtils.symmetric(h: 16, v: 12),
-          constraints: BoxConstraints(
-            minWidth: ScreenUtils.width(120),
-          ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(ScreenUtils.scale(20)),
-            border: Border.all(
-              color: isSelected
-                  ? scheme.primary.withOpacity(0.3)
-                  : scheme.outline.withOpacity(0.15),
-              width: ScreenUtils.scale(1.2),
-            ),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: isSelected
-                  ? [
-                scheme.primary.withOpacity(0.5),
-                scheme.secondary.withOpacity(0.35),
-              ]
-                  : [
-                scheme.surface.withOpacity(0.03),
-                scheme.surfaceVariant.withOpacity(0.08),
-              ],
-            ),
-            boxShadow: [
-              if (isSelected)
-                BoxShadow(
-                  color: scheme.primary.withOpacity(0.4),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                )
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                transitionBuilder: (child, animation) => ScaleTransition(
-                  scale: animation,
-                  child: FadeTransition(opacity: animation, child: child),
+              Icon(Icons.warning_amber, color: Colors.white, size: 22.sp),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: AutoSizeText(
+                  'Sleep Disturbances',
+                  maxLines: 1,
+                  minFontSize: 14,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-                child: isSelected
-                    ? Icon(
-                  Icons.check_rounded,
-                  key: const ValueKey('checked'),
-                  color: scheme.onPrimary,
-                  size: ScreenUtils.textScale(20),
-                )
-                    : Container(
-                  key: const ValueKey('unchecked'),
-                  width: ScreenUtils.width(18),
-                  height: ScreenUtils.height(18),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: scheme.outline.withOpacity(0.5),
-                      width: ScreenUtils.scale(1.5),
+              ),
+              if (selected.isNotEmpty)
+                TextButton(
+                  onPressed: () => model.setDisturbances(const []),
+                  child: AutoSizeText(
+                    'Clear',
+                    maxLines: 1,
+                    minFontSize: 10,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: _CardBlock(
+                  title: 'Select what bothered your sleep',
+                  items: _all.sublist(0, (_all.length / 2).ceil()),
+                  selected: selected,
+                  onToggle: (label) {
+                    HapticFeedback.lightImpact();
+                    model.toggleDisturbance(label);
+                  },
+                ),
               ),
-              SizedBox(width: ScreenUtils.width(8)),
-              Flexible(
-                child: AutoSizeText(
-                  dist,
-                  maxLines: 1,
-                  minFontSize: 12,
-                  style: TextStyle(
-                    fontSize: ScreenUtils.textScale(15),
-                    fontWeight: FontWeight.w500,
-                    color: isSelected
-                        ? scheme.onPrimary
-                        : scheme.onSurface.withOpacity(0.9),
-                    letterSpacing: 0.3,
-                  ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: _CardBlock(
+                  title: 'More possible disturbances',
+                  items: _all.sublist((_all.length / 2).ceil()),
+                  selected: selected,
+                  onToggle: (label) {
+                    HapticFeedback.lightImpact();
+                    model.toggleDisturbance(label);
+                  },
                 ),
               ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CardBlock extends StatelessWidget {
+  final String title;
+  final List<_DistItem> items;
+  final List<String> selected;
+  final ValueChanged<String> onToggle;
+
+  const _CardBlock({
+    required this.title,
+    required this.items,
+    required this.selected,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0D0D0D),
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: const Color(0xFF1E1E1E)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AutoSizeText(
+            title,
+            maxLines: 1,
+            minFontSize: 12,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(height: 10.h),
+          Wrap(
+            spacing: 8.w,
+            runSpacing: 8.h,
+            children: items.map((e) {
+              final bool isSelected = selected.contains(e.label);
+              return _DisturbanceChip(
+                label: e.label,
+                icon: e.icon,
+                isSelected: isSelected,
+                onTap: () => onToggle(e.label),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DisturbanceChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _DisturbanceChip({
+    required this.label,
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20.r),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white : const Color(0xFF131313),
+          borderRadius: BorderRadius.circular(20.r),
+          border: Border.all(
+            color: isSelected ? Colors.white : const Color(0xFF2A2A2A),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16.sp, color: isSelected ? Colors.black : Colors.white),
+            SizedBox(width: 6.w),
+            AutoSizeText(
+              label,
+              maxLines: 1,
+              minFontSize: 10,
+              style: TextStyle(
+                color: isSelected ? Colors.black : Colors.white,
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
+}
+
+class _DistItem {
+  final String label;
+  final IconData icon;
+  const _DistItem(this.label, this.icon);
 }

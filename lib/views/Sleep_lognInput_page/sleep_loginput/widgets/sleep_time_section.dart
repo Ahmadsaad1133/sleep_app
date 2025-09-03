@@ -1,27 +1,32 @@
 // sleep_time_section.dart
 import 'dart:ui';
-import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_loginput/widgets/step_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer_animation/shimmer_animation.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:lottie/lottie.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../../../../constants/fonts.dart';
 import '../../../../utils/time_utils.dart';
 import '../../sleep_analysis/models/sleeplog_model_page.dart';
 import 'section_title.dart';
-import 'mini_sleep_trend_chart.dart';
 
 class SleepTimeSection extends StatelessWidget {
   const SleepTimeSection({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return _SleepTimeListLayout();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionTitle('SLEEP TIMELINE', icon: Icons.timeline),
+        const SizedBox(height: 24),
+        _SleepTimeListLayout(),
+      ],
+    );
   }
 }
 
+// Updated layout: vertical list instead of grid
 class _SleepTimeListLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -31,11 +36,8 @@ class _SleepTimeListLayout extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const MiniSleepTrendChart(),
-        // Remove or shrink this:
-        // SizedBox(height: spacing),
         SleepTimeCard(type: 'Bedtime'),
-        SizedBox(height: spacing / 2), // smaller gap between cards
+        SizedBox(height: spacing),
         SleepTimeCard(type: 'Wake Up'),
       ],
     );
@@ -58,7 +60,6 @@ class _SleepTimeCardState extends State<SleepTimeCard>
   late Animation<double> _glowAnimation;
   bool _isHovered = false;
   bool _isActive = false;
-  final stt.SpeechToText _speech = stt.SpeechToText();
 
   @override
   void initState() {
@@ -101,9 +102,10 @@ class _SleepTimeCardState extends State<SleepTimeCard>
     setState(() => _isActive = false);
   }
 
-  Color _accentColor(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return widget.type == 'Bedtime' ? scheme.primary : scheme.secondary;
+  Color get _accentColor {
+    return widget.type == 'Bedtime'
+        ? const Color(0xFF7B4FFF)
+        : const Color(0xFF00C2FF);
   }
 
   @override
@@ -113,7 +115,6 @@ class _SleepTimeCardState extends State<SleepTimeCard>
       widget.type == 'Bedtime' ? model.bedtime : model.wakeTime,
       builder: (_, timeStr, __) {
         final time = parseTimeString(timeStr);
-        final accent = _accentColor(context);
         return GestureDetector(
           onTapDown: _onTapDown,
           onTapUp: _onTapUp,
@@ -134,8 +135,8 @@ class _SleepTimeCardState extends State<SleepTimeCard>
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color:
-                          accent.withOpacity(_glowAnimation.value * 0.5),
+                          color: _accentColor.withOpacity(
+                              _glowAnimation.value * 0.5),
                           blurRadius: 30,
                           spreadRadius: 5,
                         ),
@@ -154,7 +155,7 @@ class _SleepTimeCardState extends State<SleepTimeCard>
                         ],
                       ),
                       border: Border.all(
-                        color: accent.withOpacity(0.3),
+                        color: _accentColor.withOpacity(0.3),
                         width: 1.5,
                       ),
                     ),
@@ -180,7 +181,7 @@ class _SleepTimeCardState extends State<SleepTimeCard>
                               shape: BoxShape.circle,
                               gradient: RadialGradient(
                                 colors: [
-                                  accent.withOpacity(0.4),
+                                  _accentColor.withOpacity(0.4),
                                   Colors.transparent,
                                 ],
                               ),
@@ -253,20 +254,11 @@ class _SleepTimeCardState extends State<SleepTimeCard>
                             ),
                           ],
                         ),
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: IconButton(
-                            icon: const Icon(Icons.keyboard),
-                            color: Colors.white,
-                            onPressed: () => _promptTimeInput(context),
-                          ),
-                        ),
                         if (_isActive)
                           Positioned.fill(
                             child: Container(
                               decoration: BoxDecoration(
-                                color: accent.withOpacity(0.2),
+                                color: _accentColor.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                             ),
@@ -282,64 +274,13 @@ class _SleepTimeCardState extends State<SleepTimeCard>
       },
     );
   }
-  Future<void> _promptTimeInput(BuildContext context) async {
-    final controller = TextEditingController();
-    await showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          title: Text('Enter ${widget.type}'),
-          content: TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              hintText: 'e.g., 10 pm',
-              suffixIcon: IconButton(
-                icon: const Icon(Icons.mic),
-                onPressed: () async {
-                  if (await _speech.initialize()) {
-                    _speech.listen(onResult: (r) {
-                      controller.text = r.recognizedWords;
-                    });
-                  }
-                },
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                _speech.stop();
-                Navigator.pop(ctx);
-              },
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                _speech.stop();
-                final t = parseTimeString(controller.text);
-                final formatted = formatTimeOfDay(t);
-                final log = ctx.read<SleepLog>();
-                if (widget.type == 'Bedtime') {
-                  log.setBedtime(formatted);
-                } else {
-                  log.setWakeTime(formatted);
-                }
-                Navigator.pop(ctx);
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+
   Future<void> _pickTime(BuildContext context) async {
     final model = context.read<SleepLog>();
     final currentTimeStr =
     widget.type == 'Bedtime' ? model.bedtime : model.wakeTime;
     final initialTime = parseTimeString(currentTimeStr);
     final use24Hour = MediaQuery.of(context).alwaysUse24HourFormat;
-    final accent = _accentColor(context);
 
     final pickedTime = await showTimePicker(
       context: context,
@@ -347,7 +288,7 @@ class _SleepTimeCardState extends State<SleepTimeCard>
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: ColorScheme.dark(
-            primary: accent,
+            primary: _accentColor,
             onPrimary: Colors.white,
             surface: const Color(0xFF0D1B2A),
             onSurface: Colors.white,
@@ -355,7 +296,7 @@ class _SleepTimeCardState extends State<SleepTimeCard>
           dialogTheme: DialogThemeData(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: accent, width: 1.0),
+              side: BorderSide(color: _accentColor, width: 1.0),
             ),
           ),
           textButtonTheme: TextButtonThemeData(
@@ -369,15 +310,15 @@ class _SleepTimeCardState extends State<SleepTimeCard>
             dayPeriodTextColor: Colors.white,
             hourMinuteColor: MaterialStateColor.resolveWith((states) {
               return states.contains(MaterialState.selected)
-                  ? accent.withOpacity(0.2)
+                  ? _accentColor.withOpacity(0.2)
                   : Colors.transparent;
             }),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: accent, width: 1.0),
+              side: BorderSide(color: _accentColor, width: 1.0),
             ),
             dialBackgroundColor: const Color(0xFF1E293B),
-            dialHandColor: accent,
+            dialHandColor: _accentColor,
             entryModeIconColor: Colors.white,
             hourMinuteTextStyle: TextStyle(
               fontWeight: FontWeight.w600,
