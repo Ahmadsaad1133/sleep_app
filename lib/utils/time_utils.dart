@@ -5,12 +5,24 @@ import 'package:flutter/material.dart';
 
 TimeOfDay parseTimeString(String timeStr) {
   try {
-    final RegExp timeRegex = RegExp(r'^(\d{1,2}):(\d{2})$');
-    final match = timeRegex.firstMatch(timeStr);
+    final input = timeStr.trim().toLowerCase();
+
+    if (input.contains('midnight')) return const TimeOfDay(hour: 0, minute: 0);
+    if (input.contains('noon')) return const TimeOfDay(hour: 12, minute: 0);
+
+    final regex =
+    RegExp(r'(\d{1,2})(?::(\d{2}))?\s*(am|pm)?');
+    final match = regex.firstMatch(input);
     if (match == null) throw const FormatException('Invalid time format');
 
-    final hour = int.parse(match.group(1)!);
-    final minute = int.parse(match.group(2)!);
+    int hour = int.parse(match.group(1)!);
+    final minute = int.parse(match.group(2) ?? '0');
+    final period = match.group(3);
+
+    if (period != null) {
+      if (period == 'pm' && hour < 12) hour += 12;
+      if (period == 'am' && hour == 12) hour = 0;
+    }
 
     if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
       throw const FormatException('Time values out of range');

@@ -19,6 +19,7 @@ class SleepLog with ChangeNotifier {
   String dietNotes;
   String medications;
   List<String> disturbances;
+  bool usesCaffeine;
   int? latencyMinutes;
   int? wasoMinutes;
   String noiseLevel;
@@ -56,6 +57,7 @@ class SleepLog with ChangeNotifier {
     required this.sleepEnvironment,
     required this.dietNotes,
     required this.medications,
+    required this.usesCaffeine,
     required this.disturbances,
     this.latencyMinutes,
     this.wasoMinutes,
@@ -87,6 +89,7 @@ class SleepLog with ChangeNotifier {
       screenTimeBeforeBed: 0,
       mood: '',
       durationMinutes: 0,
+      usesCaffeine: false,
       stressLevel: 0,
       sleepEnvironment: '',
       dietNotes: '',
@@ -219,6 +222,7 @@ class SleepLog with ChangeNotifier {
       'exercise_minutes': exerciseMinutes,
       'screen_time_before_bed': screenTimeBeforeBed,
       'mood': mood,
+      'uses_caffeine': usesCaffeine,
       'duration_minutes': durationMinutes,
       'stress_level': stressLevel,
       'sleep_environment': sleepEnvironment,
@@ -267,6 +271,7 @@ class SleepLog with ChangeNotifier {
       bedtime: map['bedtime'] as String? ?? '',
       wakeTime: map['wake_time'] as String? ?? '',
       quality: (map['quality'] as int?) ?? 0,
+      usesCaffeine: (map['uses_caffeine'] as bool?) ?? false,
       waterIntake: (map['water_intake'] as int?) ?? 0,
       caffeineIntake: (map['caffeine_intake'] as int?) ?? 0,
       exerciseMinutes: (map['exercise_minutes'] as int?) ?? 0,
@@ -312,6 +317,7 @@ class SleepLog with ChangeNotifier {
     exerciseMinutes: exerciseMinutes,
     screenTimeBeforeBed: screenTimeBeforeBed,
     mood: mood,
+    usesCaffeine: usesCaffeine,
     durationMinutes: durationMinutes,
     stressLevel: stressLevel,
     sleepEnvironment: sleepEnvironment,
@@ -410,6 +416,10 @@ class SleepLog with ChangeNotifier {
 
   void setCaffeine(String v) {
     caffeineIntake = int.tryParse(v)?.clamp(0, 1000) ?? 0;
+    if (!_disposed) notifyListeners();
+  }
+  void setUsesCaffeine(bool v) {
+    usesCaffeine = v;
     if (!_disposed) notifyListeners();
   }
 
@@ -548,6 +558,7 @@ class SleepLog with ChangeNotifier {
     date = other.date;
     bedtime = other.bedtime;
     wakeTime = other.wakeTime;
+    usesCaffeine = other.usesCaffeine;
     quality = other.quality;
     waterIntake = other.waterIntake;
     caffeineIntake = other.caffeineIntake;
@@ -593,6 +604,7 @@ class SleepLog with ChangeNotifier {
     exerciseMinutes = fresh.exerciseMinutes;
     screenTimeBeforeBed = fresh.screenTimeBeforeBed;
     mood = fresh.mood;
+    usesCaffeine = fresh.usesCaffeine;
     durationMinutes = fresh.durationMinutes;
     stressLevel = fresh.stressLevel;
     sleepEnvironment = fresh.sleepEnvironment;

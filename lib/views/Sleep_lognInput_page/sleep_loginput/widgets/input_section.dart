@@ -1,20 +1,37 @@
 import 'dart:math';
 import 'dart:ui';
+import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_loginput/widgets/suggested_tags.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../../constants/fonts.dart';
 import '../../sleep_analysis/models/sleeplog_model_page.dart';
 import 'step_wrapper.dart';
+
 class InputSection extends StatelessWidget {
   const InputSection({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return _buildHabitTilesRow(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Consumer<SleepLog>(
+          builder: (context, log, _) => SwitchListTile(
+            title: const Text('I usually consume caffeine in the evening'),
+            value: log.usesCaffeine,
+            onChanged: log.setUsesCaffeine,
+          ),
+        ),
+        _buildHabitTilesRow(context),
+        const SizedBox(height: 16),
+        const SuggestedTags(),
+      ],
+    );
   }
 
   Widget _buildHabitTilesRow(BuildContext context) {
+    final log = context.watch<SleepLog>();
     return SizedBox(
       // Increased height to prevent clipping
       height: 360,
@@ -24,8 +41,10 @@ class InputSection extends StatelessWidget {
         // Prevent clipping of child widgets
         clipBehavior: Clip.none,
         children: [
-          _buildHabitTile(context, 'Coffee', Icons.coffee_maker_rounded, 'mg'),
-          const SizedBox(width: 16),
+          if (log.usesCaffeine) ...[
+            _buildHabitTile(context, 'Coffee', Icons.coffee_maker_rounded, 'mg'),
+            const SizedBox(width: 16),
+          ],
           _buildHabitTile(context, 'Exercise', Icons.directions_run, 'min'),
           const SizedBox(width: 16),
           _buildHabitTile(context, 'Screen Time', Icons.phone_iphone, 'min'),

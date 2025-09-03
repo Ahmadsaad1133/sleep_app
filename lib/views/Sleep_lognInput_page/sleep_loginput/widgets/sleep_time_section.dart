@@ -6,10 +6,12 @@ import 'package:provider/provider.dart';
 import 'package:shimmer_animation/shimmer_animation.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:lottie/lottie.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../../../../constants/fonts.dart';
 import '../../../../utils/time_utils.dart';
 import '../../sleep_analysis/models/sleeplog_model_page.dart';
 import 'section_title.dart';
+import 'mini_sleep_trend_chart.dart';
 
 class SleepTimeSection extends StatelessWidget {
   const SleepTimeSection({super.key});
@@ -30,6 +32,8 @@ class _SleepTimeListLayout extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        const MiniSleepTrendChart(),
+        SizedBox(height: spacing),
         SleepTimeCard(type: 'Bedtime'),
         SizedBox(height: spacing),
         SleepTimeCard(type: 'Wake Up'),
@@ -54,6 +58,7 @@ class _SleepTimeCardState extends State<SleepTimeCard>
   late Animation<double> _glowAnimation;
   bool _isHovered = false;
   bool _isActive = false;
+  final stt.SpeechToText _speech = stt.SpeechToText();
 
   @override
   void initState() {
@@ -248,6 +253,15 @@ class _SleepTimeCardState extends State<SleepTimeCard>
                             ),
                           ],
                         ),
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: IconButton(
+                            icon: const Icon(Icons.keyboard),
+                            color: Colors.white,
+                            onPressed: () => _promptTimeInput(context),
+                          ),
+                        ),
                         if (_isActive)
                           Positioned.fill(
                             child: Container(
@@ -268,7 +282,57 @@ class _SleepTimeCardState extends State<SleepTimeCard>
       },
     );
   }
-
+  Future<void> _promptTimeInput(BuildContext context) async {
+    final controller = TextEditingController();
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: Text('Enter ${widget.type}'),
+          content: TextField(
+            controller: controller,
+            decoration: InputDecoration(
+              hintText: 'e.g., 10 pm',
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.mic),
+                onPressed: () async {
+                  if (await _speech.initialize()) {
+                    _speech.listen(onResult: (r) {
+                      controller.text = r.recognizedWords;
+                    });
+                  }
+                },
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                _speech.stop();
+                Navigator.pop(ctx);
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                _speech.stop();
+                final t = parseTimeString(controller.text);
+                final formatted = formatTimeOfDay(t);
+                final log = ctx.read<SleepLog>();
+                if (widget.type == 'Bedtime') {
+                  log.setBedtime(formatted);
+                } else {
+                  log.setWakeTime(formatted);
+                }
+                Navigator.pop(ctx);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
   Future<void> _pickTime(BuildContext context) async {
     final model = context.read<SleepLog>();
     final currentTimeStr =
