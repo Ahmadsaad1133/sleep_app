@@ -96,10 +96,9 @@ class _SleepTimeCardState extends State<SleepTimeCard>
     setState(() => _isActive = false);
   }
 
-  Color get _accentColor {
-    return widget.type == 'Bedtime'
-        ? const Color(0xFF7B4FFF)
-        : const Color(0xFF00C2FF);
+  Color _accentColor(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return widget.type == 'Bedtime' ? scheme.primary : scheme.secondary;
   }
 
   @override
@@ -109,6 +108,7 @@ class _SleepTimeCardState extends State<SleepTimeCard>
       widget.type == 'Bedtime' ? model.bedtime : model.wakeTime,
       builder: (_, timeStr, __) {
         final time = parseTimeString(timeStr);
+        final accent = _accentColor(context);
         return GestureDetector(
           onTapDown: _onTapDown,
           onTapUp: _onTapUp,
@@ -129,8 +129,8 @@ class _SleepTimeCardState extends State<SleepTimeCard>
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: _accentColor.withOpacity(
-                              _glowAnimation.value * 0.5),
+                          color:
+                          accent.withOpacity(_glowAnimation.value * 0.5),
                           blurRadius: 30,
                           spreadRadius: 5,
                         ),
@@ -149,7 +149,7 @@ class _SleepTimeCardState extends State<SleepTimeCard>
                         ],
                       ),
                       border: Border.all(
-                        color: _accentColor.withOpacity(0.3),
+                        color: accent.withOpacity(0.3),
                         width: 1.5,
                       ),
                     ),
@@ -175,7 +175,7 @@ class _SleepTimeCardState extends State<SleepTimeCard>
                               shape: BoxShape.circle,
                               gradient: RadialGradient(
                                 colors: [
-                                  _accentColor.withOpacity(0.4),
+                                  accent.withOpacity(0.4),
                                   Colors.transparent,
                                 ],
                               ),
@@ -252,7 +252,7 @@ class _SleepTimeCardState extends State<SleepTimeCard>
                           Positioned.fill(
                             child: Container(
                               decoration: BoxDecoration(
-                                color: _accentColor.withOpacity(0.2),
+                                color: accent.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                             ),
@@ -275,6 +275,7 @@ class _SleepTimeCardState extends State<SleepTimeCard>
     widget.type == 'Bedtime' ? model.bedtime : model.wakeTime;
     final initialTime = parseTimeString(currentTimeStr);
     final use24Hour = MediaQuery.of(context).alwaysUse24HourFormat;
+    final accent = _accentColor(context);
 
     final pickedTime = await showTimePicker(
       context: context,
@@ -282,7 +283,7 @@ class _SleepTimeCardState extends State<SleepTimeCard>
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: ColorScheme.dark(
-            primary: _accentColor,
+            primary: accent,
             onPrimary: Colors.white,
             surface: const Color(0xFF0D1B2A),
             onSurface: Colors.white,
@@ -290,7 +291,7 @@ class _SleepTimeCardState extends State<SleepTimeCard>
           dialogTheme: DialogThemeData(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: _accentColor, width: 1.0),
+              side: BorderSide(color: accent, width: 1.0),
             ),
           ),
           textButtonTheme: TextButtonThemeData(
@@ -304,15 +305,15 @@ class _SleepTimeCardState extends State<SleepTimeCard>
             dayPeriodTextColor: Colors.white,
             hourMinuteColor: MaterialStateColor.resolveWith((states) {
               return states.contains(MaterialState.selected)
-                  ? _accentColor.withOpacity(0.2)
+                  ? accent.withOpacity(0.2)
                   : Colors.transparent;
             }),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: _accentColor, width: 1.0),
+              side: BorderSide(color: accent, width: 1.0),
             ),
             dialBackgroundColor: const Color(0xFF1E293B),
-            dialHandColor: _accentColor,
+            dialHandColor: accent,
             entryModeIconColor: Colors.white,
             hourMinuteTextStyle: TextStyle(
               fontWeight: FontWeight.w600,

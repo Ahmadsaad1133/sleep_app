@@ -137,10 +137,21 @@ class _SleepLogFlowState extends State<_SleepLogFlow> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final progress = (_index + 1) / _steps.length;
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+              child: LinearProgressIndicator(
+                value: progress,
+                backgroundColor: colors.surfaceVariant,
+                color: colors.primary,
+                minHeight: 6,
+              ),
+            ),
             Expanded(
               child: PageView.builder(
                 controller: _controller,
@@ -156,42 +167,35 @@ class _SleepLogFlowState extends State<_SleepLogFlow> {
                 },
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-              child: Row(
-                children: [
-                  if (_index > 0)
-                    TextButton(onPressed: _back, child: const Text('Back')),
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(_steps.length, (i) {
-                        final active = i == _index;
-                        return AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          height: 8,
-                          width: active ? 24 : 8,
-                          decoration: BoxDecoration(
-                            color: active
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.grey,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        );
-                      }),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: _next,
-                    child: Text(_index == _steps.length - 1 ? 'Analyze' : 'Next'),
-                  ),
-                ],
-              ),
-            ),
+            _buildControls(context),
           ],
         ),
       ),
     );
   }
+Widget _buildControls(BuildContext context) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+    child: Row(
+      children: [
+        if (_index > 0)
+          OutlinedButton.icon(
+            onPressed: _back,
+            icon: const Icon(Icons.arrow_back),
+            label: const Text('Back'),
+          ),
+        if (_index > 0) const SizedBox(width: 16),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: _next,
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+            child: Text(_index == _steps.length - 1 ? 'Analyze' : 'Next'),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 }

@@ -30,7 +30,7 @@ class DisturbanceSection extends StatelessWidget {
               spacing: ScreenUtils.width(12),
               runSpacing: ScreenUtils.height(12),
               children: disturbances
-                  .map((dist) => _buildDisturbanceChip(dist, model))
+                  .map((dist) => _buildDisturbanceChip(context, dist, model))
                   .toList(),
             ),
           ],
@@ -39,8 +39,10 @@ class DisturbanceSection extends StatelessWidget {
     );
   }
 
-  Widget _buildDisturbanceChip(String dist, SleepLog model) {
+  Widget _buildDisturbanceChip(
+      BuildContext context, String dist, SleepLog model) {
     final isSelected = model.disturbances.contains(dist);
+    final scheme = Theme.of(context).colorScheme;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
@@ -60,8 +62,8 @@ class DisturbanceSection extends StatelessWidget {
             borderRadius: BorderRadius.circular(ScreenUtils.scale(20)),
             border: Border.all(
               color: isSelected
-                  ? Colors.white.withOpacity(0.3)
-                  : Colors.blueGrey.withOpacity(0.15),
+                  ? scheme.primary.withOpacity(0.3)
+                  : scheme.outline.withOpacity(0.15),
               width: ScreenUtils.scale(1.2),
             ),
             gradient: LinearGradient(
@@ -69,18 +71,18 @@ class DisturbanceSection extends StatelessWidget {
               end: Alignment.bottomRight,
               colors: isSelected
                   ? [
-                const Color(0xFF4A7BD5).withOpacity(0.5),
-                const Color(0xFF00D2FF).withOpacity(0.35),
+                scheme.primary.withOpacity(0.5),
+                scheme.secondary.withOpacity(0.35),
               ]
                   : [
-                Colors.blueGrey.withOpacity(0.03),
-                Colors.blueGrey.withOpacity(0.08),
+                scheme.surface.withOpacity(0.03),
+                scheme.surfaceVariant.withOpacity(0.08),
               ],
             ),
             boxShadow: [
               if (isSelected)
                 BoxShadow(
-                  color: const Color(0xFF4A7BD5).withOpacity(0.4),
+                  color: scheme.primary.withOpacity(0.4),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 )
@@ -100,7 +102,7 @@ class DisturbanceSection extends StatelessWidget {
                     ? Icon(
                   Icons.check_rounded,
                   key: const ValueKey('checked'),
-                  color: Colors.white,
+                  color: scheme.onPrimary,
                   size: ScreenUtils.textScale(20),
                 )
                     : Container(
@@ -110,7 +112,7 @@ class DisturbanceSection extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: Colors.blueGrey.withOpacity(0.5),
+                      color: scheme.outline.withOpacity(0.5),
                       width: ScreenUtils.scale(1.5),
                     ),
                   ),
@@ -126,8 +128,8 @@ class DisturbanceSection extends StatelessWidget {
                     fontSize: ScreenUtils.textScale(15),
                     fontWeight: FontWeight.w500,
                     color: isSelected
-                        ? Colors.white
-                        : Colors.blueGrey[100]!.withOpacity(0.9),
+                        ? scheme.onPrimary
+                        : scheme.onSurface.withOpacity(0.9),
                     letterSpacing: 0.3,
                   ),
                 ),
