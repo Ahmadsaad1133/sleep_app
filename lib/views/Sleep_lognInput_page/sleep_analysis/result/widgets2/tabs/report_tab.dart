@@ -153,7 +153,13 @@ class _ReportTabState extends State<ReportTab> {
       _data = {...?_data, ...legacy};
     }
 
-    if (_data == null) { _fetchOnce(); }
+    // Show placeholders immediately and fetch real data without requiring a
+    // manual refresh.
+    // If no initial data, show placeholders and fetch report once.
+    if (_data == null || _data!.isEmpty) {
+      _loading = true;
+      _fetchOnce();
+    }
   }
 
   Map<String, dynamic> _legacyParamsAsMap() {
@@ -196,57 +202,6 @@ class _ReportTabState extends State<ReportTab> {
     return m;
   }
 
-  Future<void> _fetchReportOnce() async {
-    if (widget.loadReport == null) return;
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final normalized = await widget.loadReport!.call();
-      if (mounted) {
-        setState(() {
-          _data = {...?_data, ...normalized};
-          _loading = false;
-        });
-      }
-      // fetch historical async (non-blocking)
-      try {
-        final histRaw = await ApiService.getHistoricalSleepAnalysis(limit: 10);
-
-        // Decode JSON if needed
-        dynamic decoded;
-        if (histRaw is String) {
-          final s = histRaw.trimLeft();
-          if (s.startsWith('[') || s.startsWith('{')) {
-            decoded = jsonDecode(s);
-          } else {
-            decoded = null; // plain text; ignore
-          }
-        } else {
-          decoded = histRaw;
-        }
-
-        if (mounted && decoded is List && decoded.isNotEmpty) {
-          final list = <Map<String, dynamic>>[];
-          for (final h in decoded) {
-            if (h is Map) list.add(Map<String, dynamic>.from(h));
-          }
-          setState(() => _historical = list);
-        }
-      } catch (e) {
-        print('Error fetching historical sleep analysis: $e');
-      }
-      catch (_) {}
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = e.toString();
-          _loading = false;
-        });
-      }
-    }
-  }
 
   // ---------- small data helpers ----------
   String _readString(List<String> keys, {String fallback = ''}) {
@@ -1490,13 +1445,29 @@ class _MiniSparkline extends CustomPainter {
 class _SkeletonList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final heights = [
+      100.h, // executive summary
+      80.h, // key metrics
+      100.h, // trends & debt
+      80.h, // chronotype
+      120.h, // risk hotspots
+      100.h, // risk assessment
+      120.h, // dynamic factors
+      100.h, // action center
+      100.h, // energy plan
+      100.h, // wake windows
+      100.h, // what-if scenarios
+    ];
     return Column(
-        children: List.generate(3, (i) => Container(
+        children: [
+        for (final h in heights)
+    Container(
             margin: EdgeInsets.only(bottom: 12.h),
-            height: 120.h,
+        height: h,
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16.r),
-                color: Colors.white10))));
+                color: Colors.white10))
+        ]);
   }
 }
 

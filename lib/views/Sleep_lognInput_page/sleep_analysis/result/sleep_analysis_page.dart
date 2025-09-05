@@ -752,12 +752,19 @@ class _SleepAnalysisResultPageContentState
       final log = _recentLogs.first;
       final logs = _recentLogs.map((e) => e.toMap()).toList();
 
+      // Fetch the main analysis and structured report in parallel so the
+      // report is ready by the time the AI loading completes.
+      final analysisFuture = ApiService.fetchSleepAnalysis(logs);
+      final reportFuture =
+      ApiService.fetchReport(current: log.toMap(), history: logs);
 
-      final analysis =
-      await ApiService.fetchSleepAnalysis(logs);
+      final analysis = await analysisFuture;
+      final report = await reportFuture;
+
       final safeAnalysis = (analysis is Map)
           ? Map<String, dynamic>.from(analysis)
           : <String, dynamic>{};
+      safeAnalysis['report'] = report;
       _analysisResult = safeAnalysis;
       // Extract sections used across tabs.
       final Map<String, dynamic> nested = _asMap(safeAnalysis['analysis']);
