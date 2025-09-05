@@ -352,10 +352,12 @@ class _ReportTabState extends State<ReportTab> {
 
 
     // Raw-dump fallback if empty
-    final sec = _readMap(['executive_summary','executiveSummary']);
-    final rawSec = sec.isNotEmpty ? sec : _data;
+
     if (!(bullets.isNotEmpty || (textBlob.trim().isNotEmpty))) {
-      return _SectionCard(title: 'Executive Summary', subtitle: 'Raw', child: _JsonDump(rawSec));
+      return _SectionCard(
+          title: 'Executive Summary',
+          subtitle: 'Fast overview for today',
+          child: _EmptyText('No summary available yet.'));
     }
 
     return _SectionCard(
@@ -365,16 +367,19 @@ class _ReportTabState extends State<ReportTab> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (bullets.isNotEmpty) ...[
-                for (final b in bullets) Padding(
-                    padding: EdgeInsets.only(bottom: 6.h),
-                    child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('• ', style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white)),
-                          Expanded(child: Text(b.toString(), style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white))),
-                        ])),
+                for (final b in bullets)
+                  Padding(
+                      padding: EdgeInsets.only(bottom: 6.h),
+                      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text('• ', style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white)),
+                        Expanded(
+                            child: Text(b.toString(),
+                                style: theme.textTheme.bodyMedium
+                                    ?.copyWith(color: Colors.white))),
+                      ])),
               ] else if (textBlob.isNotEmpty) ...[
-                Text(plainText(textBlob), style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white)),
+                Text(plainText(textBlob),
+                    style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white)),
               ] else
                 _EmptyText('No summary available yet.'),
             ]));
@@ -537,11 +542,12 @@ class _ReportTabState extends State<ReportTab> {
     final advice = (ra['advice'] ?? ra['notes'] ?? ra['note'])?.toString();
 
 
-    // Raw-dump fallback if empty
-    final sec = _readMap(['risk_assessment','riskAssessment']);
-    final rawSec = sec.isNotEmpty ? sec : _data;
-    if (!(risks.isNotEmpty || (level != null && level.toString().isNotEmpty) || (advice != null && advice!.trim().isNotEmpty) || score != null)) {
-      return _SectionCard(title: 'Risk Assessment', subtitle: 'Raw', child: _JsonDump(rawSec));
+    if (!(risks.isNotEmpty || (level != null && level.toString().isNotEmpty) ||
+        (advice != null && advice!.trim().isNotEmpty) || score != null)) {
+      return _SectionCard(
+          title: 'Risk Assessment',
+          subtitle: 'Potential sleep disruptors',
+          child: _EmptyText('No risk assessment available.'));
     }
 
     return _SectionCard(
@@ -550,14 +556,18 @@ class _ReportTabState extends State<ReportTab> {
         child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (level != null || score != null) Row(
-                  children: [
-                    if (level != null) _Chip(text: _titleize(level)),
-                    if (score != null) ...[SizedBox(width: 8.w), _Chip(text: 'Score ${score.toStringAsFixed(0)}')],
-                  ]),
+              if (level != null || score != null)
+                Row(children: [
+                  if (level != null) _Chip(text: _titleize(level)),
+                  if (score != null)
+                    ...[SizedBox(width: 8.w),
+                      _Chip(text: 'Score ${score.toStringAsFixed(0)}')],
+                ]),
               if (advice != null && advice.trim().isNotEmpty) ...[
                 SizedBox(height: 8.h),
-                Text(advice, style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white)),
+                Text(advice,
+                    style:
+                    theme.textTheme.bodyMedium?.copyWith(color: Colors.white)),
               ],
               SizedBox(height: 8.h),
               if (risks.isEmpty)
@@ -565,8 +575,10 @@ class _ReportTabState extends State<ReportTab> {
               else
                 ...risks.map((r) {
                   if (r is Map) {
-                    final title = (r['title'] ?? r['name'] ?? 'Risk').toString();
-                    final impact = (r['impact'] ?? r['effect'] ?? '').toString();
+                    final title =
+                    (r['title'] ?? r['name'] ?? 'Risk').toString();
+                    final impact =
+                    (r['impact'] ?? r['effect'] ?? '').toString();
                     return Padding(
                         padding: EdgeInsets.only(bottom: 6.h),
                         child: Row(
@@ -574,22 +586,32 @@ class _ReportTabState extends State<ReportTab> {
                             children: [
                               Icon(Icons.warning_amber_rounded, size: 18.r),
                               SizedBox(width: 8.w),
-                              Expanded(child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(title, style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w600)),
-                                    if (impact.trim().isNotEmpty) Text(impact, style: theme.textTheme.bodySmall?.copyWith(color: Colors.white)),
+                              Expanded(
+                                  child: Column(
+                                      crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                      children: [
+                                        Text(title,
+                                            style: theme.textTheme.bodyMedium?.copyWith(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w600)),
+                                        if (impact.trim().isNotEmpty)
+                                          Text(impact,
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(color: Colors.white)),
                                   ])),
                             ]));
                   } else {
                     return Padding(
                         padding: EdgeInsets.only(bottom: 6.h),
-                        child: Row(
-                            children: [
-                              Icon(Icons.warning_amber_rounded, size: 18.r),
-                              SizedBox(width: 8.w),
-                              Expanded(child: Text(r.toString(), style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white))),
-                            ]));
+                        child: Row(children: [
+                          Icon(Icons.warning_amber_rounded, size: 18.r),
+                          SizedBox(width: 8.w),
+                          Expanded(
+                              child: Text(r.toString(),
+                                  style: theme.textTheme.bodyMedium
+                                      ?.copyWith(color: Colors.white))),
+                        ]));
                   }
                 }).toList(),
             ]));
@@ -801,22 +823,12 @@ class _ReportTabState extends State<ReportTab> {
     if (blocks.isEmpty && (advice == null || advice.trim().isEmpty)) {
 
       // Raw-dump fallback if nothing to show
-      if (blocks.isEmpty && (advice == null || advice.trim().isEmpty)) {
-        final rawSec = e.isNotEmpty ? e : _data;
-        return _SectionCard(title: 'Daily Energy Plan', subtitle: 'Raw', child: _JsonDump(rawSec));
-      }
 
       return _SectionCard(
           title: 'Daily Energy Plan',
           subtitle: 'How to pace your day',
-          child: _EmptyText('Add more sleep logs to unlock a personalized plan.'));
-    }
-
-
-    // Raw-dump fallback if nothing to show
-    if (blocks.isEmpty && (advice == null || advice.trim().isEmpty)) {
-      final rawSec = e.isNotEmpty ? e : _data;
-      return _SectionCard(title: 'Daily Energy Plan', subtitle: 'Raw', child: _JsonDump(rawSec));
+          child: _EmptyText(
+              'Add more sleep logs to unlock a personalized plan.'));
     }
 
     return _SectionCard(
@@ -855,9 +867,21 @@ class _ReportTabState extends State<ReportTab> {
             ]));
   }
   Widget _buildWakeWindows(ThemeData theme) {
-    final _wwTop = _readList(['wake_windows', 'wakeWindows', 'wakeUpWindows', 'suggested_wake_windows', 'suggestedWakeWindows']);
-    final ww = _wwTop.isNotEmpty ? _wwTop : _readList(['wake_windows.windows', 'wakeWindows.windows']);
-    if (ww.isEmpty) { final sec = _readMap(['wake_windows','wakeWindows']); final rawSec = sec.isNotEmpty ? sec : _data; return _SectionCard(title: 'Suggested Wake Windows', subtitle: 'Raw', child: _JsonDump(rawSec)); }
+    final _wwTop = _readList([
+      'wake_windows',
+      'wakeWindows',
+      'wakeUpWindows',
+      'suggested_wake_windows',
+      'suggestedWakeWindows'
+    ]);
+    final ww =
+    _wwTop.isNotEmpty ? _wwTop : _readList(['wake_windows.windows', 'wakeWindows.windows']);
+    if (ww.isEmpty) {
+      return _SectionCard(
+          title: 'Suggested Wake Windows',
+          subtitle: 'Best times to wake up',
+          child: _EmptyText('No wake windows available.'));
+    }
     return _SectionCard(
         title: 'Suggested Wake Windows',
         subtitle: 'Best times to wake up',
@@ -904,12 +928,6 @@ class _ReportTabState extends State<ReportTab> {
 
     if (scenarios.isEmpty) {
 
-      // Raw-dump fallback if empty
-      final sec = _readMap(['what_if_scenarios','whatIfScenarios']);
-      final rawSec = sec.isNotEmpty ? sec : _data;
-      if (!(scenarios.isNotEmpty)) {
-        return _SectionCard(title: 'What-If Scenarios', subtitle: 'Raw', child: _JsonDump(rawSec));
-      }
 
       return _SectionCard(
           title: 'What-If Scenarios',
@@ -919,12 +937,6 @@ class _ReportTabState extends State<ReportTab> {
     }
 
 
-    // Raw-dump fallback if empty
-    final sec = _readMap(['what_if_scenarios','whatIfScenarios']);
-    final rawSec = sec.isNotEmpty ? sec : _data;
-    if (!(scenarios.isNotEmpty)) {
-      return _SectionCard(title: 'What-If Scenarios', subtitle: 'Raw', child: _JsonDump(rawSec));
-    }
 
     return _SectionCard(
         title: 'What-If Scenarios',
@@ -985,38 +997,6 @@ class _ReportTabState extends State<ReportTab> {
     return v.toString();
   }
 }
-
-// ====================== UI helpers (top-level classes) ======================
-
-
-class _JsonDump extends StatelessWidget {
-  final dynamic node;
-  const _JsonDump(this.node, {super.key});
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    String txt;
-    try {
-      if (node is String) {
-        txt = node as String;
-      } else {
-        txt = const JsonEncoder.withIndent('  ').convert(node);
-      }
-    } catch (_) {
-      txt = node?.toString() ?? '';
-    }
-    if (txt.isEmpty) txt = '(no data)';
-    return Container(
-        width: double.infinity,
-        padding: EdgeInsets.all(12.w),
-    decoration: BoxDecoration(
-    color: theme.colorScheme.surfaceVariant.withOpacity(.4),
-    borderRadius: BorderRadius.circular(12.r),
-    border: Border.all(color: theme.dividerColor.withOpacity(.3))),
-    child: SelectableText(txt, style: theme.textTheme.bodySmall?.copyWith(color: Colors.white, fontFamily: 'monospace', height: 1.3)));
-  }
-}
-
 
 class _SectionCard extends StatelessWidget {
   final String title;
