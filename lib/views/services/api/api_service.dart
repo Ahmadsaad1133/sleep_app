@@ -17,6 +17,7 @@ import 'package:intl/intl.dart';
 
 
 
+import '../../Sleep_lognInput_page/sleep_log_service/api_result.dart';
 import '../../bedtime_page/story.dart' as bedtime_story;
 
 class SleepAnalysisException implements Exception {
@@ -203,7 +204,7 @@ class ApiService {
       throw SleepAnalysisException('Failed to fetch historical logs: ${e.toString()}');
     }
   }
-  static Future<Map<String, dynamic>?> compareSleepLogs({
+  static Future<ApiResult<Map<String, dynamic>>> compareSleepLogs({
     required Map<String, dynamic> currentLog,
     required Map<String, dynamic> previousLog,
   }) async {
@@ -224,16 +225,19 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
-        return json.decode(response.body) as Map<String, dynamic>;
+        final data = json.decode(response.body) as Map<String, dynamic>;
+        return ApiResult(data: data);
       }
 
       // If the server doesn’t have this route (404) or any non-200 → local fallback
       debugPrint('compareSleepLogs HTTP ${response.statusCode}: ${response.body}');
-      return _localDailyCompare(sanitizedCurrent, sanitizedPrevious);
+      final fallback = _localDailyCompare(sanitizedCurrent, sanitizedPrevious);
+      return ApiResult(data: fallback, error: 'HTTP ${response.statusCode}');
     } catch (e, st) {
       debugPrint('compareSleepLogs exception: $e\n$st');
       // Last-resort local fallback
-      return _localDailyCompare(currentLog, previousLog);
+      final fallback = _localDailyCompare(currentLog, previousLog);
+      return ApiResult(data: fallback, error: e.toString());
     }
   }
 

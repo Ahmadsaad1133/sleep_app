@@ -377,35 +377,21 @@ class _SleepAnalysisResultPageContentState
       final snap = await logsRef.orderBy('date', descending: true).limit(2).get();
       if (snap.docs.length < 2) return {};
 
-      Map<String, dynamic> _normalize(Map<String, dynamic> raw) {
-        final m = Map<String, dynamic>.from(raw);
+      final currentRaw = Map<String, dynamic>.from(snap.docs[0].data());
+      final previousRaw = Map<String, dynamic>.from(snap.docs[1].data());
 
-        int asInt(dynamic v) => v is int ? v : (v is double ? v.round() : int.tryParse('$v') ?? 0);
-        double asDouble(dynamic v) => v is double ? v : (v is int ? v.toDouble() : double.tryParse('$v') ?? 0.0);
-
-        final duration = asInt(m['durationMinutes'] ?? m['totalSleepMinutes'] ?? 0);
-        m['totalSleepMinutes'] = duration;
-        m['deepSleepMinutes'] = asInt(m['deepSleepMinutes'] ?? 0);
-        m['remSleepMinutes'] = asInt(m['remSleepMinutes'] ?? 0);
-        m['lightSleepMinutes'] = asInt(m['lightSleepMinutes'] ?? 0);
-        m['efficiencyScore'] = asDouble(m['efficiencyScore'] ?? m['sleepEfficiency'] ?? 0.0);
-
-        if (m['date'] == null && m['timestamp'] != null) m['date'] = m['timestamp'];
-        return m;
-      }
-
-      final currentLog = _normalize(Map<String, dynamic>.from(snap.docs[0].data()));
-      final previousLog = _normalize(Map<String, dynamic>.from(snap.docs[1].data()));
+      final currentLog = SleepLog.fromMap(currentRaw);
+      final previousLog = SleepLog.fromMap(previousRaw);
 
       final res = await ApiService.compareSleepLogs(
-        currentLog: currentLog,
-        previousLog: previousLog,
+        currentLog: currentLog.toApiMap(),
+        previousLog: previousLog.toApiMap(),
       );
 
-      if (res == null) return {};
-      if (res is Map<String, dynamic>) return res;
-      if (res is Map) return res.map((k, v) => MapEntry(k.toString(), v));
-      return {};
+      if (!res.isSuccess) {
+        return {'error': res.error ?? 'Unknown error'};
+      }
+      return res.data ?? {};
     } catch (e, st) {
       debugPrint('Error in _getDailyComparison(): $e\n$st');
       return {'error': e.toString()};

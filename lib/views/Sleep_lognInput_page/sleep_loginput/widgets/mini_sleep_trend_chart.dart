@@ -23,11 +23,16 @@ class _MiniSleepTrendChartState extends State<MiniSleepTrendChart> {
 
   Future<void> _load() async {
     try {
-      final logs = await SleepLogService.getHistoricalSleepLogs(limit: 7);
-      setState(() {
-        _logs = logs.reversed.toList();
-        _loading = false;
-      });
+      final res = await SleepLogService.getHistoricalSleepLogs(limit: 7);
+      if (res.isSuccess && res.data != null) {
+        setState(() {
+          _logs = res.data!.reversed.toList();
+          _loading = false;
+        });
+      } else {
+        setState(() => _loading = false);
+      }
+    } catch (_) {
     } catch (_) {
       setState(() => _loading = false);
     }

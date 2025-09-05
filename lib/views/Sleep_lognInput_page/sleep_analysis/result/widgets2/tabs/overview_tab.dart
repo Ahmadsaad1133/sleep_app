@@ -534,70 +534,19 @@ class _OverviewTab2050NewState extends State<OverviewTab2050New> with SingleTick
         return {};
       }
 
-      Map<String, dynamic> _normalize(Map<String, dynamic> raw) {
-        // Defensive normalization to match API expectations.
-        final m = Map<String, dynamic>.from(raw);
-
-        int asInt(dynamic v) {
-          if (v is int) return v;
-          if (v is double) return v.round();
-          if (v is String) {
-            final parsed = int.tryParse(v);
-            if (parsed != null) return parsed;
-          }
-          return 0;
-        }
-
-        double asDouble(dynamic v) {
-          if (v is double) return v;
-          if (v is int) return v.toDouble();
-          if (v is String) {
-            final parsed = double.tryParse(v);
-            if (parsed != null) return parsed;
-          }
-          return 0.0;
-        }
-
-        // Common fields
-        final duration =
-        asInt(m['durationMinutes'] ?? m['totalSleepMinutes'] ?? 0);
-        final deep = asInt(m['deepSleepMinutes'] ?? 0);
-        final rem = asInt(m['remSleepMinutes'] ?? 0);
-        final light = asInt(m['lightSleepMinutes'] ?? 0);
-        final eff =
-        asDouble(m['efficiencyScore'] ?? m['sleepEfficiency'] ?? 0.0);
-
-        // Ensure standardized keys for the API
-        m['totalSleepMinutes'] = duration;
-        m['deepSleepMinutes'] = deep;
-        m['remSleepMinutes'] = rem;
-        m['lightSleepMinutes'] = light;
-        m['efficiencyScore'] = eff;
-
-        // Pass through date/time if available
-        if (m['date'] == null && m['timestamp'] != null) {
-          m['date'] = m['timestamp'];
-        }
-
-        return m;
-      }
-
       final currentRaw = Map<String, dynamic>.from(snap.docs[0].data());
       final previousRaw = Map<String, dynamic>.from(snap.docs[1].data());
 
-      final currentLog = _normalize(currentRaw);
-      final previousLog = _normalize(previousRaw);
+      final currentLog = SleepLog.fromMap(currentRaw);
+      final previousLog = SleepLog.fromMap(previousRaw);
 
       final res = await ApiService.compareSleepLogs(
-        currentLog: currentLog,
-        previousLog: previousLog,
+        currentLog: currentLog.toApiMap(),
+        previousLog: previousLog.toApiMap(),
       );
 
-      if (res == null) return {};
-      if (res is Map<String, dynamic>) return res;
-      if (res is Map) return res.map((k, v) => MapEntry(k.toString(), v));
-
-      return {};
+      if (!res.isSuccess) return {'error': res.error ?? 'Unknown error'};
+      return res.data ?? {};
     } catch (e, st) {
       debugPrint('Error in _getDailyComparison(): $e\n$st');
       return {'error': e.toString()};

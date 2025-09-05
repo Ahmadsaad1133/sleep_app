@@ -255,11 +255,21 @@ class _CosmicWeaverPageState extends State<_CosmicWeaverPage>
     setState(() => _isWeavingComplete = true);
 
     try {
-      // Save the log to Firebase
-      await SleepLogService.saveSleepLog(model);
+      final result = await SleepLogService.saveSleepLog(model);
+      if (!result.isSuccess) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Save failed: ${result.error}'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+        setState(() => _isWeavingComplete = false);
+        return;
+      }
 
       if (mounted) {
-        // Navigate to AI loading page with cosmic transition
         Navigator.pushReplacement(
           context,
           PageRouteBuilder(

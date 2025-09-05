@@ -250,7 +250,22 @@ class SleepLog with ChangeNotifier {
 
     return m;
   }
-
+  /// Map representation tailored for API requests.
+  ///
+  /// Ensures the API receives consistent field names regardless of
+  /// how the data is stored locally.
+  Map<String, dynamic> toApiMap() {
+    return {
+      'totalSleepMinutes': durationMinutes,
+      'deepSleepMinutes': effectiveDeepSleepMinutes,
+      'remSleepMinutes': effectiveRemSleepMinutes,
+      'lightSleepMinutes': effectiveLightSleepMinutes,
+      'efficiencyScore': efficiencyScore,
+      'quality': quality,
+      'stressLevel': stressLevel,
+      'mood': mood,
+    };
+  }
   factory SleepLog.fromMap(Map<String, dynamic> map, [String? id]) {
     // Handle date conversion
     dynamic dateValue = map['date'];
