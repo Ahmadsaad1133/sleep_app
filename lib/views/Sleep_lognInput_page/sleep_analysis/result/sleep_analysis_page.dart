@@ -25,7 +25,7 @@ import '../../../../constants/colors.dart';
 import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_analysis/result/widgets2/neo_design.dart';
 import '../../../services/api/api_service.dart';
 import '../models/sleeplog_model_page.dart';
-import '../plan/sleep_ai_plan_page.dart';
+
 
 class SleepAnalysisResultPage extends StatelessWidget {
   final Map<String, dynamic>? analysisResult;
@@ -1279,59 +1279,10 @@ class _SleepAnalysisResultPageContentState
                 },
               ),
             ),
-            Positioned(
-              bottom: 30,
-              right: 20,
-              child:
-              FloatingActionButton.extended(
-                onPressed: _createSleepPlan,
-                backgroundColor:
-                AppColors.primaryPurple,
-                shape:
-                RoundedRectangleBorder(
-                  borderRadius:
-                  BorderRadius.circular(
-                      30),
-                ),
-                icon: const Icon(
-                    Icons.nights_stay_rounded),
-                label: const Text(
-                  'Create Sleep Plan',
-                  style: TextStyle(
-                      fontWeight:
-                      FontWeight.bold),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-  Future<void>
-  _createSleepPlan() async {
-    try {
-      // Generate a plan from the detailed report,
-      // then navigate to SleepAIPlanPage with the plan.
-      final plan = await ApiService.generateSleepPlan(_detailedReport);
-      if (!mounted) return;
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) =>
-              SleepAIPlanPage(plan: plan),
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-        SnackBar(
-            content: Text(
-                'Failed to create plan: $e')),
-      );
+
+        ]),
+      ));
     }
-  }
 
   /// Wrap a list of slivers in a CustomScrollView with the appropriate
   /// SliverOverlapInjector. The [context] provided must be a descendant of a
