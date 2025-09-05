@@ -86,8 +86,23 @@ class _ReportTabState extends State<ReportTab> {
         normalized = await widget.loadReport!.call();
       } else {
         // Default: pull latest logs and build report using ApiService
-        final report = await ApiService.fetchReportForLatestLogs(historyLimit: 7);
-        normalized = Map<String, dynamic>.from(report);
+        dynamic report =
+        await ApiService.fetchReportForLatestLogs(historyLimit: 7);
+        if (report is String) {
+          final s = report.trim();
+          if (s.startsWith('{') || s.startsWith('[')) {
+            try {
+              report = jsonDecode(s);
+            } catch (_) {
+              report = {};
+            }
+          } else {
+            report = {};
+          }
+        }
+        if (report is Map) {
+          normalized = Map<String, dynamic>.from(report);
+        }
       }
 
       if (mounted) {
@@ -219,6 +234,18 @@ class _ReportTabState extends State<ReportTab> {
     for (final k in keys) {
       final v = _readByPath(map, k);
       if (v is List) return List<dynamic>.from(v);
+      if (v is String) {
+        final s = v.trim();
+        if ((s.startsWith('[') && s.endsWith(']')) ||
+            (s.startsWith('{') && s.endsWith('}'))) {
+          try {
+            final decoded = jsonDecode(s);
+            if (decoded is List) return List<dynamic>.from(decoded);
+            if (decoded is Map) return [decoded];
+          } catch (_) {}
+        }
+        if (s.isNotEmpty) return [s];
+      }
       if (v != null) return [v];
     }
     return const [];
@@ -230,6 +257,17 @@ class _ReportTabState extends State<ReportTab> {
     for (final k in keys) {
       final v = _readByPath(map, k);
       if (v is Map) return Map<String, dynamic>.from(v);
+      if (v is String) {
+        final s = v.trim();
+        if (s.startsWith('{') && s.endsWith('}')) {
+          try {
+            final decoded = jsonDecode(s);
+            if (decoded is Map) {
+              return Map<String, dynamic>.from(decoded);
+            }
+          } catch (_) {}
+        }
+      }
     }
     return const {};
   }
@@ -384,7 +422,7 @@ class _ReportTabState extends State<ReportTab> {
                 _EmptyText('No summary available yet.'),
             ]));
   }
-
+//
   Widget _buildKeyMetrics(ThemeData theme) {
     final m = _readMap(['metrics']);
     final total = (m['total_sleep_hours'] ?? widget.totalSleepHours) as num?;
