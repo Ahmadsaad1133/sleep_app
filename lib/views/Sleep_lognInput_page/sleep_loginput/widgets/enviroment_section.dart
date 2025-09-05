@@ -94,10 +94,20 @@ class EnvironmentSection extends StatelessWidget {
               ),
               SizedBox(width: 12.w),
               Expanded(
-                child: _TipsCard(),
+                child: _OptionCard(
+                  title: 'Comfort Level',
+                  icon: Icons.bed_outlined,
+                  description: 'How comfortable did you feel?',
+                  options: const ['Uncomfortable', 'Neutral', 'Comfortable'],
+                  selected: log.comfortLevel,
+                  onSelect: (v) => log.setComfortLevel(v),
+                ),
               ),
             ],
           ),
+          SizedBox(height: 12.h),
+
+          _TipsCard(),
         ],
       ),
     );

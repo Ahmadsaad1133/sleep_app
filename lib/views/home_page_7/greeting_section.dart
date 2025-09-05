@@ -27,10 +27,10 @@ class GreetingSection extends StatelessWidget {
                 Text(
                   'Good morning…',
                   style: TextStyle(
-                    fontSize: scale(28),
+                    fontSize: scale(30),
                     fontFamily: AppFonts.helveticaBold,
                     fontWeight: FontWeight.w300,
-                    color: Colors.black,
+                    color: Colors.white,
                   ),
                   textAlign: TextAlign.center,
                 ),

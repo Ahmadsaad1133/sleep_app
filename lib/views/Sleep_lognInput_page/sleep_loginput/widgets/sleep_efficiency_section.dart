@@ -116,13 +116,13 @@ class SleepEfficiencySection extends StatelessWidget {
             ),
           ],
         ),
-    if (helperText != null)
-    Padding(
-    padding: EdgeInsets.only(top: ScreenUtils.height(4)),
-    child: Text(
-    helperText,
-    style: TextStyle(
-    color: Colors.white70,
+        if (helperText != null)
+          Padding(
+            padding: EdgeInsets.only(top: ScreenUtils.height(4)),
+            child: Text(
+              helperText,
+              style: TextStyle(
+                color: Colors.white70,
                 fontSize: ScreenUtils.textScale(12),
               ),
             ),

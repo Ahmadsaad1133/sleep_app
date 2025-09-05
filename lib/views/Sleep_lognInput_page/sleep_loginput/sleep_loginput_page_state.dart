@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
+import 'package:first_flutter_app/views/Sleep_lognInput_page/sleep_loginput/widgets/sleep_efficiency_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lottie/lottie.dart';
@@ -18,7 +19,7 @@ import 'widgets/sleep_time_section.dart';
 import 'widgets/enviroment_section.dart';
 import 'widgets/disturbance_section.dart';
 import 'widgets/sleep_stages_section.dart';
-import 'widgets/sleep_efficiency_section.dart';
+
 // --- Edge-to-edge helper: makes a child take full width, removing horizontal padding from ancestors.
 Widget _edgeToEdge(BuildContext context, Widget child, {EdgeInsetsGeometry? verticalPadding}) {
   return MediaQuery.removePadding(
@@ -109,13 +110,14 @@ class _CosmicWeaverPageState extends State<_CosmicWeaverPage>
       icon: Icons.account_tree,
       color: const Color(0xFFED5565),
       content: const SleepEfficiencySection(),
+
     ),
     DreamThread(
       title: 'Habit Comets',
       hint: 'What rituals preceded your journey?',
       icon: Icons.nightlight_round,
       color: const Color(0xFFAC92EC),
-      content: const InputSectionRefactored(),
+      content: const InputSection(),
     ),
     DreamThread(
       title: 'Environment Matrix',

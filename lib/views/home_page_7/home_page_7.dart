@@ -125,15 +125,15 @@ class _HomePage7State extends State<HomePage7> {
   }
 
   Widget _buildDiscoverSection(double Function(double) s) {
-    return Padding(
+    return Padding(//
       padding: EdgeInsets.only(left: s(4)),
       child: Text(
         'Discover Sleep Tools',
         style: TextStyle(
-          fontSize: s(20),
+          fontSize: s(24),
           fontFamily: AppFonts.helveticaBold,
           fontWeight: FontWeight.w600,
-          color: AppColors.primaryText,
+          color: Colors.white,//
         ),
       ),
     );

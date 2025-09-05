@@ -10,107 +10,70 @@ import '../../sleep_analysis/models/sleeplog_model_page.dart';
 /// ------------------------------------------------------------
 /// DisturbanceSection (Provider + SleepLog)
 /// ------------------------------------------------------------
-/// - Dark UI (texts white), organized with Rows/Columns/Containers
+/// - Dark UI (texts white), organized with Columns/Containers
 /// - Uses SleepLog via Provider:
 ///     - read: model.disturbances (List<String>)
 ///     - toggle: model.toggleDisturbance(String)
-///     - (optional bulk): model.setDisturbances(List<String>)
+/// - Two blocks stacked VERTICALLY (no horizontal row)
+/// ------------------------------------------------------------
 class DisturbanceSection extends StatelessWidget {
-  const DisturbanceSection({Key? key}) : super(key: key);
-//
-  static const List<_DistItem> _all = [
-    _DistItem('Phone notifications', Icons.notifications_active),
-    _DistItem('Partner movement', Icons.bed),
-    _DistItem('Traffic noise', Icons.directions_car),
-    _DistItem('Pets', Icons.pets),
-    _DistItem('Children', Icons.child_care),
-    _DistItem('Late-night screens', Icons.phone_android),
-    _DistItem('Caffeine late', Icons.local_cafe),
-    _DistItem('Stress', Icons.self_improvement),
-    _DistItem('Nightmares', Icons.nightlight_round),
-    _DistItem('Snoring', Icons.record_voice_over),
-    _DistItem('Heat', Icons.device_thermostat),
-    _DistItem('Cold', Icons.ac_unit),
-  ];
+  const DisturbanceSection({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final model = context.watch<SleepLog>();
-    final selected = model.disturbances;
+    // Ensure ScreenUtil is initialized higher up in your app.
+    final theme = Theme.of(context);
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.circular(16.r),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.warning_amber, color: Colors.white, size: 22.sp),
-              SizedBox(width: 8.w),
-              Expanded(
-                child: AutoSizeText(
-                  'Sleep Disturbances',
-                  maxLines: 1,
-                  minFontSize: 14,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              if (selected.isNotEmpty)
-                TextButton(
-                  onPressed: () => model.setDisturbances(const []),
-                  child: AutoSizeText(
-                    'Clear',
-                    maxLines: 1,
-                    minFontSize: 10,
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          SizedBox(height: 12.h),
+    // Full list of available disturbance choices.
+    const List<_DistItem> _all = [
+      _DistItem('Noise', Icons.volume_up_rounded),
+      _DistItem('Light', Icons.light_mode_rounded),
+      _DistItem('Temperature', Icons.thermostat_rounded),
+      _DistItem('Snoring', Icons.bedtime_rounded),
+      _DistItem('Pets', Icons.pets_rounded),
+      _DistItem('Kids', Icons.child_care_rounded),
+      _DistItem('Stress', Icons.self_improvement_rounded),
+      _DistItem('Late meals', Icons.restaurant_rounded),
+      _DistItem('Caffeine', Icons.coffee_rounded),
+      _DistItem('Alcohol', Icons.wine_bar_rounded),
+      _DistItem('Screens', Icons.tv_rounded),
+      _DistItem('Nightmares', Icons.nightlight_round),
+    ];
 
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _CardBlock(
-                  title: 'Select what bothered your sleep',
-                  items: _all.sublist(0, (_all.length / 2).ceil()),
-                  selected: selected,
-                  onToggle: (label) {
-                    HapticFeedback.lightImpact();
-                    model.toggleDisturbance(label);
-                  },
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: _CardBlock(
-                  title: 'More possible disturbances',
-                  items: _all.sublist((_all.length / 2).ceil()),
-                  selected: selected,
-                  onToggle: (label) {
-                    HapticFeedback.lightImpact();
-                    model.toggleDisturbance(label);
-                  },
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+    return Consumer<SleepLog>(
+      builder: (context, model, _) {
+        final selected = model.disturbances; // List<String>
+
+        // Split choices into two vertical blocks
+        final mid = (_all.length / 2).ceil();
+        final firstHalf = _all.sublist(0, mid);
+        final secondHalf = _all.sublist(mid);
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _CardBlock(
+              title: 'Common disturbances',
+              items: firstHalf,
+              selected: selected,
+              onToggle: (label) {
+                HapticFeedback.lightImpact();
+                model.toggleDisturbance(label);
+              },
+            ),
+            SizedBox(height: 12.h),
+            _CardBlock(
+              title: 'More possible disturbances',
+              items: secondHalf,
+              selected: selected,
+              onToggle: (label) {
+                HapticFeedback.lightImpact();
+                model.toggleDisturbance(label);
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -131,38 +94,46 @@ class _CardBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(12.w),
+      padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D0D0D),
-        borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: const Color(0xFF1E1E1E)),
+        color: const Color(0xFF121218),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: const Color(0x22FFFFFF)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AutoSizeText(
-            title,
-            maxLines: 1,
-            minFontSize: 12,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w700,
-            ),
+          Row(
+            children: [
+              Icon(Icons.bolt_rounded, color: Colors.white, size: 18.sp),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: AutoSizeText(
+                  title,
+                  maxLines: 1,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16.sp,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ),
+            ],
           ),
           SizedBox(height: 10.h),
           Wrap(
             spacing: 8.w,
             runSpacing: 8.h,
-            children: items.map((e) {
-              final bool isSelected = selected.contains(e.label);
-              return _DisturbanceChip(
-                label: e.label,
-                icon: e.icon,
-                isSelected: isSelected,
-                onTap: () => onToggle(e.label),
-              );
-            }).toList(),
+            children: [
+              for (final item in items)
+                _ChipChoice(
+                  label: item.label,
+                  icon: item.icon,
+                  selected: selected.contains(item.label),
+                  onTap: () => onToggle(item.label),
+                ),
+            ],
           ),
         ],
       ),
@@ -170,44 +141,53 @@ class _CardBlock extends StatelessWidget {
   }
 }
 
-class _DisturbanceChip extends StatelessWidget {
+class _ChipChoice extends StatelessWidget {
   final String label;
   final IconData icon;
-  final bool isSelected;
+  final bool selected;
   final VoidCallback onTap;
 
-  const _DisturbanceChip({
+  const _ChipChoice({
     required this.label,
     required this.icon,
-    required this.isSelected,
+    required this.selected,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20.r),
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : const Color(0xFF131313),
-          borderRadius: BorderRadius.circular(20.r),
+          color: selected ? const Color(0xFF2E335A) : const Color(0xFF1A1B22),
+          borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
-            color: isSelected ? Colors.white : const Color(0xFF2A2A2A),
+            color: selected ? const Color(0xFF7B7FF4) : const Color(0x33FFFFFF),
+            width: 1,
           ),
+          boxShadow: selected
+              ? [
+            BoxShadow(
+              blurRadius: 10,
+              spreadRadius: 0,
+              offset: const Offset(0, 4),
+              color: const Color(0xFF7B7FF4).withOpacity(0.25),
+            )
+          ]
+              : [],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16.sp, color: isSelected ? Colors.black : Colors.white),
+            Icon(icon, size: 16.sp, color: Colors.white),
             SizedBox(width: 6.w),
-            AutoSizeText(
+            Text(
               label,
-              maxLines: 1,
-              minFontSize: 10,
               style: TextStyle(
-                color: isSelected ? Colors.black : Colors.white,
+                color: Colors.white,
                 fontSize: 13.sp,
                 fontWeight: FontWeight.w600,
               ),
