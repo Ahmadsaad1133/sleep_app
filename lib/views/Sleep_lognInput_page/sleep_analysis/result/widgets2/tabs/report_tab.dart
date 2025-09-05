@@ -138,8 +138,6 @@ class _ReportTabState extends State<ReportTab> {
   bool _loading = false;
   String? _error;
 
-  bool _compact = false;
-
   @override
   void initState() {
     super.initState();
@@ -273,32 +271,12 @@ class _ReportTabState extends State<ReportTab> {
         child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                  children: [
-                    Text('Report', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18.sp)),
-                    Spacer(),
-                    if (_loading) Padding(
-                        padding: EdgeInsets.only(right: 8.w),
-                        child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))),
-                    if (_error != null)
-                      TextButton.icon(style: TextButton.styleFrom(foregroundColor: Colors.white),
-                          onPressed: (_loading || widget.loadReport == null) ? null : _fetchOnce,
-                          icon: Icon(Icons.refresh),
-                          label: Text('Retry'))
-                    else if (widget.loadReport != null)
-                      TextButton.icon(style: TextButton.styleFrom(foregroundColor: Colors.white),
-                          onPressed: _loading ? null : _fetchOnce,
-                          icon: Icon(Icons.sync),
-                          label: Text('Refresh')),
-                  ]),
               SizedBox(height: 12.h),
 
               if (_loading) _SkeletonList(),
               if (_error != null) _ErrorBox(error: _error),
 
               if (!_loading && _error == null) ...[
-                _buildViewModeToggle(theme),
-                SizedBox(height: 12.h),
                 _buildExecutiveSummary(theme),
                 SizedBox(height: 12.h),
                 _buildKeyMetrics(theme),
@@ -331,25 +309,6 @@ class _ReportTabState extends State<ReportTab> {
         style: TextStyle(color: Colors.white, fontSize: 16)));
   }
 
-  // ---- View toggle ----
-  Widget _buildViewModeToggle(ThemeData theme) {
-    return Row(
-        children: [
-          Text('View:', style: theme.textTheme.labelMedium?.copyWith(color: Colors.white)),
-          SizedBox(width: 8.w),
-          ChoiceChip(
-              label: Text('Detailed'),
-              selected: !_compact,
-              onSelected: (v) => setState(() => _compact = false)),
-          SizedBox(width: 8.w),
-          ChoiceChip(
-              label: Text('Compact'),
-              selected: _compact,
-              onSelected: (v) => setState(() => _compact = true)),
-        ]);
-  }
-
-  // ---- Sections ----
 
   Widget _buildExecutiveSummary(ThemeData theme) {
     List bullets = _readList(['executive_summary.bullets', 'executiveSummary.bullets']);

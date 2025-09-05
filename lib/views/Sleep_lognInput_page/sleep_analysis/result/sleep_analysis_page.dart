@@ -1215,11 +1215,10 @@ class _SleepAnalysisResultPageContentState
                             tabContext,
                             'Report',
                             ReportTab(
-                              initialReportData: _asMap(_analysisResult['report']),
-                              loadReport: () => ApiService.fetchReport(
-                                current: (_lastSleepLog ?? log).toMap(),
-                                history: _recentLogs.map((e) => e.toMap()).toList(),
-                              ),
+                              initialReportData: () {
+                                final data = _asMap(_analysisResult['report']);
+                                return data.isEmpty ? null : data;
+                              }(),
                               totalSleepHours: ((_lastSleepLog?.durationMinutes ?? 0) / 60.0),
                               efficiency: (_lastSleepLog?.efficiencyScore ?? 0).toDouble(),
                               deepPct: _sleepStages['Deep'] ?? _sleepStages['deep'],

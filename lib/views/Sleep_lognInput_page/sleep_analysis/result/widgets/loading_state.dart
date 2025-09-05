@@ -45,6 +45,26 @@ class LoadingState extends StatelessWidget {
             ),
           ),
         ),
+        const SizedBox(height: 20),
+        Shimmer.fromColors(
+          baseColor: Colors.grey.shade300,
+          highlightColor: Colors.grey.shade100,
+          child: Column(
+            children: List.generate(
+              5,
+                  (index) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Container(
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
