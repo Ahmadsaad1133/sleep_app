@@ -48,6 +48,7 @@ class _AILoadingAnalysisPageState extends State<AILoadingAnalysisPage>
     "Analyzing sleep quality...",
     "Generating dream forecast...",
     "Generating sleep insights...",
+    "Compiling sleep report...",
     "Finalizing cosmic analysis..."
   ];
   final Random _random = Random();
@@ -208,12 +209,12 @@ class _AILoadingAnalysisPageState extends State<AILoadingAnalysisPage>
       try {
         _fullAnalysisData['quality_breakdown'] =
         await ApiService.getEnhancedSleepQualityAnalysis(sleepQualityData)
-            .timeout(const Duration(seconds: 25));
+            .timeout(const Duration(seconds: 27));
       } on TimeoutException {
         _fullAnalysisData['quality_breakdown'] = {"status": "timeout", "message": "Quality analysis timed out"};
       }
       _updateProgress(60);
-      await Future.delayed(const Duration(seconds: 5));
+      await Future.delayed(const Duration(seconds: 6));
 
       // Step 5: Dream/Mood Forecast
       _updateStep(4, "Generating dream forecast...");
@@ -228,22 +229,22 @@ class _AILoadingAnalysisPageState extends State<AILoadingAnalysisPage>
       try {
         _fullAnalysisData['dream_mood_forecast'] =
         await ApiService.getDreamPredictionAndMoodForecast(forecastData)
-            .timeout(const Duration(seconds: 20));
+            .timeout(const Duration(seconds: 22));
       } on TimeoutException {
         _fullAnalysisData['dream_mood_forecast'] = {"status": "timeout", "message": "Forecast analysis timed out"};
       }
       _updateProgress(75);
-      await Future.delayed(const Duration(seconds: 5));
+      await Future.delayed(const Duration(seconds: 8));
 
       // Step 6: Sleep Insights
       _updateStep(5, "Generating sleep insights...");
       try {
         _fullAnalysisData['sleep_insights'] =
         await ApiService().getInsights(widget.sleepLog.toMap())
-            .timeout(const Duration(seconds: 20));
+            .timeout(const Duration(seconds: 22));
         _fullAnalysisData['historical_analysis'] =
         await ApiService.getHistoricalSleepAnalysis(limit: 10)
-            .timeout(const Duration(seconds: 15));
+            .timeout(const Duration(seconds: 18));
       } on TimeoutException {
         // If either insights or historical analysis times out, provide fallback values.
         _fullAnalysisData['sleep_insights'] = {
@@ -262,11 +263,27 @@ class _AILoadingAnalysisPageState extends State<AILoadingAnalysisPage>
         };
         _fullAnalysisData['historical_analysis'] = e.message;
       }
-      _updateProgress(90);
+      _updateProgress(85);
       await Future.delayed(const Duration(seconds: 5));
 
       // Step 7: Main sleep analysis
-      _updateStep(6, "Finalizing cosmic analysis...");
+      // Step 7: Compile detailed report
+      _updateStep(6, "Compiling sleep report...");
+      try {
+        _fullAnalysisData['report'] = await ApiService
+            .fetchReportForLatestLogs(historyLimit: 7)
+            .timeout(const Duration(seconds: 30));
+      } on TimeoutException {
+        _fullAnalysisData['report'] = {
+          "status": "timeout",
+          "message": "Report generation timed out"
+        };
+      }
+      _updateProgress(95);
+      await Future.delayed(const Duration(seconds: 5));
+
+      // Step 8: Main sleep analysis
+      _updateStep(7, "Finalizing cosmic analysis...");
       Map<String, dynamic>? analysis;
       try {
         analysis = await ApiService.fetchSleepAnalysis([widget.sleepLog.toMap()])
