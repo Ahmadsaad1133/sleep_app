@@ -175,37 +175,43 @@ class _StepIndicator extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: GestureDetector(
                 onTap: () => onTap(i),
-                child: AnimatedContainer(
+                child: AnimatedScale(
+                  scale: i == index ? 1.1 : 1.0,
                   duration: const Duration(milliseconds: 300),
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: i == index
-                        ? colors.primaryContainer
-                        : colors.surfaceVariant,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        steps[i].icon,
-                        size: 18,
-                        color: i == index
-                            ? colors.onPrimaryContainer
-                            : colors.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        steps[i].title,
-                        style: TextStyle(
-                          fontSize: 12,
+    child: AnimatedContainer(
+    duration: const Duration(milliseconds: 300),
+    padding: const EdgeInsets.symmetric(
+    horizontal: 12,
+    vertical: 8,
+    ),
+    decoration: BoxDecoration(
+    color: i == index
+    ? colors.primaryContainer
+        : colors.surfaceVariant,
+    borderRadius: BorderRadius.circular(20),
+    ),
+    child: Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+    Icon(
+    steps[i].icon,
+    size: i == index ? 20 : 18,
                           color: i == index
                               ? colors.onPrimaryContainer
                               : colors.onSurfaceVariant,
                         ),
-                      ),
-                    ],
+      const SizedBox(width: 4),
+      Text(
+        steps[i].title,
+        style: TextStyle(
+          fontSize: i == index ? 14 : 12,
+          color: i == index
+              ? colors.onPrimaryContainer
+              : colors.onSurfaceVariant,
+        ),
+      ),
+    ],
+    ),
                   ),
                 ),
               ),
