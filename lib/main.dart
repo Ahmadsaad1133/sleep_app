@@ -25,12 +25,7 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
-            brightness: Brightness.dark,
             fontFamily: AppFonts.AirbnbCerealBook, // ✅ الخط الجديد
-            textTheme: ThemeData.dark().textTheme.apply(
-              bodyColor: Colors.white,
-              displayColor: Colors.white,
-            ),
           ),
           home: child,
         );

@@ -265,7 +265,7 @@ class _OverviewTab2050NewState extends State<OverviewTab2050New> with SingleTick
     return NeoCard(
       padding: EdgeInsets.all(16.r),
       child: widget.weeklyTrend.isEmpty
-          ? Text('Failed to load weekly trend.',
+          ? Text('Please add more sleep logs.',
           style: TextStyle(color: Colors.white60, fontSize: 13.sp))
           : Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -323,7 +323,7 @@ class _OverviewTab2050NewState extends State<OverviewTab2050New> with SingleTick
                 _sectionTitle('AI Highlights', Icons.auto_awesome),
                 SizedBox(height: 6.h),
                 if (widget.aiHighlights.isEmpty)
-                  Text('Failed to load AI highlights.',
+                  Text('Please add more sleep logs.',
                       style: TextStyle(color: Colors.white60, fontSize: 13.sp))
                 else
                   ...widget.aiHighlights.take(5).map((t) => Padding(
