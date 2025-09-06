@@ -52,7 +52,7 @@ class EnvironmentSection extends StatelessWidget {
           SizedBox(height: 16.h),
 
           // Row 1: Light Exposure | Temperature
-          Row(
+          Row(crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: _OptionCard(
@@ -80,7 +80,7 @@ class EnvironmentSection extends StatelessWidget {
           SizedBox(height: 12.h),
 
           // Row 2: Noise Level | Tips (static)
-          Row(
+          Row(crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: _OptionCard(
@@ -261,7 +261,7 @@ class _TipsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Row(crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 width: 34.w,

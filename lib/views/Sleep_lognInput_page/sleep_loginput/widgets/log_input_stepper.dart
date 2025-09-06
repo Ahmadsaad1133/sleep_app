@@ -87,10 +87,19 @@ class _LogInputStepperState extends State<LogInputStepper> {
             itemCount: widget.steps.length,
             itemBuilder: (context, i) {
               final step = widget.steps[i];
-              return StepWrapper(
-                title: step.title,
-                icon: step.icon,
-                child: step.builder(context),
+              final isActive = i == _index;
+              return AnimatedScale(
+                scale: isActive ? 1.0 : 0.95,
+                duration: const Duration(milliseconds: 300),
+                child: AnimatedOpacity(
+                  opacity: isActive ? 1.0 : 0.7,
+                  duration: const Duration(milliseconds: 300),
+                  child: StepWrapper(
+                    title: step.title,
+                    icon: step.icon,
+                    child: step.builder(context),
+                  ),
+                ),
               );
             },
           ),
@@ -176,42 +185,46 @@ class _StepIndicator extends StatelessWidget {
               child: GestureDetector(
                 onTap: () => onTap(i),
                 child: AnimatedScale(
-                  scale: i == index ? 1.1 : 1.0,
+                  scale: i == index ? 1.1 : 0.9,
                   duration: const Duration(milliseconds: 300),
-    child: AnimatedContainer(
-    duration: const Duration(milliseconds: 300),
-    padding: const EdgeInsets.symmetric(
-    horizontal: 12,
-    vertical: 8,
-    ),
-    decoration: BoxDecoration(
-    color: i == index
-    ? colors.primaryContainer
-        : colors.surfaceVariant,
-    borderRadius: BorderRadius.circular(20),
-    ),
-    child: Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-    Icon(
-    steps[i].icon,
-    size: i == index ? 20 : 18,
-                          color: i == index
-                              ? colors.onPrimaryContainer
-                              : colors.onSurfaceVariant,
-                        ),
-      const SizedBox(width: 4),
-      Text(
-        steps[i].title,
-        style: TextStyle(
-          fontSize: i == index ? 14 : 12,
-          color: i == index
-              ? colors.onPrimaryContainer
-              : colors.onSurfaceVariant,
-        ),
-      ),
-    ],
-    ),
+                  child: AnimatedOpacity(
+                    opacity: i == index ? 1.0 : 0.6,
+                    duration: const Duration(milliseconds: 300),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: i == index
+                            ? colors.primaryContainer
+                            : colors.surfaceVariant,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            steps[i].icon,
+                            size: i == index ? 20 : 18,
+                            color: i == index
+                                ? colors.onPrimaryContainer
+                                : colors.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            steps[i].title,
+                            style: TextStyle(
+                              fontSize: i == index ? 14 : 12,
+                              color: i == index
+                                  ? colors.onPrimaryContainer
+                                  : colors.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
